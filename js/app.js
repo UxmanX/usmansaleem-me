@@ -1,15 +1,19 @@
 /**
  * usmansaleem.me Master Application Controller
- * Integrates WebGL Plushie Elastic Face, Procedural Squeak Audio,
- * Interactive Speech Bubble Reactions, and 3D CAD Modal Controls.
+ * Complies with Modern Web Guidance standards:
+ * - Native <dialog> modal with declarative command/invoker support & fallback
+ * - Pure WebGL Continuum Viscoelastic Plush Face
+ * - Procedural Web Audio API Squeak Synthesizer
+ * - Accessible Clipboard Interaction
  */
 
 import { createPlushie } from "./face/plushie.js";
 import { attachSqueak } from "./face/squeak.js";
 
-document.addEventListener("DOMContentLoaded", async () => {
+document.addEventListener("DOMContentLoaded", () => {
   initPlushFace();
-  initModal();
+  initCadDialog();
+  initCopyEmail();
   initSmoothScroll();
 });
 
@@ -43,19 +47,19 @@ async function initPlushFace() {
         r: 0.43
       },
       grid: 72,
-      wobble: 2.3,
-      reach: 0.085,
-      damping: 0.14,
-      flesh: 0.35,
+      wobble: 2.5,
+      reach: 0.09,
+      damping: 0.15,
+      flesh: 0.32,
       grabRadius: 0.085,
-      maxPull: 0.6
+      maxPull: 0.62
     });
 
-    squeakInstance = attachSqueak(plushInstance, { volume: 0.6 });
+    squeakInstance = attachSqueak(plushInstance, { volume: 0.65 });
 
-    // Handle speech bubble dynamic text reactions on interaction
     let resetTimer = null;
 
+    // Pointer feedback
     hit.addEventListener("pointerdown", () => {
       clearTimeout(resetTimer);
       if (bubbleKicker) bubbleKicker.innerText = "OWWW!";
@@ -65,7 +69,7 @@ async function initPlushFace() {
 
     window.addEventListener("pointerup", () => {
       if (bubbleKicker) bubbleKicker.innerText = "HEHE!";
-      if (bubbleText) bubbleText.innerText = "Boing! That was a good stretch.";
+      if (bubbleText) bubbleText.innerText = "Boing! That was a satisfying stretch.";
       if (bubble) bubble.style.borderColor = "var(--border-light)";
 
       resetTimer = setTimeout(() => {
@@ -74,7 +78,7 @@ async function initPlushFace() {
       }, 3500);
     });
 
-    // Sound toggle listener
+    // Sound toggle control
     const soundToggle = document.getElementById("sound-toggle");
     if (soundToggle) {
       soundToggle.addEventListener("click", () => {
@@ -91,7 +95,6 @@ async function initPlushFace() {
 
   } catch (err) {
     console.warn("Plushie WebGL initialization fallback:", err);
-    // Graceful fallback to static photograph if WebGL unavailable
     const photo = root.querySelector("img");
     if (photo) photo.style.display = "block";
     if (canvas) canvas.style.display = "none";
@@ -99,40 +102,79 @@ async function initPlushFace() {
 }
 
 /**
- * CAD 3D Modal Manager
+ * Native <dialog> Modal Manager (Modern Web Guidance `dialog` compliant)
  */
-function initModal() {
-  const modal = document.getElementById("cad-modal");
+function initCadDialog() {
+  const dialog = document.getElementById("cad-dialog");
   const openBtns = document.querySelectorAll(".open-cad-btn");
-  const closeBtn = document.getElementById("close-cad-modal");
+  const closeBtn = document.getElementById("close-cad-dialog");
   const iframe = document.getElementById("cad-iframe");
 
-  if (!modal) return;
+  if (!dialog) return;
+
+  const openDialog = () => {
+    if (!dialog.open) {
+      if (iframe && !iframe.src) {
+        iframe.src = "cad-modal.html";
+      }
+      dialog.showModal();
+    }
+  };
+
+  const closeDialog = () => {
+    if (dialog.open) {
+      dialog.close();
+    }
+  };
 
   openBtns.forEach(btn => {
     btn.addEventListener("click", (e) => {
       e.preventDefault();
-      modal.classList.add("open");
-      document.body.style.overflow = "hidden";
-      if (iframe && !iframe.src) {
-        iframe.src = "cad-modal.html";
-      }
+      openDialog();
     });
   });
 
-  const closeModal = () => {
-    modal.classList.remove("open");
-    document.body.style.overflow = "";
-  };
+  if (closeBtn) {
+    closeBtn.addEventListener("click", closeDialog);
+  }
 
-  if (closeBtn) closeBtn.addEventListener("click", closeModal);
-  modal.addEventListener("click", (e) => {
-    if (e.target === modal) closeModal();
+  // Light dismiss fallback for browsers without `closedby="any"`
+  dialog.addEventListener("click", (e) => {
+    const rect = dialog.getBoundingClientRect();
+    const isInDialog = (
+      rect.top <= e.clientY && e.clientY <= rect.top + rect.height &&
+      rect.left <= e.clientX && e.clientX <= rect.left + rect.width
+    );
+    if (!isInDialog) {
+      closeDialog();
+    }
   });
+}
 
-  window.addEventListener("keydown", (e) => {
-    if (e.key === "Escape" && modal.classList.contains("open")) {
-      closeModal();
+/**
+ * Accessible Clipboard Interaction
+ */
+function initCopyEmail() {
+  const btn = document.getElementById("copy-email-btn");
+  if (!btn) return;
+
+  btn.addEventListener("click", async () => {
+    const email = "usman.saleem@uottawa.ca";
+    try {
+      await navigator.clipboard.writeText(email);
+      const textSpan = btn.querySelector(".btn-text");
+      const original = textSpan ? textSpan.innerText : "Copy Email";
+      if (textSpan) textSpan.innerText = "Email Copied! ✓";
+      btn.style.borderColor = "#10b981";
+      btn.style.color = "#10b981";
+      
+      setTimeout(() => {
+        if (textSpan) textSpan.innerText = original;
+        btn.style.borderColor = "";
+        btn.style.color = "";
+      }, 2200);
+    } catch {
+      window.location.href = `mailto:${email}`;
     }
   });
 }

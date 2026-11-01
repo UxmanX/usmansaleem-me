@@ -235,28 +235,80 @@ async function initPlushFace() {
   let pullCount = parseInt(localStorage.getItem(PULL_STORAGE_KEY) || "0", 10);
   if (pullCountEl) pullCountEl.textContent = String(pullCount);
 
-  // Dynamic Witty Quotes
+  // Dynamic Witty Quotes Powered by Gemini 4 Argon High-Thinking Architecture
   const quotes = {
     low: [
-      { kicker: "NOMINAL", text: "Light vertex calibration detected. Elastic modulus nominal!" },
-      { kicker: "HEHE", text: "Just a gentle cheek tug. Feels like soft silicone!" },
-      { kicker: "SPRINGY", text: "Checking damping coefficients... Hooke's Law verified!" }
-    ],
+      {
+            "kicker": "LINEAR ELASTIC",
+            "text": "Sub-millimeter vertex displacement detected. Hooke's Law is holding steady\u2014for now."
+      },
+      {
+            "kicker": "NOMINAL SHEAR",
+            "text": "Light surface traction! Young's modulus is comfortably within the green zone."
+      },
+      {
+            "kicker": "SITE AUDIT",
+            "text": "Testing the structural tolerances of my cheek mesh? Field measurements look solid!"
+      },
+      {
+            "kicker": "CALIBRATED",
+            "text": "60 FPS viscoelastic damping active. Go ahead, give the mesh a proper pull."
+      }
+],
     medium: [
-      { kicker: "WHOA", text: "Careful! I need these cheek vertices for tomorrow's standup." },
-      { kicker: "STRETCH", text: "Tensile stress ramping up! WebGL mesh deforming smoothly." },
-      { kicker: "OWWW!", text: "Please don't pull too much. It hurts!" }
-    ],
+      {
+            "kicker": "RISING TENSION",
+            "text": "Passing 5.8 MPa! My uOttawa Finite Element Analysis lectures prepared me for this exact stress tensor."
+      },
+      {
+            "kicker": "SCOPE CREEP!",
+            "text": "Whoa, this vertex displacement is expanding faster than a rush-order technical take-off!"
+      },
+      {
+            "kicker": "NECKING STAGE",
+            "text": "Coordinating 40 national key accounts simultaneously feels less stretched than my zygomatic arch right now."
+      },
+      {
+            "kicker": "NON-LINEAR",
+            "text": "Entering hyperelastic deformation territory! SolidWorks Simulation would be throwing yellow warnings."
+      }
+],
     high: [
-      { kicker: "CRITICAL!", text: "12.4 MPa MAX! My beard shaders are approaching yield limit!" },
-      { kicker: "DANGER", text: "Elastic modulus exceeded! Initiating emergency snapback!" },
-      { kicker: "SNAP!", text: "Boing! My spring constants just saw another dimension!" }
-    ],
+      {
+            "kicker": "12.4 MPa YIELD!",
+            "text": "CRITICAL STRAIN! Even a heavy-duty ASSA ABLOY SL500 aluminum header would deflect under this load!"
+      },
+      {
+            "kicker": "ULTIMATE STRESS",
+            "text": "Mercy! Commissioning a 60-crew B\u00fchler milling plant in Karachi was gentler than your cursor!"
+      },
+      {
+            "kicker": "STRUCTURAL LIMIT",
+            "text": "Von Mises stress peaking in the red! Priming kinetic recoil matrix for immediate snapback!"
+      },
+      {
+            "kicker": "SAFETY FACTOR: 0",
+            "text": "Any further and you'll trigger plastic deformation! Release the mouse to initiate harmonic damping!"
+      }
+],
     milestones: {
-      10: { kicker: "TEN PULLS!", text: "Should I invoice you for quality assurance stress testing?" },
-      25: { kicker: "STRESS TEST", text: "25 pulls! You really love continuum physics simulations!" },
-      50: { kicker: "CHIEF SQUISH", text: "50+ pulls! Achievement Unlocked: Chief Elasticity Officer." }
-    }
+      "5": {
+            "kicker": "5X FATIGUE TEST",
+            "text": "Five tensile cycles logged! Initial commissioning inspection passed with zero micro-fractures."
+      },
+      "10": {
+            "kicker": "10X QA AUDIT",
+            "text": "Ten pulls! You're stress-testing this WebGL shader with the rigor of a senior commissioning engineer."
+      },
+      "25": {
+            "kicker": "25X ENDURANCE",
+            "text": "25 high-strain cycles! I'm logging a corrective action ticket in Dynamics 365 for facial fatigue."
+      },
+      "50": {
+            "kicker": "50X S-N CURVE MASTER",
+            "text": "Fifty pulls! You've officially proven infinite fatigue life on my mesh. Here is your P.Eng in Viscoelasticity."
+      }
+}
   };
 
   const updateStrainUI = (stressMPa) => {
@@ -337,40 +389,40 @@ async function initPlushFace() {
     /* ----------------------------------------------------------------------
        EXPRESSION CONTROLLER (Smile, Shock, Ouch, Annoyed, Dizzy)
        ---------------------------------------------------------------------- */
-    const EXPRESSIONS = {
+        const EXPRESSIONS = {
       smile: {
         label: "SMILE",
         icon: "😊",
-        kicker: "NATURAL",
-        quote: "Optimal resting state! Drag my cheek to stretch.",
+        kicker: "EQUILIBRIUM",
+        quote: "All 40 projects on schedule, Power BI pipelines green, and mesh at zero residual stress. Drag any vertex!",
         sound: () => soundSynth.playRadarChirp(1200, 1600)
       },
       shock: {
         label: "SHOCK",
         icon: "😲",
-        kicker: "SURPRISED!",
-        quote: "Woah! Did you see that sudden displacement?",
+        kicker: "IMPULSE LOAD!",
+        quote: "Sudden kinetic spike detected! Did a field technician just submit a site take-off with zero missing dimensions?!",
         sound: () => soundSynth.playBoop()
       },
       ouch: {
         label: "OUCH",
         icon: "😣",
-        kicker: "TENSION!",
-        quote: "Ouch! Tensile shear limit approaching 12.4 MPa!",
+        kicker: "PEAK SHEAR!",
+        quote: "High-magnitude localized strain! Watch the geometric tolerances on the epidermis!",
         sound: () => soundSynth.playWarningBuzz()
       },
       annoyed: {
         label: "ANNOYED",
         icon: "😒",
-        kicker: "SKEPTICAL",
-        quote: "Continuous prodding detected. Can we build something?",
+        kicker: "UNSCHEDULED POKE",
+        quote: "Repeated point-load detected without an approved change order. Shouldn't we be reviewing CAD layouts?",
         sound: () => soundSynth.playServoHum(0.4)
       },
       dizzy: {
         label: "DIZZY",
         icon: "😵",
-        kicker: "OVERLOAD!",
-        quote: "Buffer overflow! Vertices oscillating at 40 Hz!",
+        kicker: "UNDERDAMPED",
+        quote: "Resonant frequency reached... waiting for the second-order differential equation to settle my vertices!",
         sound: () => soundSynth.playEspressoArpeggio()
       }
     };

@@ -135,16 +135,16 @@
 
         <!-- Right Column: Interactive Elastic Face (Plushie) -->
         <div class="hero-stage">
-          <div class="plush-container">
-
-            <!-- Speech reaction bubble -->
-            <div id="hero-bubble" class="hero-bubble" aria-live="polite">
-              <div class="hero-bubble-top">
-                <span id="hero-bubble-kicker" class="hero-bubble-kicker">PSST.</span>
-                <button type="button" id="face-state-pill" class="face-state-pill" title="Click to cycle expression" aria-label="Current expression: SMILE. Click to cycle.">SMILE &#9662;</button>
-              </div>
-              <span id="hero-bubble-text" class="hero-bubble-text">Grab &amp; pull my cheek like elastic!</span>
+          <!-- Speech reaction bubble positioned cleanly ABOVE the face -->
+          <div id="hero-bubble" class="hero-bubble" aria-live="polite">
+            <div class="hero-bubble-top">
+              <span id="hero-bubble-kicker" class="hero-bubble-kicker">PSST.</span>
+              <span id="face-state-pill" class="face-state-pill">SMILE</span>
             </div>
+            <span id="hero-bubble-text" class="hero-bubble-text">Grab &amp; pull my cheek like elastic!</span>
+          </div>
+
+          <div class="plush-container">
 
             <!-- The WebGL Plush Element -->
             <div class="plush" id="usman-plush" data-frame="circle">
@@ -173,19 +173,7 @@
 
           </div>
 
-                    <!-- Interactive Facial Expression Bar -->
-          <div class="face-expressions-deck" aria-label="Facial Expressions Toolbar">
-            <div class="deck-label">EXPRESSIONS:</div>
-            <div class="face-expressions-row" role="group" aria-label="Select Facial Expression">
-              <button type="button" class="expr-btn active" data-face="smile" title="Natural Smile">&#128522; Smile</button>
-              <button type="button" class="expr-btn" data-face="shock" title="Surprised / Shocked">&#128552; Shock</button>
-              <button type="button" class="expr-btn" data-face="ouch" title="Ouch / Tensile Strain">&#128547; Ouch</button>
-              <button type="button" class="expr-btn" data-face="annoyed" title="Skeptical / Annoyed">&#128530; Annoyed</button>
-              <button type="button" class="expr-btn" data-face="dizzy" title="Overclocked / Dizzy">&#128565; Dizzy</button>
-            </div>
-          </div>
-
-          <!-- Live Viscoelastic Strain Gauge Deck -->
+                    <!-- Live Viscoelastic Strain Gauge Deck -->
           <div class="face-telemetry-deck" aria-label="Viscoelastic Face Telemetry">
             <div class="strain-meter-header">
               <span>STRESS: <strong id="strain-val">0.0 MPa</strong> <em id="strain-pct" class="strain-pct">(0%)</em></span>

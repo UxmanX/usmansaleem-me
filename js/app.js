@@ -397,7 +397,7 @@ async function initPlushFace() {
       // 3. Update Face State Pill in Speech Bubble
       const pill = document.getElementById("face-state-pill");
       if (pill) {
-        pill.innerHTML = `${meta.label} &#9662;`;
+        pill.textContent = meta.label;
         pill.setAttribute("aria-label", `Current expression: ${meta.label}. Click to cycle.`);
       }
 
@@ -412,24 +412,16 @@ async function initPlushFace() {
 
     window.setExpression = setExpression;
 
-    // Click handler for expression buttons
-    document.querySelectorAll(".expr-btn").forEach((btn) => {
-      btn.addEventListener("click", () => {
-        const face = btn.getAttribute("data-face");
-        setExpression(face, true);
-      });
-    });
-
-    // Click handler on Face State Pill to cycle expressions
+    // Click handler on Face State Pill or Bubble to cycle through reactions
     const facePill = document.getElementById("face-state-pill");
-    if (facePill) {
+    const bubbleEl = document.getElementById("hero-bubble");
+    const triggerCycle = () => {
       const faceKeys = Object.keys(EXPRESSIONS);
-      facePill.addEventListener("click", () => {
-        const curIdx = faceKeys.indexOf(activeExpression);
-        const nextIdx = (curIdx + 1) % faceKeys.length;
-        setExpression(faceKeys[nextIdx], true);
-      });
-    }
+      const curIdx = faceKeys.indexOf(activeExpression);
+      const nextIdx = (curIdx + 1) % faceKeys.length;
+      setExpression(faceKeys[nextIdx], true);
+    };
+    if (facePill) facePill.addEventListener("click", triggerCycle);
 
     // React to engine-driven expression changes (e.g. idle acts or reactions)
     if (typeof plushInstance.on === "function") {
@@ -438,7 +430,7 @@ async function initPlushFace() {
           activeExpression = face;
           const meta = EXPRESSIONS[face];
           const pill = document.getElementById("face-state-pill");
-          if (pill) pill.innerHTML = `${meta.label} &#9662;`;
+          if (pill) pill.textContent = meta.label;
           document.querySelectorAll(".expr-btn").forEach((btn) => {
             btn.classList.toggle("active", btn.getAttribute("data-face") === face);
           });

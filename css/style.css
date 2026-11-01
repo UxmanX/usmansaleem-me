@@ -570,58 +570,48 @@ body {
   visibility: visible !important;
 }
 
-/* Speech Pitch Bubble with Pointer Beak */
+/* Speech Pitch Bubble with Pointer Beak - positioned cleanly ABOVE face */
 .hero-bubble {
-  position: absolute;
-  top: -12px;
-  right: -6px;
-  background: rgba(255, 255, 255, 0.96);
+  position: relative;
+  background: rgba(255, 255, 255, 0.98);
   backdrop-filter: blur(8px);
   border: 1.5px solid var(--border-light);
   border-radius: 14px;
-  padding: 8px 12px;
-  box-shadow: 0 10px 24px rgba(20, 23, 26, 0.1);
-  font-size: 0.75rem;
-  max-width: 175px;
+  padding: 8px 14px;
+  box-shadow: 0 8px 22px rgba(20, 23, 26, 0.08);
+  font-size: 0.78rem;
+  max-width: 310px;
+  width: 100%;
+  margin: 0 auto 12px auto;
   z-index: 10;
   pointer-events: auto;
   transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s ease, box-shadow 0.2s ease;
+  text-align: center;
 }
 
 .hero-bubble.is-active {
-  transform: scale(1.04) translateY(-2px);
-  box-shadow: 0 14px 28px rgba(255, 84, 30, 0.18);
-}
-
-@media (min-width: 860px) {
-  .hero-bubble {
-    top: 2px;
-    right: -12px;
-    padding: 10px 14px;
-    font-size: 0.8rem;
-    max-width: 205px;
-    border-radius: 16px;
-  }
+  transform: scale(1.02) translateY(-2px);
+  box-shadow: 0 12px 26px rgba(255, 84, 30, 0.16);
 }
 
 .hero-bubble::before {
   content: '';
   position: absolute;
   bottom: -6px;
-  left: 22px;
+  left: 50%;
   width: 10px;
   height: 10px;
   background: #ffffff;
-  border-right: 1.5px solid inherit;
-  border-bottom: 1.5px solid inherit;
-  transform: rotate(45deg);
+  border-right: 1.5px solid var(--border-light);
+  border-bottom: 1.5px solid var(--border-light);
+  transform: translateX(-50%) rotate(45deg);
 }
 
 .hero-bubble-top {
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   margin-bottom: 3px;
 }
 
@@ -638,24 +628,15 @@ body {
   font-family: var(--font-mono);
   font-size: 0.62rem;
   font-weight: 700;
-  padding: 2px 8px;
+  padding: 1px 7px;
   border-radius: 999px;
   background: var(--bg-card-subtle);
   color: var(--brand-orange);
   border: 1px solid rgba(255, 84, 30, 0.35);
-  cursor: pointer;
-  transition: all 0.15s ease;
   display: inline-flex;
   align-items: center;
   gap: 3px;
   user-select: none;
-}
-
-.face-state-pill:hover {
-  background: var(--brand-orange);
-  color: #fff;
-  border-color: var(--brand-orange);
-  transform: translateY(-1px);
 }
 
 .hero-bubble-text {
@@ -663,77 +644,6 @@ body {
   font-weight: 600;
   line-height: 1.35;
   display: block;
-}
-
-@keyframes floatBubble {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-4px); }
-}
-
-
-/* Interactive Facial Expressions Switcher Toolbar */
-.face-expressions-deck {
-  width: 100%;
-  max-width: 340px;
-  margin-top: 14px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.deck-label {
-  font-family: var(--font-mono);
-  font-size: 0.65rem;
-  font-weight: 700;
-  letter-spacing: 0.6px;
-  color: var(--text-muted);
-}
-
-.face-expressions-row {
-  display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
-  width: 100%;
-}
-
-.expr-btn {
-  flex: 1 1 auto;
-  min-width: 58px;
-  padding: 6px 8px;
-  font-size: 0.72rem;
-  font-weight: 600;
-  font-family: var(--font-sans);
-  border-radius: 8px;
-  border: 1px solid var(--border-light);
-  background: var(--bg-card);
-  color: var(--text-main);
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
-  user-select: none;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
-}
-
-.expr-btn:hover {
-  border-color: var(--brand-orange);
-  color: var(--brand-orange);
-  background: rgba(255, 84, 30, 0.06);
-  transform: translateY(-1px);
-}
-
-.expr-btn.active {
-  background: var(--brand-orange);
-  color: #fff;
-  border-color: var(--brand-orange);
-  box-shadow: 0 2px 8px rgba(255, 84, 30, 0.35);
-  transform: translateY(-1px);
-}
-
-.expr-btn:active {
-  transform: translateY(0);
 }
 
 /* Live Viscoelastic Strain Gauge Bar */

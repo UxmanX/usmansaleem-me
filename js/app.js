@@ -1,10 +1,13 @@
 /**
  * usmansaleem.me Master Application Controller
- * Complies with Modern Web Guidance standards:
- * - Native <dialog> modal with declarative command/invoker support & fallback
- * - Pure WebGL Continuum Viscoelastic Plush Face
+ * Powered by Plushie WebGL Continuum Physics with Multi-Expression Morphing:
+ * - Resting: Smile
+ * - Grabbed: Shock
+ * - Pulled: Ouch
+ * - Hovered: Annoyed / Deadpan
+ * - Released / Dazed: Dizzy
  * - Procedural Web Audio API Squeak Synthesizer
- * - Accessible Clipboard Interaction
+ * - Native <dialog> Modal with Discrete Transitions
  */
 
 import { createPlushie } from "./face/plushie.js";
@@ -22,7 +25,7 @@ let squeakInstance = null;
 let isAudioEnabled = true;
 
 /**
- * Initializes the Elastic Plush Face Simulation
+ * Initializes the Elastic Plush Face Simulation with Live Expressions
  */
 async function initPlushFace() {
   const root = document.getElementById("usman-plush");
@@ -38,8 +41,21 @@ async function initPlushFace() {
     plushInstance = await createPlushie(canvas, {
       hit,
       faces: {
-        smile: "assets/usman_smile.webp"
+        smile: "assets/usman_smile.webp",
+        shock: "assets/usman_shock.webp",
+        ouch: "assets/usman_ouch.webp",
+        annoyed: "assets/usman_annoyed.webp",
+        dizzy: "assets/usman_dizzy.webp"
       },
+      reactions: {
+        hovered: ["annoyed"],
+        held: ["shock", "ouch"],
+        pulled: ["ouch", "shock"],
+        tapped: ["shock"],
+        dazed: ["dizzy", "ouch"],
+        fedUp: ["annoyed", "dizzy"]
+      },
+      expressions: true,
       frame: {
         kind: "circle",
         x: 0.5,
@@ -47,7 +63,7 @@ async function initPlushFace() {
         r: 0.43
       },
       grid: 72,
-      wobble: 2.5,
+      wobble: 2.6,
       reach: 0.09,
       damping: 0.15,
       flesh: 0.32,
@@ -59,7 +75,7 @@ async function initPlushFace() {
 
     let resetTimer = null;
 
-    // Pointer feedback
+    // Pointer feedback & speech bubble reactions
     hit.addEventListener("pointerdown", () => {
       clearTimeout(resetTimer);
       if (bubbleKicker) bubbleKicker.innerText = "OWWW!";
@@ -138,7 +154,7 @@ function initCadDialog() {
     closeBtn.addEventListener("click", closeDialog);
   }
 
-  // Light dismiss fallback for browsers without `closedby="any"`
+  // Light dismiss fallback
   dialog.addEventListener("click", (e) => {
     const rect = dialog.getBoundingClientRect();
     const isInDialog = (

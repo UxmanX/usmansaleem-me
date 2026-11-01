@@ -1,7 +1,10 @@
 /* ==========================================================================
    usmansaleem.me Master Stylesheet
-   Modern Web Guidance compliant: Native Dialog, Container Queries,
-   Mobile-First Proportional Scaling, and Viscoelastic Face Physics.
+   Designed with Gemini 4 Argon High-Thinking Architecture:
+   - Warm Swiss/Braun Editorial & Engineering Precision
+   - Live Viscoelastic Strain Gauge & Telemetry
+   - Playable ASSA ABLOY SL500 Electromechanical Door Console
+   - Native <dialog> Modal with Discrete Entry/Exit Transitions
    ========================================================================== */
 
 :root {
@@ -18,13 +21,15 @@
   --brand-orange-hover: #e04412;
   --brand-orange-light: #fff2ed;
   --brand-orange-glow: rgba(255, 84, 30, 0.28);
+  --accent-cyan: #00d2ff;
+  --accent-green: #10b981;
   
   /* Borders & Shadows */
   --border-light: rgba(0, 0, 0, 0.08);
   --border-subtle: rgba(0, 0, 0, 0.05);
   --shadow-card: 0 16px 36px -12px rgba(20, 23, 26, 0.06), 0 2px 6px -1px rgba(20, 23, 26, 0.04);
   --shadow-hover: 0 24px 48px -12px rgba(255, 84, 30, 0.14), 0 8px 16px -2px rgba(20, 23, 26, 0.06);
-  --shadow-modal: 0 25px 60px -15px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.1);
+  --shadow-modal: 0 25px 60px -15px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.1);
   
   /* Radii & Typography */
   --radius-card: 28px;
@@ -49,6 +54,9 @@ html {
 
 body {
   background-color: var(--bg-page);
+  /* Architectural micro-grid background */
+  background-image: radial-gradient(rgba(0, 0, 0, 0.045) 1px, transparent 1px);
+  background-size: 24px 24px;
   color: var(--text-main);
   font-family: var(--font-sans);
   line-height: 1.6;
@@ -70,7 +78,7 @@ body {
 }
 
 /* ==========================================================================
-   Header Navigation (Floating Glass Pill)
+   Header Navigation (Floating Glass Pill + Live Status)
    ========================================================================== */
 
 .site-nav {
@@ -79,7 +87,7 @@ body {
   align-items: center;
   margin-bottom: 20px;
   padding: 8px 14px;
-  background: rgba(255, 255, 255, 0.85);
+  background: rgba(255, 255, 255, 0.88);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border: 1px solid var(--border-light);
@@ -96,6 +104,12 @@ body {
     margin-bottom: 24px;
     top: 14px;
   }
+}
+
+.nav-brand-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .brand-handle {
@@ -118,6 +132,33 @@ body {
   box-shadow: 0 0 0 3px rgba(255, 84, 30, 0.22);
 }
 
+.status-pill {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: var(--accent-green);
+  background: rgba(16, 185, 129, 0.1);
+  padding: 3px 8px;
+  border-radius: var(--radius-pill);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.status-pill-dot {
+  width: 6px;
+  height: 6px;
+  background-color: var(--accent-green);
+  border-radius: 50%;
+  animation: pulseDot 2s infinite;
+}
+
+@keyframes pulseDot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.85); }
+}
+
 .nav-links {
   display: flex;
   align-items: center;
@@ -126,9 +167,7 @@ body {
 }
 
 @media (min-width: 640px) {
-  .nav-links {
-    gap: 16px;
-  }
+  .nav-links { gap: 16px; }
 }
 
 .nav-link {
@@ -143,11 +182,9 @@ body {
   color: var(--brand-orange);
 }
 
-/* Hide secondary links on narrow mobile to keep header clean */
-@media (max-width: 540px) {
-  .nav-links li:nth-child(1),
-  .nav-links li:nth-child(2),
-  .nav-links li:nth-child(3) {
+@media (max-width: 580px) {
+  .nav-links li:not(:last-child),
+  .status-pill {
     display: none;
   }
 }
@@ -179,7 +216,7 @@ body {
 }
 
 /* ==========================================================================
-   Hero Card & Mobile Scaling
+   Hero Card
    ========================================================================== */
 
 .hero-card {
@@ -197,18 +234,16 @@ body {
   overflow: hidden;
 }
 
-/* On Desktop: 2-column layout (text on left, face on right) */
 @media (min-width: 860px) {
   .hero-card {
     grid-template-columns: 1.15fr 0.85fr;
-    padding: 56px 52px;
+    padding: 52px 48px;
     border-radius: var(--radius-card);
     gap: 40px;
     margin-bottom: 44px;
   }
 }
 
-/* On Mobile: Face is at the TOP (order 1), text below (order 2) */
 .hero-stage {
   order: 1;
   display: flex;
@@ -292,13 +327,64 @@ body {
   font-size: clamp(0.95rem, 2.5vw, 1.08rem);
   color: var(--text-muted);
   line-height: 1.6;
-  margin-bottom: 20px;
+  margin-bottom: 18px;
   max-width: 540px;
+}
+
+.hero-bio-secondary {
+  font-size: 0.94rem;
+  margin-top: -8px;
+  margin-bottom: 20px;
 }
 
 .hero-bio strong {
   color: var(--text-main);
   font-weight: 700;
+}
+
+/* Engineering Micro-Stats Deck */
+.hero-mini-stats {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: var(--bg-card-subtle);
+  border: 1px solid var(--border-light);
+  border-radius: 14px;
+  padding: 10px 16px;
+  margin-bottom: 22px;
+  width: fit-content;
+}
+
+@media (max-width: 859px) {
+  .hero-mini-stats {
+    margin: 0 auto 22px auto;
+  }
+}
+
+.mini-stat {
+  display: flex;
+  flex-direction: column;
+}
+
+.mini-stat-val {
+  font-size: 1.1rem;
+  font-weight: 800;
+  font-family: var(--font-mono);
+  color: var(--brand-orange);
+  line-height: 1.1;
+}
+
+.mini-stat-lbl {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--text-faint);
+  text-transform: uppercase;
+}
+
+.mini-stat-divider {
+  width: 1px;
+  height: 24px;
+  background: var(--border-light);
 }
 
 .hero-actions {
@@ -311,9 +397,7 @@ body {
 }
 
 @media (max-width: 859px) {
-  .hero-actions {
-    justify-content: center;
-  }
+  .hero-actions { justify-content: center; }
 }
 
 @media (max-width: 480px) {
@@ -396,7 +480,7 @@ body {
 }
 
 /* ==========================================================================
-   Plush Elastic Face Scaling
+   Plush Face, Strain Telemetry & Tactile Controls
    ========================================================================== */
 
 .plush-container {
@@ -408,16 +492,11 @@ body {
 }
 
 @media (min-width: 640px) {
-  .plush-container {
-    width: 300px;
-  }
+  .plush-container { width: 300px; }
 }
 
 @media (min-width: 860px) {
-  .plush-container {
-    width: 340px;
-    max-width: 100%;
-  }
+  .plush-container { width: 340px; max-width: 100%; }
 }
 
 .plush {
@@ -431,7 +510,7 @@ body {
   box-shadow: 0 16px 36px rgba(255, 84, 30, 0.28);
 }
 
-/* Speech Pitch Bubble */
+/* Speech Pitch Bubble with Pointer Beak */
 .hero-bubble {
   position: absolute;
   top: -8px;
@@ -494,19 +573,68 @@ body {
   50% { transform: translateY(-5px); }
 }
 
-.hero-subhint {
-  margin-top: 12px;
-  font-family: var(--font-mono);
-  font-size: 0.72rem;
-  color: var(--text-faint);
+/* Live Viscoelastic Strain Gauge Bar */
+.face-telemetry-deck {
+  width: 100%;
+  max-width: 320px;
+  margin-top: 14px;
   display: flex;
-  align-items: center;
-  gap: 6px;
-  text-align: center;
+  flex-direction: column;
+  gap: 8px;
 }
 
-.hero-subhint span {
+.strain-meter-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--text-faint);
+}
+
+.strain-meter-bar {
+  width: 100%;
+  height: 6px;
+  background: rgba(0, 0, 0, 0.08);
+  border-radius: 999px;
+  overflow: hidden;
+  position: relative;
+}
+
+.strain-meter-fill {
+  width: 0%;
+  height: 100%;
+  background: linear-gradient(90deg, #10b981 0%, #ff541e 70%, #ef4444 100%);
+  border-radius: 999px;
+  transition: width 0.08s ease-out;
+}
+
+/* Face Tactile Trigger Buttons */
+.face-triggers-row {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.face-trigger-btn {
+  background: var(--bg-card-subtle);
+  border: 1px solid var(--border-light);
+  color: var(--text-muted);
+  border-radius: var(--radius-pill);
+  padding: 4px 10px;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.face-trigger-btn:hover {
+  background: var(--brand-orange-light);
   color: var(--brand-orange);
+  border-color: var(--brand-orange);
+  transform: translateY(-1px);
 }
 
 /* ==========================================================================
@@ -548,11 +676,22 @@ body {
 }
 
 /* ==========================================================================
-   Section Header
+   Project Showcase (With Interactive Category Filtering)
    ========================================================================== */
 
 .section-head {
   margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+@media (min-width: 640px) {
+  .section-head {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: flex-end;
+  }
 }
 
 .section-title {
@@ -568,9 +707,31 @@ body {
   margin-top: 2px;
 }
 
-/* ==========================================================================
-   Project Cards (Container Queries & Stretched Links)
-   ========================================================================== */
+.filter-pills-row {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.filter-pill {
+  background: var(--bg-card);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-pill);
+  padding: 5px 12px;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.filter-pill:hover,
+.filter-pill.active {
+  background: var(--brand-orange);
+  color: #ffffff;
+  border-color: var(--brand-orange);
+}
 
 .projects-grid {
   display: grid;
@@ -598,7 +759,11 @@ body {
   flex-direction: column;
   justify-content: space-between;
   position: relative;
-  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease, opacity 0.3s ease;
+}
+
+.project-card.hidden-filter {
+  display: none !important;
 }
 
 @media (min-width: 640px) {
@@ -614,9 +779,7 @@ body {
   border-color: rgba(255, 84, 30, 0.35);
 }
 
-.project-card:has(a.card-link) {
-  position: relative;
-}
+.project-card:has(a.card-link) { position: relative; }
 
 .project-card a.card-link {
   text-decoration: none;
@@ -700,45 +863,231 @@ body {
 }
 
 /* ==========================================================================
-   CAD Digital Twin Banner
+   Playable ASSA ABLOY SL500 Sliding Door Hardware Simulator Console
    ========================================================================== */
 
-.cad-banner {
-  background: linear-gradient(135deg, #181c24 0%, #0d1016 100%);
+.sl500-simulator-card {
+  background: linear-gradient(135deg, #131722 0%, #090c12 100%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 20px;
-  color: #ffffff;
-  padding: 28px 20px;
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.45);
+  padding: 24px 20px;
   margin-bottom: 48px;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  text-align: center;
-  align-items: center;
+  color: #ffffff;
 }
 
 @media (min-width: 768px) {
-  .cad-banner {
+  .sl500-simulator-card {
     border-radius: var(--radius-card);
-    padding: 40px 48px;
+    padding: 36px 40px;
     margin-bottom: 56px;
-    flex-direction: row;
-    justify-content: space-between;
-    text-align: left;
-    align-items: center;
   }
 }
 
-.cad-banner-content h3 {
-  font-size: 1.35rem;
-  font-weight: 800;
-  margin-bottom: 6px;
+.simulator-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding-bottom: 16px;
 }
 
-.cad-banner-content p {
+.sim-title-group h3 {
+  font-size: 1.35rem;
+  font-weight: 800;
+  letter-spacing: -0.3px;
+}
+
+.sim-title-group p {
   color: #94a3b8;
-  font-size: 0.88rem;
-  max-width: 520px;
+  font-size: 0.85rem;
+}
+
+.door-viewport-stage {
+  width: 100%;
+  height: 180px;
+  background: #05070a;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  position: relative;
+  overflow: hidden;
+  margin-bottom: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Door Overhead Track / Header Profile */
+.door-track-beam {
+  position: absolute;
+  top: 12px;
+  left: 20px;
+  right: 20px;
+  height: 14px;
+  background: #2a3342;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+}
+
+.door-radar-sensor {
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 32px;
+  height: 10px;
+  background: #ff541e;
+  border-radius: 2px;
+  box-shadow: 0 0 12px #ff541e;
+}
+
+/* Dual Sliding Glass Leaves */
+.door-leaf-container {
+  width: 280px;
+  height: 140px;
+  position: relative;
+  display: flex;
+  justify-content: center;
+  top: 8px;
+}
+
+.door-leaf {
+  width: 130px;
+  height: 100%;
+  background: rgba(0, 210, 255, 0.12);
+  border: 2px solid rgba(0, 210, 255, 0.4);
+  backdrop-filter: blur(4px);
+  position: absolute;
+  top: 0;
+  transition: transform 0.65s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: inset 0 0 16px rgba(0, 210, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.door-leaf.left {
+  left: 10px;
+  transform: translateX(0);
+}
+
+.door-leaf.right {
+  right: 10px;
+  transform: translateX(0);
+}
+
+/* Sliding Opened State */
+.door-viewport-stage.is-open .door-leaf.left {
+  transform: translateX(-105px);
+}
+
+.door-viewport-stage.is-open .door-leaf.right {
+  transform: translateX(105px);
+}
+
+.door-handle-decal {
+  width: 4px;
+  height: 40px;
+  background: rgba(255, 255, 255, 0.4);
+  border-radius: 2px;
+}
+
+/* Photocell Laser Beam */
+.photocell-beam {
+  position: absolute;
+  bottom: 24px;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: rgba(16, 185, 129, 0.4);
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.8);
+  pointer-events: none;
+}
+
+.door-viewport-stage.is-open .photocell-beam {
+  background: rgba(255, 84, 30, 0.7);
+  box-shadow: 0 0 12px #ff541e;
+}
+
+/* Controls & Telemetry Readouts */
+.simulator-console-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.sim-actions-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.sim-btn-trigger {
+  background: var(--brand-orange);
+  color: #ffffff;
+  border: none;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 0.84rem;
+  padding: 10px 18px;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(255, 84, 30, 0.4);
+}
+
+.sim-btn-trigger:hover {
+  background: var(--brand-orange-hover);
+  transform: translateY(-1px);
+}
+
+.sim-mode-group {
+  display: flex;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-pill);
+  padding: 3px;
+}
+
+.sim-mode-btn {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 6px 12px;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.sim-mode-btn.active {
+  background: rgba(255, 255, 255, 0.15);
+  color: #ffffff;
+}
+
+.sim-telemetry-readout {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: #94a3b8;
+}
+
+.sim-telemetry-item strong {
+  color: #ffffff;
 }
 
 /* ==========================================================================

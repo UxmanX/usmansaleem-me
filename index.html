@@ -11,7 +11,7 @@
   <!-- Google Fonts: Plus Jakarta Sans, Inter, JetBrains Mono -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700;800&family=Plus+Jakarta+Sans:wght@600;700;800;900&display=swap" rel="stylesheet">
 
   <!-- Core Stylesheets -->
   <link rel="stylesheet" href="css/face.css">
@@ -25,23 +25,30 @@
   <div class="page-wrapper">
 
     <!-- ======================================================================
-         Top Header Navigation (Floating Glass Pill)
+         Top Header Navigation (Floating Glass Pill + Live Status)
          ====================================================================== -->
     <header class="site-nav" role="banner">
-      <a href="#" class="brand-handle" aria-label="Usman Saleem Homepage">
-        <span class="handle-dot" aria-hidden="true"></span>
-        <span>@usmansaleem</span>
-      </a>
+      <div class="nav-brand-group">
+        <a href="#" class="brand-handle" aria-label="Usman Saleem Homepage">
+          <span class="handle-dot" aria-hidden="true"></span>
+          <span>@usmansaleem</span>
+        </a>
+        <span class="status-pill" title="Available for high-impact engineering collaborations">
+          <span class="status-pill-dot" aria-hidden="true"></span>
+          CAN · ON-LINE
+        </span>
+      </div>
 
       <nav aria-label="Primary Navigation">
         <ul class="nav-links">
           <li><a href="#showcase" class="nav-link">Showcase</a></li>
+          <li><a href="#simulator" class="nav-link">SL500 Sim</a></li>
           <li><a href="#about" class="nav-link">About</a></li>
           <li><a href="#contact" class="nav-link">Contact</a></li>
           <li><a href="assets/Usman_Saleem_MEng_Resume.pdf" download="Usman_Saleem_MEng_Resume.pdf" class="nav-link">Resume</a></li>
           <li>
-            <button id="sound-toggle" class="audio-toggle-btn" type="button" aria-pressed="true" title="Toggle rubber toy sounds">
-              <span aria-hidden="true">🔊</span>
+            <button id="sound-toggle" class="audio-toggle-btn" type="button" aria-pressed="true" title="Toggle rubber toy & mechanical sound effects">
+              <span class="sound-icon" aria-hidden="true">🔊</span>
               <span class="sound-label">Audio: On</span>
             </button>
           </li>
@@ -70,9 +77,27 @@
             My passion is turning complex mechanical systems, robotics, and automation into rock-solid software and physical hardware that actually works.
           </p>
 
-          <p class="hero-bio" style="font-size: 0.98rem; margin-top: -12px;">
-            Currently scaling entrance automation infrastructure across Canada at <strong>ASSA ABLOY Entrance Systems</strong>. Alumnus of the <strong>University of Ottawa</strong> (Master of Engineering in Mechanical & Autonomous Systems).
+          <p class="hero-bio hero-bio-secondary">
+            Currently scaling entrance automation infrastructure across Canada at <strong>ASSA ABLOY Entrance Systems</strong>. Alumnus of the <strong>University of Ottawa</strong> (Master of Engineering in Mechanical &amp; Autonomous Systems).
           </p>
+
+          <!-- Quick Engineering Stats Row -->
+          <div class="hero-mini-stats" aria-label="Key Engineering Metrics">
+            <div class="mini-stat">
+              <span class="mini-stat-val">99.8%</span>
+              <span class="mini-stat-lbl">ERP Dispatch Precision</span>
+            </div>
+            <div class="mini-stat-divider" aria-hidden="true"></div>
+            <div class="mini-stat">
+              <span class="mini-stat-val">MEng</span>
+              <span class="mini-stat-lbl">uOttawa Autonomous Sys</span>
+            </div>
+            <div class="mini-stat-divider" aria-hidden="true"></div>
+            <div class="mini-stat">
+              <span class="mini-stat-val">60 FPS</span>
+              <span class="mini-stat-lbl">WebGL Continuum Physics</span>
+            </div>
+          </div>
 
           <div class="hero-actions">
             <a href="assets/Usman_Saleem_MEng_Resume.pdf" download="Usman_Saleem_MEng_Resume.pdf" class="btn-primary">
@@ -92,13 +117,13 @@
             </button>
 
             <div class="social-pills">
-              <a href="https://github.com/UxmanX" target="_blank" rel="noopener" class="social-pill" title="GitHub (@UxmanX)">
+              <a href="https://github.com/UxmanX" target="_blank" rel="noopener" class="social-pill" title="GitHub (@UxmanX)" aria-label="GitHub">
                 <svg viewBox="0 0 24 24" width="17" height="17" fill="currentColor">
                   <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
                 </svg>
               </a>
 
-              <a href="mailto:usman.saleem@uottawa.ca" class="social-pill" title="Email Usman">
+              <a href="mailto:usman.saleem@uottawa.ca" class="social-pill" title="Email Usman" aria-label="Email Usman">
                 <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2">
                   <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
                   <polyline points="22,6 12,13 2,6"></polyline>
@@ -129,6 +154,22 @@
 
           </div>
 
+          <!-- Live Viscoelastic Strain Gauge Deck -->
+          <div class="face-telemetry-deck">
+            <div class="strain-meter-header">
+              <span>TENSILE STRAIN: <strong id="strain-val">0.0 MPa</strong></span>
+              <span>PULLS: <strong id="pull-count">0</strong></span>
+            </div>
+            <div class="strain-meter-bar">
+              <div id="strain-fill" class="strain-meter-fill"></div>
+            </div>
+            <div class="face-triggers-row">
+              <button type="button" id="btn-boop" class="face-trigger-btn">👉 Boop Nose</button>
+              <button type="button" id="btn-max-stretch" class="face-trigger-btn">⚡ Max Stretch</button>
+              <button type="button" id="btn-espresso" class="face-trigger-btn">☕ Espresso</button>
+            </div>
+          </div>
+
           <div class="hero-subhint">
             <span aria-hidden="true">🖐</span> Grab cheek or nose to stretch · Procedural rubber physics active
           </div>
@@ -151,18 +192,26 @@
       </section>
 
       <!-- ======================================================================
-           Showcase: Featured Projects (Container Queries & Stretched Links)
+           Showcase: Featured Projects with Category Filter Tabs
            ====================================================================== -->
       <section id="showcase" aria-labelledby="showcase-heading">
-        <div class="section-head">
-          <h2 id="showcase-heading" class="section-title">Some things I've built</h2>
-          <p class="section-subtitle">High-impact electromechanical automation, distributed intelligence, and robotics.</p>
+        <div class="section-head" style="display:flex; justify-content:space-between; align-items:flex-end; flex-wrap:wrap; gap:16px;">
+          <div>
+            <h2 id="showcase-heading" class="section-title">Some things I've built</h2>
+            <p class="section-subtitle">High-impact electromechanical automation, distributed intelligence, and robotics.</p>
+          </div>
+          <div class="filter-pills-row" role="tablist" aria-label="Project Categories">
+            <button type="button" class="filter-pill active" data-filter="all" role="tab" aria-selected="true">All (4)</button>
+            <button type="button" class="filter-pill" data-filter="erp" role="tab" aria-selected="false">ERP & Automation</button>
+            <button type="button" class="filter-pill" data-filter="webgl" role="tab" aria-selected="false">3D & WebGL</button>
+            <button type="button" class="filter-pill" data-filter="robotics" role="tab" aria-selected="false">Robotics & AI</button>
+          </div>
         </div>
 
         <div class="projects-grid">
           
-          <!-- Project 1 -->
-          <article class="project-card">
+          <!-- Project 1: ERP -->
+          <article class="project-card" data-category="erp">
             <div>
               <div class="project-meta">
                 <span class="project-badge">ENTERPRISE AUTOMATION</span>
@@ -185,8 +234,8 @@
             </div>
           </article>
 
-          <!-- Project 2 -->
-          <article class="project-card">
+          <!-- Project 2: WebGL CAD -->
+          <article class="project-card" data-category="webgl">
             <div>
               <div class="project-meta">
                 <span class="project-badge">3D DIGITAL TWIN</span>
@@ -211,8 +260,8 @@
             </div>
           </article>
 
-          <!-- Project 3 -->
-          <article class="project-card">
+          <!-- Project 3: Robotics -->
+          <article class="project-card" data-category="robotics">
             <div>
               <div class="project-meta">
                 <span class="project-badge">GRADUATE RESEARCH</span>
@@ -235,8 +284,8 @@
             </div>
           </article>
 
-          <!-- Project 4 -->
-          <article class="project-card">
+          <!-- Project 4: Agentic AI -->
+          <article class="project-card" data-category="erp">
             <div>
               <div class="project-meta">
                 <span class="project-badge">AGENTIC AI</span>
@@ -262,19 +311,61 @@
       </section>
 
       <!-- ======================================================================
-           Spotlight Banner: Interactive 3D CAD Operator
+           Playable Hardware Widget: ASSA ABLOY SL500 Sliding Door Console
            ====================================================================== -->
-      <section class="cad-banner" aria-label="3D CAD Feature">
-        <div class="cad-banner-content">
-          <div class="hero-tag" style="background:rgba(255,84,30,0.2); color:#ff7a4d; border-color:transparent;">DIGITAL TWIN SPOTLIGHT</div>
-          <h3>ASSA ABLOY SL500 Automatic Door Operator</h3>
-          <p>
-            Interact with the complete 3D electromechanical assembly right in your browser. Inspect motors, drive belts, microprocessors, and track geometry in real time.
-          </p>
+      <section id="simulator" class="sl500-simulator-card" aria-label="ASSA ABLOY SL500 Door Simulator">
+        <div class="simulator-header">
+          <div class="sim-title-group">
+            <div class="hero-tag" style="background:rgba(255,84,30,0.2); color:#ff7a4d; border-color:transparent; margin-bottom:8px;">
+              ELECTROMECHANICAL HARDWARE SIMULATOR
+            </div>
+            <h3>ASSA ABLOY SL500 Sliding Door Console</h3>
+            <p>Dual-leaf automatic operator simulation with radar actuation & safety photocells</p>
+          </div>
+          <div class="sim-telemetry-readout">
+            <div class="sim-telemetry-item">CYCLES: <strong id="sim-cycles">142</strong></div>
+            <div class="sim-telemetry-item">MOTOR PWM: <strong id="sim-pwm">0%</strong></div>
+            <div class="sim-telemetry-item">SAFETY BEAM: <strong id="sim-beam" style="color:var(--accent-green);">ARMED</strong></div>
+          </div>
         </div>
-        <button type="button" class="btn-primary open-cad-btn" command="show-modal" commandfor="cad-dialog" style="background:#ff541e; white-space:nowrap;">
-          Launch 3D Explorer 🚀
-        </button>
+
+        <!-- Animated Door Viewport Stage -->
+        <div id="door-stage" class="door-viewport-stage">
+          <div class="door-track-beam"></div>
+          <div id="door-radar" class="door-radar-sensor"></div>
+          <div class="door-leaf-container">
+            <div class="door-leaf left">
+              <div class="door-handle-decal"></div>
+            </div>
+            <div class="door-leaf right">
+              <div class="door-handle-decal"></div>
+            </div>
+          </div>
+          <div class="photocell-beam"></div>
+        </div>
+
+        <!-- Console Control Row -->
+        <div class="simulator-console-row">
+          <div class="sim-actions-group">
+            <button type="button" id="btn-trigger-radar" class="sim-btn-trigger">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M2 12h2a8 8 0 0 1 8-8V2M2 12a10 10 0 0 1 10 10v-2M12 2a10 10 0 0 1 10 10h-2M12 22a8 8 0 0 0 8-8h2"></path>
+              </svg>
+              <span>🚶 Approach Radar</span>
+            </button>
+
+            <div class="sim-mode-group" role="radiogroup" aria-label="Door Operating Modes">
+              <button type="button" class="sim-mode-btn active" data-mode="AUTO" role="radio" aria-checked="true">AUTO</button>
+              <button type="button" class="sim-mode-btn" data-mode="HOLD" role="radio" aria-checked="false">HOLD OPEN</button>
+              <button type="button" class="sim-mode-btn" data-mode="EXIT" role="radio" aria-checked="false">EXIT ONLY</button>
+              <button type="button" class="sim-mode-btn" data-mode="LOCK" role="radio" aria-checked="false">LOCKED</button>
+            </div>
+          </div>
+
+          <button type="button" class="btn-secondary open-cad-btn" command="show-modal" commandfor="cad-dialog" style="border-color:rgba(255,255,255,0.2); color:#ffffff; font-size:0.8rem; padding:8px 16px;">
+            Explore 3D Assembly ↗
+          </button>
+        </div>
       </section>
 
       <!-- ======================================================================

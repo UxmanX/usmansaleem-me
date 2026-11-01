@@ -6,7 +6,7 @@
   <meta name="description" content="Usman Saleem, MEng — Key Accounts Project Coordinator at ASSA ABLOY Entrance Systems & Autonomous Systems Engineer. Interactive WebGL portfolio.">
   <meta name="author" content="Usman Saleem">
   <meta name="theme-color" content="#ff541e">
-  <title>Usman Saleem, MEng | Key Accounts Project Coordinator & Autonomous Systems</title>
+  <title>Usman Saleem, MEng | Key Accounts Project Coordinator &amp; Autonomous Systems</title>
 
   <!-- Google Fonts: Plus Jakarta Sans, Inter, JetBrains Mono -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -47,7 +47,7 @@
           <li><a href="#contact" class="nav-link">Contact</a></li>
           <li><a href="assets/Usman_Saleem_MEng_Resume.pdf" download="Usman_Saleem_MEng_Resume.pdf" class="nav-link">Resume</a></li>
           <li>
-            <button id="sound-toggle" class="audio-toggle-btn" type="button" aria-pressed="true" title="Toggle rubber toy & mechanical sound effects">
+            <button id="sound-toggle" class="audio-toggle-btn" type="button" aria-pressed="true" title="Toggle rubber toy &amp; mechanical sound effects">
               <span class="sound-icon" aria-hidden="true">🔊</span>
               <span class="sound-label">Audio: On</span>
             </button>
@@ -61,7 +61,7 @@
          ====================================================================== -->
     <main role="main">
       <section class="hero-card" aria-label="Introduction">
-        
+
         <!-- Left Column: Copy & CTAs -->
         <div class="hero-content">
           <div class="hero-tag">
@@ -118,13 +118,13 @@
 
             <div class="social-pills">
               <a href="https://github.com/UxmanX" target="_blank" rel="noopener" class="social-pill" title="GitHub (@UxmanX)" aria-label="GitHub">
-                <svg viewBox="0 0 24 24" width="17" height="17" fill="currentColor">
+                <svg viewBox="0 0 24 24" width="17" height="17" fill="currentColor" aria-hidden="true">
                   <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
                 </svg>
               </a>
 
               <a href="mailto:usman.saleem@uottawa.ca" class="social-pill" title="Email Usman" aria-label="Email Usman">
-                <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2">
+                <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                   <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
                   <polyline points="22,6 12,13 2,6"></polyline>
                 </svg>
@@ -136,42 +136,62 @@
         <!-- Right Column: Interactive Elastic Face (Plushie) -->
         <div class="hero-stage">
           <div class="plush-container">
-            
+
             <!-- Speech reaction bubble -->
             <div id="hero-bubble" class="hero-bubble" aria-live="polite">
-              <span id="hero-bubble-kicker" class="hero-bubble-kicker">PSST.</span>
-              <span id="hero-bubble-text" class="hero-bubble-text">Click and pull my face like elastic!</span>
+              <div class="hero-bubble-top">
+                <span id="hero-bubble-kicker" class="hero-bubble-kicker">PSST.</span>
+                <span id="face-state-pill" class="face-state-pill">SMILE</span>
+              </div>
+              <span id="hero-bubble-text" class="hero-bubble-text">Grab &amp; pull my cheek like elastic!</span>
             </div>
 
             <!-- The WebGL Plush Element -->
             <div class="plush" id="usman-plush" data-frame="circle">
               <div class="plush-frame"></div>
-              <!-- Fallback photo if WebGL is unavailable -->
-              <img src="assets/usman_smile.webp" alt="Usman Saleem, MEng" style="display:none; width:100%; height:100%; object-fit:cover; border-radius:50%;">
+              <!-- Fallback photo shown until WebGL initializes or if unavailable -->
+              <img src="assets/usman_smile.webp" alt="Usman Saleem, MEng" draggable="false">
               <canvas role="img" aria-label="Interactive 3D elastic face of Usman Saleem"></canvas>
-              <button type="button" class="plush-hit" aria-label="Poke Usman"></button>
+              <button type="button" class="plush-hit" aria-label="Grab, poke, or stretch Usman's face"></button>
+
+              <!-- Idle Act Prop: Phantom Hand / Touch Tip -->
+              <svg class="plush-ghost" id="plush-ghost" viewBox="0 0 32 32" aria-hidden="true">
+                <path class="open" d="M14 4a2 2 0 0 1 4 0v8h1.5a2 2 0 0 1 2 2v1h1.5a2 2 0 0 1 2 2v5.5a7.5 7.5 0 0 1-7.5 7.5h-3A7.5 7.5 0 0 1 7 22.5V16a2 2 0 0 1 4 0v3h1V7a2 2 0 0 1 2-2V4z"/>
+                <path class="grab" d="M9 14a2 2 0 0 1 3.5-1.3A2 2 0 0 1 16 12a2 2 0 0 1 3.5 1 2 2 0 0 1 3.5 1.5v6a7.5 7.5 0 0 1-7.5 7.5h-2A6.5 6.5 0 0 1 7 21.5v-5A2.5 2.5 0 0 1 9 14z"/>
+                <circle class="tip" cx="16" cy="16" r="10"/>
+              </svg>
+
+              <!-- Idle Act Prop: Buzzing Fly -->
+              <svg class="plush-fly" id="plush-fly" viewBox="0 0 32 32" aria-hidden="true">
+                <ellipse class="wing left" cx="11" cy="12" rx="6" ry="3.4"/>
+                <ellipse class="wing right" cx="21" cy="12" rx="6" ry="3.4"/>
+                <ellipse class="body" cx="16" cy="16.5" rx="3.8" ry="5.2"/>
+                <circle class="eye" cx="14.4" cy="12.5" r="1.3"/>
+                <circle class="eye" cx="17.6" cy="12.5" r="1.3"/>
+              </svg>
             </div>
 
           </div>
 
           <!-- Live Viscoelastic Strain Gauge Deck -->
-          <div class="face-telemetry-deck">
+          <div class="face-telemetry-deck" aria-label="Viscoelastic Face Telemetry">
             <div class="strain-meter-header">
-              <span>TENSILE STRAIN: <strong id="strain-val">0.0 MPa</strong></span>
+              <span>STRESS: <strong id="strain-val">0.0 MPa</strong> <em id="strain-pct" class="strain-pct">(0%)</em></span>
               <span>PULLS: <strong id="pull-count">0</strong></span>
             </div>
-            <div class="strain-meter-bar">
+            <div class="strain-meter-bar" role="progressbar" aria-label="Tensile Stress MPa" aria-valuemin="0" aria-valuemax="12.4" aria-valuenow="0">
               <div id="strain-fill" class="strain-meter-fill"></div>
             </div>
             <div class="face-triggers-row">
-              <button type="button" id="btn-boop" class="face-trigger-btn">👉 Boop Nose</button>
-              <button type="button" id="btn-max-stretch" class="face-trigger-btn">⚡ Max Stretch</button>
-              <button type="button" id="btn-espresso" class="face-trigger-btn">☕ Espresso</button>
+              <button type="button" id="btn-boop" class="face-trigger-btn" title="Poke nose sensor">👉 Boop Nose</button>
+              <button type="button" id="btn-max-stretch" class="face-trigger-btn" title="Execute 12.4 MPa max stretch">⚡ Max Stretch</button>
+              <button type="button" id="btn-espresso" class="face-trigger-btn" title="Inject double espresso overclock">☕ Espresso</button>
+              <button type="button" id="btn-wireframe" class="face-trigger-btn" aria-pressed="false" title="Toggle 72x72 WebGL continuum mesh">🕸️ Mesh</button>
             </div>
           </div>
 
           <div class="hero-subhint">
-            <span aria-hidden="true">🖐</span> Grab cheek or nose to stretch · Procedural rubber physics active
+            <span aria-hidden="true">🖐</span> Drag cheek or chin in any direction · Damped wave physics active
           </div>
         </div>
 
@@ -181,7 +201,7 @@
            Featured Badges: Systems & Frameworks
            ====================================================================== -->
       <section class="featured-strip" aria-label="Organizations and Frameworks">
-        <div class="featured-label">ENGINEERING CREDENTIALS & INDUSTRY DEPLOYMENTS</div>
+        <div class="featured-label">ENGINEERING CREDENTIALS &amp; INDUSTRY DEPLOYMENTS</div>
         <div class="featured-logos">
           <div class="featured-logo-item">ASSA ABLOY Entrance Systems</div>
           <div class="featured-logo-item">University of Ottawa · MEng</div>
@@ -195,21 +215,21 @@
            Showcase: Featured Projects with Category Filter Tabs
            ====================================================================== -->
       <section id="showcase" aria-labelledby="showcase-heading">
-        <div class="section-head" style="display:flex; justify-content:space-between; align-items:flex-end; flex-wrap:wrap; gap:16px;">
+        <div class="section-head">
           <div>
             <h2 id="showcase-heading" class="section-title">Some things I've built</h2>
             <p class="section-subtitle">High-impact electromechanical automation, distributed intelligence, and robotics.</p>
           </div>
           <div class="filter-pills-row" role="tablist" aria-label="Project Categories">
             <button type="button" class="filter-pill active" data-filter="all" role="tab" aria-selected="true">All (4)</button>
-            <button type="button" class="filter-pill" data-filter="erp" role="tab" aria-selected="false">ERP & Automation</button>
-            <button type="button" class="filter-pill" data-filter="webgl" role="tab" aria-selected="false">3D & WebGL</button>
-            <button type="button" class="filter-pill" data-filter="robotics" role="tab" aria-selected="false">Robotics & AI</button>
+            <button type="button" class="filter-pill" data-filter="erp" role="tab" aria-selected="false">ERP &amp; Automation</button>
+            <button type="button" class="filter-pill" data-filter="webgl" role="tab" aria-selected="false">3D &amp; WebGL</button>
+            <button type="button" class="filter-pill" data-filter="robotics" role="tab" aria-selected="false">Robotics &amp; AI</button>
           </div>
         </div>
 
         <div class="projects-grid">
-          
+
           <!-- Project 1: ERP -->
           <article class="project-card" data-category="erp">
             <div>
@@ -218,7 +238,7 @@
                 <span class="project-metric">99.8% PRECISION</span>
               </div>
               <h3 class="project-title">
-                <a href="#showcase" class="card-link">ASSA ABLOY Operations Dispatcher & Invoicing Intelligence</a>
+                <a href="#simulator" class="card-link">ASSA ABLOY Operations Dispatcher &amp; Invoicing Intelligence</a>
               </h3>
               <p class="project-desc">
                 High-throughput operational data hub uniting Baan IV ERP, SSRS reporting telemetry, and field service management. Eliminates manual dispatch errors and guarantees deterministic pricing reconciliation across Canada.
@@ -242,7 +262,7 @@
                 <span class="project-metric">60 FPS WEBGL</span>
               </div>
               <h3 class="project-title">
-                <a href="#showcase" class="card-link">ASSA ABLOY SL500 Electromechanical 3D Simulator</a>
+                <a href="#simulator" class="card-link">ASSA ABLOY SL500 Electromechanical 3D Simulator</a>
               </h3>
               <p class="project-desc">
                 Interactive real-time 3D CAD digital twin of the commercial SL500 automatic sliding door operator. Features orbital controls, dynamic exploded assembly view, wireframe mode, and mechanical servo sound synthesis.
@@ -254,7 +274,7 @@
                 <span class="project-tag">CAD / GLTF</span>
                 <span class="project-tag">WebGL</span>
               </div>
-              <button type="button" class="btn-primary open-cad-btn" command="show-modal" commandfor="cad-dialog" style="padding:6px 14px; font-size:0.8rem;">
+              <button type="button" class="btn-primary open-cad-btn project-cad-btn" command="show-modal" commandfor="cad-dialog">
                 Open 3D Model ↗
               </button>
             </div>
@@ -268,7 +288,7 @@
                 <span class="project-metric">uOTTAWA MEng</span>
               </div>
               <h3 class="project-title">
-                <a href="#showcase" class="card-link">Autonomous Swarm Robotics & Kinematic Trajectory Engine</a>
+                <a href="#about" class="card-link">Autonomous Swarm Robotics &amp; Kinematic Trajectory Engine</a>
               </h3>
               <p class="project-desc">
                 Multi-agent robotic trajectory planning, obstacle avoidance algorithms, and kinematic modeling developed for autonomous systems. Evaluated on simulated multi-rover environments with decentralized state machines.
@@ -285,23 +305,23 @@
           </article>
 
           <!-- Project 4: Agentic AI -->
-          <article class="project-card" data-category="erp">
+          <article class="project-card" data-category="robotics" data-category-alt="erp">
             <div>
               <div class="project-meta">
                 <span class="project-badge">AGENTIC AI</span>
-                <span class="project-metric">0% PRO QUOTA</span>
+                <span class="project-metric">ZERO MARGINAL COST</span>
               </div>
               <h3 class="project-title">
-                <a href="#showcase" class="card-link">Distributed Multi-Agent Engineering Bridge</a>
+                <a href="https://github.com/UxmanX" target="_blank" rel="noopener" class="card-link">Distributed Multi-Agent Engineering Bridge</a>
               </h3>
               <p class="project-desc">
-                High-concurrency distributed engineering harness orchestrating Microsoft Copilot Sol 6.1, Google AI Studio pooled key clusters, and AST code verification pipelines with zero marginal compute cost.
+                High-concurrency distributed engineering harness orchestrating multi-model reasoning clusters, automated CAD/ERP verification scripts, and AST code verification pipelines with deterministic reliability.
               </p>
             </div>
             <div class="project-footer">
               <div class="project-tags">
                 <span class="project-tag">Distributed Systems</span>
-                <span class="project-tag">Substrate</span>
+                <span class="project-tag">Agentic AI</span>
                 <span class="project-tag">AST Patching</span>
               </div>
             </div>
@@ -316,42 +336,74 @@
       <section id="simulator" class="sl500-simulator-card" aria-label="ASSA ABLOY SL500 Door Simulator">
         <div class="simulator-header">
           <div class="sim-title-group">
-            <div class="hero-tag" style="background:rgba(255,84,30,0.2); color:#ff7a4d; border-color:transparent; margin-bottom:8px;">
+            <div class="hero-tag sim-kicker-tag">
+              <span class="sim-live-dot" aria-hidden="true"></span>
               ELECTROMECHANICAL HARDWARE SIMULATOR
             </div>
             <h3>ASSA ABLOY SL500 Sliding Door Console</h3>
-            <p>Dual-leaf automatic operator simulation with radar actuation & safety photocells</p>
+            <p>Dual-leaf commercial operator with microwave Doppler radar &amp; active photocell auto-reverse</p>
           </div>
-          <div class="sim-telemetry-readout">
+          <div class="sim-telemetry-readout" aria-live="polite">
             <div class="sim-telemetry-item">CYCLES: <strong id="sim-cycles">142</strong></div>
             <div class="sim-telemetry-item">MOTOR PWM: <strong id="sim-pwm">0%</strong></div>
-            <div class="sim-telemetry-item">SAFETY BEAM: <strong id="sim-beam" style="color:var(--accent-green);">ARMED</strong></div>
+            <div class="sim-telemetry-item">APERTURE: <strong id="sim-aperture">0%</strong></div>
+            <div class="sim-telemetry-item">SAFETY BEAM: <strong id="sim-beam" class="beam-status-armed">ARMED</strong></div>
           </div>
         </div>
 
         <!-- Animated Door Viewport Stage -->
-        <div id="door-stage" class="door-viewport-stage">
-          <div class="door-track-beam"></div>
-          <div id="door-radar" class="door-radar-sensor"></div>
+        <div id="door-stage" class="door-viewport-stage" role="region" aria-label="Interactive Sliding Door Viewport">
+          <!-- Architectural Background Grid & Threshold Markings -->
+          <div class="door-stage-grid" aria-hidden="true"></div>
+
+          <!-- Overhead SL500 Extruded Aluminum Header Track -->
+          <div class="door-track-beam">
+            <span class="track-model-label">ASSA ABLOY SL500 · DRIVE UNIT</span>
+            <div class="track-belt- carriage-indicator" id="sim-drive-led"></div>
+            <span class="track-lock-badge" id="sim-lock-badge">UNLOCKED</span>
+          </div>
+
+          <!-- Microwave Doppler Radar Sensor + Emitted Wave Rings -->
+          <div id="door-radar" class="door-radar-sensor" title="Microwave Doppler Motion Sensor">
+            <span class="radar-wave wave-1"></span>
+            <span class="radar-wave wave-2"></span>
+            <span class="radar-wave wave-3"></span>
+          </div>
+
+          <!-- Dual Sliding Glass Leaves -->
           <div class="door-leaf-container">
             <div class="door-leaf left">
+              <div class="door-safety-stripe"></div>
               <div class="door-handle-decal"></div>
+              <span class="leaf-code">LEAF-L</span>
             </div>
             <div class="door-leaf right">
+              <div class="door-safety-stripe"></div>
               <div class="door-handle-decal"></div>
+              <span class="leaf-code">LEAF-R</span>
             </div>
           </div>
-          <div class="photocell-beam"></div>
+
+          <!-- Interactive Photocell Emitter/Receiver & Laser Beam -->
+          <div class="photocell-node left" aria-hidden="true" title="Photocell Emitter"></div>
+          <div class="photocell-node right" aria-hidden="true" title="Photocell Receiver"></div>
+          <div id="photocell-beam" class="photocell-beam" title="Click to test photocell obstruction auto-reverse">
+            <span class="photocell-label" id="sim-stage-banner">IR SAFETY CURTAIN ACTIVE</span>
+          </div>
         </div>
 
         <!-- Console Control Row -->
         <div class="simulator-console-row">
           <div class="sim-actions-group">
             <button type="button" id="btn-trigger-radar" class="sim-btn-trigger">
-              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
                 <path d="M2 12h2a8 8 0 0 1 8-8V2M2 12a10 10 0 0 1 10 10v-2M12 2a10 10 0 0 1 10 10h-2M12 22a8 8 0 0 0 8-8h2"></path>
               </svg>
               <span>🚶 Approach Radar</span>
+            </button>
+
+            <button type="button" id="btn-trip-beam" class="sim-btn-obstruction" title="Simulate pedestrian or cart obstructing the doorway">
+              <span>🚧 Trip Safety Beam</span>
             </button>
 
             <div class="sim-mode-group" role="radiogroup" aria-label="Door Operating Modes">
@@ -362,7 +414,7 @@
             </div>
           </div>
 
-          <button type="button" class="btn-secondary open-cad-btn" command="show-modal" commandfor="cad-dialog" style="border-color:rgba(255,255,255,0.2); color:#ffffff; font-size:0.8rem; padding:8px 16px;">
+          <button type="button" class="btn-secondary open-cad-btn sim-cad-launch-btn" command="show-modal" commandfor="cad-dialog">
             Explore 3D Assembly ↗
           </button>
         </div>
@@ -386,8 +438,8 @@
         </div>
 
         <div class="about-col">
-          <h3>Technical Stack & Methodologies</h3>
-          <p style="font-size:0.88rem; color:var(--text-faint);">CORE COMPETENCIES & INDUSTRY TOOLS</p>
+          <h3>Technical Stack &amp; Methodologies</h3>
+          <p class="about-kicker">CORE COMPETENCIES &amp; INDUSTRY TOOLS</p>
 
           <div class="skills-cloud">
             <span class="skill-pill featured">ASSA ABLOY SL500</span>
@@ -395,7 +447,7 @@
             <span class="skill-pill featured">Autonomous Robotics</span>
             <span class="skill-pill">SolidWorks CAD</span>
             <span class="skill-pill">AutoCAD</span>
-            <span class="skill-pill">GD&T Standards</span>
+            <span class="skill-pill">GD&amp;T Standards</span>
             <span class="skill-pill">Baan IV ERP</span>
             <span class="skill-pill">Python 3.12</span>
             <span class="skill-pill">C++</span>
@@ -406,8 +458,8 @@
             <span class="skill-pill">Git / DevOps</span>
           </div>
 
-          <div style="margin-top: 28px;">
-            <a href="assets/Usman_Saleem_MEng_Resume.pdf" download="Usman_Saleem_MEng_Resume.pdf" class="btn-secondary" style="width: 100%; justify-content: center;">
+          <div class="about-cta-wrap">
+            <a href="assets/Usman_Saleem_MEng_Resume.pdf" download="Usman_Saleem_MEng_Resume.pdf" class="btn-secondary about-resume-btn">
               Download Complete Resume Dossier (PDF)
             </a>
           </div>
@@ -424,7 +476,7 @@
         </div>
         <div class="contact-actions">
           <button id="copy-email-btn" class="copy-email-btn" type="button" aria-label="Copy Usman's email address">
-            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
               <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
               <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
             </svg>
@@ -444,11 +496,12 @@
     <footer class="site-footer" role="contentinfo">
       <div class="footer-left">
         <span class="handle-dot" aria-hidden="true"></span>
-        <span class="footer-copy">© 2026 Usman Saleem, MEng · Built with pure WebGL & 0% bloat.</span>
+        <span class="footer-copy">© 2026 Usman Saleem, MEng · Built with pure WebGL &amp; 0% bloat.</span>
       </div>
 
       <ul class="footer-links">
         <li><a href="#showcase" class="footer-link">Showcase</a></li>
+        <li><a href="#simulator" class="footer-link">SL500 Sim</a></li>
         <li><a href="#about" class="footer-link">About</a></li>
         <li><a href="https://github.com/UxmanX" target="_blank" rel="noopener" class="footer-link">GitHub</a></li>
         <li><a href="mailto:usman.saleem@uottawa.ca" class="footer-link">Email</a></li>

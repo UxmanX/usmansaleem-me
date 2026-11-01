@@ -320,15 +320,141 @@ async function initPlushFace() {
       maxPull: 0.62
     });
 
+    // Expose globally for browser console and external tools
+    window.plushInstance = plushInstance;
+
+    // Mark plush live and STRICTLY hide any background fallback photo
+    root.classList.add("is-live");
+    root.classList.remove("no-webgl");
+    const photo = root.querySelector("img");
+    if (photo) {
+      photo.style.display = "none";
+      photo.style.visibility = "hidden";
+    }
+
     squeakInstance = attachSqueak(plushInstance, { volume: 0.65 });
 
+    /* ----------------------------------------------------------------------
+       EXPRESSION CONTROLLER (Smile, Shock, Ouch, Annoyed, Dizzy)
+       ---------------------------------------------------------------------- */
+    const EXPRESSIONS = {
+      smile: {
+        label: "SMILE",
+        icon: "😊",
+        kicker: "NATURAL",
+        quote: "Optimal resting state! Drag my cheek to stretch.",
+        sound: () => soundSynth.playRadarChirp(1200, 1600)
+      },
+      shock: {
+        label: "SHOCK",
+        icon: "😲",
+        kicker: "SURPRISED!",
+        quote: "Woah! Did you see that sudden displacement?",
+        sound: () => soundSynth.playBoop()
+      },
+      ouch: {
+        label: "OUCH",
+        icon: "😣",
+        kicker: "TENSION!",
+        quote: "Ouch! Tensile shear limit approaching 12.4 MPa!",
+        sound: () => soundSynth.playWarningBuzz()
+      },
+      annoyed: {
+        label: "ANNOYED",
+        icon: "😒",
+        kicker: "SKEPTICAL",
+        quote: "Continuous prodding detected. Can we build something?",
+        sound: () => soundSynth.playServoHum(0.4)
+      },
+      dizzy: {
+        label: "DIZZY",
+        icon: "😵",
+        kicker: "OVERLOAD!",
+        quote: "Buffer overflow! Vertices oscillating at 40 Hz!",
+        sound: () => soundSynth.playEspressoArpeggio()
+      }
+    };
+
+    let activeExpression = "smile";
+
+    function setExpression(name, playAudio = true) {
+      if (!EXPRESSIONS[name]) return;
+      activeExpression = name;
+      const meta = EXPRESSIONS[name];
+
+      // 1. Tell plushie WebGL engine to cross-fade into new expression
+      if (typeof plushInstance.setFace === "function") {
+        plushInstance.setFace(name, 160);
+      }
+
+      // 2. Update UI Expression Buttons
+      document.querySelectorAll(".expr-btn").forEach((btn) => {
+        const isMatch = btn.getAttribute("data-face") === name;
+        btn.classList.toggle("active", isMatch);
+        btn.setAttribute("aria-pressed", isMatch ? "true" : "false");
+      });
+
+      // 3. Update Face State Pill in Speech Bubble
+      const pill = document.getElementById("face-state-pill");
+      if (pill) {
+        pill.innerHTML = `${meta.label} &#9662;`;
+        pill.setAttribute("aria-label", `Current expression: ${meta.label}. Click to cycle.`);
+      }
+
+      // 4. Update Speech Bubble
+      setSpeech(meta.kicker, meta.quote, "var(--brand-orange)");
+
+      // 5. Sound cue
+      if (playAudio && typeof meta.sound === "function") {
+        meta.sound();
+      }
+    }
+
+    window.setExpression = setExpression;
+
+    // Click handler for expression buttons
+    document.querySelectorAll(".expr-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const face = btn.getAttribute("data-face");
+        setExpression(face, true);
+      });
+    });
+
+    // Click handler on Face State Pill to cycle expressions
+    const facePill = document.getElementById("face-state-pill");
+    if (facePill) {
+      const faceKeys = Object.keys(EXPRESSIONS);
+      facePill.addEventListener("click", () => {
+        const curIdx = faceKeys.indexOf(activeExpression);
+        const nextIdx = (curIdx + 1) % faceKeys.length;
+        setExpression(faceKeys[nextIdx], true);
+      });
+    }
+
+    // React to engine-driven expression changes (e.g. idle acts or reactions)
+    if (typeof plushInstance.on === "function") {
+      plushInstance.on("facechange", ({ face }) => {
+        if (face && EXPRESSIONS[face] && face !== activeExpression) {
+          activeExpression = face;
+          const meta = EXPRESSIONS[face];
+          const pill = document.getElementById("face-state-pill");
+          if (pill) pill.innerHTML = `${meta.label} &#9662;`;
+          document.querySelectorAll(".expr-btn").forEach((btn) => {
+            btn.classList.toggle("active", btn.getAttribute("data-face") === face);
+          });
+        }
+      });
+    }
+
+    /* ----------------------------------------------------------------------
+       POINTER DRAG TELEMETRY & DYNAMIC EXPRESSION MORPHING
+       ---------------------------------------------------------------------- */
     let isDragging = false;
     let startX = 0;
     let startY = 0;
     let peakStress = 0;
     let resetTimer = null;
 
-    // Pointer Drag Telemetry
     hit.addEventListener("pointerdown", (e) => {
       isDragging = true;
       startX = e.clientX;
@@ -336,7 +462,10 @@ async function initPlushFace() {
       peakStress = 0.6;
       updateStrainUI(0.6);
       clearTimeout(resetTimer);
-      setSpeech("HOLD ON...", "You grabbed my face! Stretching vertices...", "var(--brand-orange)");
+      if (typeof plushInstance.react === "function") {
+        plushInstance.react("shock", 400);
+      }
+      setSpeech("HOLD ON...", "You grabbed my face! Stretching viscoelastic vertices...", "var(--brand-orange)");
     });
 
     window.addEventListener("pointermove", (e) => {
@@ -351,8 +480,12 @@ async function initPlushFace() {
 
       updateStrainUI(stress);
 
+      // Dynamic reactive expressions during pull
       if (stress > 7.5) {
+        if (typeof plushInstance.react === "function") plushInstance.react("ouch", 600);
         setSpeech("CRITICAL!", "Please don't pull too much. It hurts!", "var(--brand-orange)");
+      } else if (stress > 3.0) {
+        if (typeof plushInstance.react === "function") plushInstance.react("shock", 400);
       }
     });
 
@@ -365,6 +498,11 @@ async function initPlushFace() {
         pullCount += 1;
         localStorage.setItem(PULL_STORAGE_KEY, String(pullCount));
         if (pullCountEl) pullCountEl.textContent = String(pullCount);
+
+        // React with dizzy/dazed if pulled hard
+        if (finalPeak > 6.5 && typeof plushInstance.react === "function") {
+          plushInstance.react("dizzy", 1800);
+        }
 
         // Check milestone or quote pool
         if (quotes.milestones[pullCount]) {
@@ -379,8 +517,12 @@ async function initPlushFace() {
         }
 
         resetTimer = setTimeout(() => {
+          // Gracefully return to user's selected expression
+          if (typeof plushInstance.setFace === "function") {
+            plushInstance.setFace(activeExpression, 220);
+          }
           setSpeech("PSST.", "Click and pull my face like elastic!");
-        }, 4000);
+        }, 3200);
       }
 
       animateDecay(finalPeak);
@@ -461,7 +603,6 @@ async function initPlushFace() {
         if (isAudioEnabled) soundSynth.playRadarChirp(1400, 1800);
       });
     }
-
   } catch (err) {
     console.warn("Plushie WebGL initialization fallback:", err);
     const photo = root.querySelector("img");

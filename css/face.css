@@ -55,12 +55,22 @@
   clip-path: inset(0 calc(var(--frame-right) * 100%) 0 calc(var(--frame-left) * 100%));
 }
 
-.plush > img,
+.plush > img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: none !important;
+  visibility: hidden !important;
+}
+
+.plush.no-webgl > img {
+  display: block !important;
+  visibility: visible !important;
+  z-index: 2;
+}
+
 .plush-hit { position: absolute; inset: 0; width: 100%; height: 100%; }
-/* The photograph is him until the engine is running: it goes where the
- * canvas will, between the two planes a page can lay things in (1 behind
- * him, 4 in front; see template-parts/content/portrait.php). */
-.plush > img { z-index: 2; }
 /* Where he can be touched (a button with nothing of a button's looks): the
  * same shape, so a finger in the empty corners is the page's. On him, swipes
  * up and down still scroll the page and pinches still zoom it; sideways

@@ -561,6 +561,13 @@ body {
 
 .plush > img {
   object-fit: cover;
+  display: none !important;
+  visibility: hidden !important;
+}
+
+.plush.no-webgl > img {
+  display: block !important;
+  visibility: visible !important;
 }
 
 /* Speech Pitch Bubble with Pointer Beak */
@@ -577,8 +584,7 @@ body {
   font-size: 0.75rem;
   max-width: 175px;
   z-index: 10;
-  pointer-events: none;
-  animation: floatBubble 4s ease-in-out infinite;
+  pointer-events: auto;
   transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
@@ -630,13 +636,26 @@ body {
 
 .face-state-pill {
   font-family: var(--font-mono);
-  font-size: 0.6rem;
+  font-size: 0.62rem;
   font-weight: 700;
-  padding: 1px 6px;
+  padding: 2px 8px;
   border-radius: 999px;
   background: var(--bg-card-subtle);
-  color: var(--text-muted);
-  border: 1px solid var(--border-light);
+  color: var(--brand-orange);
+  border: 1px solid rgba(255, 84, 30, 0.35);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  user-select: none;
+}
+
+.face-state-pill:hover {
+  background: var(--brand-orange);
+  color: #fff;
+  border-color: var(--brand-orange);
+  transform: translateY(-1px);
 }
 
 .hero-bubble-text {
@@ -649,6 +668,72 @@ body {
 @keyframes floatBubble {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-4px); }
+}
+
+
+/* Interactive Facial Expressions Switcher Toolbar */
+.face-expressions-deck {
+  width: 100%;
+  max-width: 340px;
+  margin-top: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.deck-label {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  color: var(--text-muted);
+}
+
+.face-expressions-row {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+.expr-btn {
+  flex: 1 1 auto;
+  min-width: 58px;
+  padding: 6px 8px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  font-family: var(--font-sans);
+  border-radius: 8px;
+  border: 1px solid var(--border-light);
+  background: var(--bg-card);
+  color: var(--text-main);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+  user-select: none;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.expr-btn:hover {
+  border-color: var(--brand-orange);
+  color: var(--brand-orange);
+  background: rgba(255, 84, 30, 0.06);
+  transform: translateY(-1px);
+}
+
+.expr-btn.active {
+  background: var(--brand-orange);
+  color: #fff;
+  border-color: var(--brand-orange);
+  box-shadow: 0 2px 8px rgba(255, 84, 30, 0.35);
+  transform: translateY(-1px);
+}
+
+.expr-btn:active {
+  transform: translateY(0);
 }
 
 /* Live Viscoelastic Strain Gauge Bar */

@@ -141,7 +141,7 @@
             <div id="hero-bubble" class="hero-bubble" aria-live="polite">
               <div class="hero-bubble-top">
                 <span id="hero-bubble-kicker" class="hero-bubble-kicker">PSST.</span>
-                <span id="face-state-pill" class="face-state-pill">SMILE</span>
+                <button type="button" id="face-state-pill" class="face-state-pill" title="Click to cycle expression" aria-label="Current expression: SMILE. Click to cycle.">SMILE &#9662;</button>
               </div>
               <span id="hero-bubble-text" class="hero-bubble-text">Grab &amp; pull my cheek like elastic!</span>
             </div>
@@ -150,7 +150,7 @@
             <div class="plush" id="usman-plush" data-frame="circle">
               <div class="plush-frame"></div>
               <!-- Fallback photo shown until WebGL initializes or if unavailable -->
-              <img src="assets/usman_smile.webp" alt="Usman Saleem, MEng" draggable="false">
+              <img src="assets/usman_smile.webp" alt="Usman Saleem, MEng" draggable="false" style="display: none;">
               <canvas role="img" aria-label="Interactive 3D elastic face of Usman Saleem"></canvas>
               <button type="button" class="plush-hit" aria-label="Grab, poke, or stretch Usman's face"></button>
 
@@ -173,6 +173,18 @@
 
           </div>
 
+                    <!-- Interactive Facial Expression Bar -->
+          <div class="face-expressions-deck" aria-label="Facial Expressions Toolbar">
+            <div class="deck-label">EXPRESSIONS:</div>
+            <div class="face-expressions-row" role="group" aria-label="Select Facial Expression">
+              <button type="button" class="expr-btn active" data-face="smile" title="Natural Smile">&#128522; Smile</button>
+              <button type="button" class="expr-btn" data-face="shock" title="Surprised / Shocked">&#128552; Shock</button>
+              <button type="button" class="expr-btn" data-face="ouch" title="Ouch / Tensile Strain">&#128547; Ouch</button>
+              <button type="button" class="expr-btn" data-face="annoyed" title="Skeptical / Annoyed">&#128530; Annoyed</button>
+              <button type="button" class="expr-btn" data-face="dizzy" title="Overclocked / Dizzy">&#128565; Dizzy</button>
+            </div>
+          </div>
+
           <!-- Live Viscoelastic Strain Gauge Deck -->
           <div class="face-telemetry-deck" aria-label="Viscoelastic Face Telemetry">
             <div class="strain-meter-header">
@@ -183,15 +195,15 @@
               <div id="strain-fill" class="strain-meter-fill"></div>
             </div>
             <div class="face-triggers-row">
-              <button type="button" id="btn-boop" class="face-trigger-btn" title="Poke nose sensor">👉 Boop Nose</button>
-              <button type="button" id="btn-max-stretch" class="face-trigger-btn" title="Execute 12.4 MPa max stretch">⚡ Max Stretch</button>
-              <button type="button" id="btn-espresso" class="face-trigger-btn" title="Inject double espresso overclock">☕ Espresso</button>
-              <button type="button" id="btn-wireframe" class="face-trigger-btn" aria-pressed="false" title="Toggle 72x72 WebGL continuum mesh">🕸️ Mesh</button>
+              <button type="button" id="btn-boop" class="face-trigger-btn" title="Poke nose sensor">&#128073; Boop Nose</button>
+              <button type="button" id="btn-max-stretch" class="face-trigger-btn" title="Execute 12.4 MPa max stretch">&#9889; Max Stretch</button>
+              <button type="button" id="btn-espresso" class="face-trigger-btn" title="Inject double espresso overclock">&#9749; Espresso</button>
+              <button type="button" id="btn-wireframe" class="face-trigger-btn" aria-pressed="false" title="Toggle 72x72 WebGL continuum mesh">&#128295; Mesh</button>
             </div>
           </div>
 
           <div class="hero-subhint">
-            <span aria-hidden="true">🖐</span> Drag cheek or chin in any direction · Damped wave physics active
+            <span aria-hidden="true">&#128070;</span> Drag cheek or chin in any direction &middot; Damped viscoelastic physics
           </div>
         </div>
 

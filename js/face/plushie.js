@@ -351,7 +351,7 @@ export async function createPlushie(canvas, options = {}) {
   // the eye sheet, arrive in their own time and switch themselves on as they
   // do; one that fails to load is simply a reaction he doesn't have.
   const wanted = Object.keys(opt.faces);
-  const resting = wanted[0];
+  let resting = wanted[0];
   // No picture is kept bigger than the screen can show it, which on a phone
   // halves the memory his faces take. If he's later shown larger (a rotated
   // phone, a zoomed page), they are fetched again at the new size.
@@ -385,6 +385,7 @@ export async function createPlushie(canvas, options = {}) {
   // (A face he pulls at being handled waits for a hand to let go only
   // briefly: it is wanted for that very grab.)
   const idleHands = async (urgent) => {
+    if (urgent) return;
     const since = performance.now(), waited = () => performance.now() - since;
     const most = urgent ? 600 : 4000; // ms it will wait for quiet (a hand on him: for ever, unless urgent)
     await Promise.race([spare(), pause(urgent ? 200 : 1500)]);
@@ -411,8 +412,17 @@ export async function createPlushie(canvas, options = {}) {
     textures[name] = texture;
     wake();
   };
-  const wantedNow = new Set(Object.values(opt.reactions).flat());
-  for (const name of wanted.slice(1)) later(opt.faces[name], keep(name), { urgent: wantedNow.has(name) });
+  for (const name of wanted.slice(1)) {
+    if (opt.faces[name]) {
+      loadImage(opt.faces[name])
+        .then((img) => {
+          if (!destroyed && !gl.isContextLost()) {
+            keep(name)(makeTexture(gl, img, size));
+          }
+        })
+        .catch((err) => console.warn("Failed to load expression:", name, err));
+    }
+  }
   // Shown bigger than his pictures were sized for: fetch them again.
   function refit() {
     if (destroyed || size >= full || sizeWanted() <= size * 1.1) return;
@@ -832,13 +842,14 @@ export async function createPlushie(canvas, options = {}) {
     ? now - pointer.since > HOVER_IN
     : faceB === react("hovered") && now - pointer.since < HOVER_OUT);
 
-  function setFace(name, ms = 110) {
+  function internalSetFace(name, ms = 110) {
     if (!textures[name] || name === faceB) return;
     // Whatever is mostly on screen right now becomes the "from" side.
     if (faceMix > 0.5) faceA = faceB;
     faceB = name;
     faceMix = 0;
     faceSpeed = 1000 / ms;
+    emit("facechange", { face: name, from: faceA });
   }
 
   // Idle acts. One plays at a time, never the same one twice running.
@@ -946,24 +957,24 @@ export async function createPlushie(canvas, options = {}) {
     const frame = grab ? null : acting(now);
     if (grab) {
       const pull = Math.hypot(grab.pullX, grab.pullY) / cellsPerImage();
-      if (opt.expressions) setFace(react(pull > 0.09 ? "pulled" : "held"), 80);
-      else setFace(resting);
+      if (opt.expressions) internalSetFace(react(pull > 0.09 ? "pulled" : "held"), 80);
+      else internalSetFace(resting);
       mood = { until: 0, face: resting };
     } else if (frame && isPose(frame.show)) {
       // An eyes-only frame: the face stays as it is and the eyes are posed.
-      setFace(resting, 200);
+      internalSetFace(resting, 200);
       act.pose = frame.watch ? null : frame.show; act.poseFade = frame.fade;
       act.watching = !!frame.watch;
     } else if (frame) {
       // (An eyes-only frame with no eye sheet to draw it from shows nothing new.)
-      setFace(frame.show in opt.faces ? frame.show : resting, frame.fade);
+      internalSetFace(frame.show in opt.faces ? frame.show : resting, frame.fade);
       act.pose = null; act.watching = false;
     } else if (opt.expressions && now < mood.until) {
-      setFace(mood.face, 140);
+      internalSetFace(mood.face, 140);
     } else if (opt.expressions && hovered(now)) {
-      setFace(react("hovered"), 160);
+      internalSetFace(react("hovered"), 160);
     } else {
-      setFace(resting, 260);
+      internalSetFace(resting, 260);
     }
   }
 
@@ -1475,7 +1486,37 @@ export async function createPlushie(canvas, options = {}) {
       if (destroyed || !textures[name]) return;
       if (act.at >= 0) endAct(performance.now(), 0);
       mood = { until: performance.now() + ms, face: name };
+      internalSetFace(name, 120);
       wake();
+    },
+    // Set a persistent facial expression and update resting state
+    setFace(name, ms = 160) {
+      if (destroyed || !textures[name]) return false;
+      if (act.at >= 0) endAct(performance.now(), 0);
+      resting = name;
+      mood = { until: performance.now() + 60000, face: name };
+      internalSetFace(name, ms);
+      wake();
+      emit("facechange", { face: name, from: faceA });
+      return true;
+    },
+    setRestingFace(name) {
+      if (destroyed || !textures[name]) return false;
+      resting = name;
+      wake();
+      return true;
+    },
+    getCurrentFace() {
+      return faceB || resting;
+    },
+    getRestingFace() {
+      return resting;
+    },
+    hasFace(name) {
+      return !!textures[name];
+    },
+    getFaces() {
+      return Object.keys(textures);
     },
     // Cut short whatever idle act is playing.
     stop() { if (!destroyed && act.at >= 0) { endAct(performance.now(), 0); wake(); } },

@@ -1,0 +1,443 @@
+/* ==========================================================================
+   HERO.CSS — 3D PERSPECTIVE STAGE, SENTIENT AVATAR & DEPTH TYPOGRAPHY
+   Site: Usman Saleem — Sentient 3D Showcase (usmansaleem.me)
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. Hero Section Container
+   -------------------------------------------------------------------------- */
+.hero-section {
+  position: relative;
+  min-height: calc(100vh - 72px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 0 80px;
+  overflow: hidden;
+  background: radial-gradient(circle at 50% 30%, #0d1424 0%, var(--bg-primary) 70%);
+}
+
+/* Ambient Canvas Particle Constellation */
+#hero-particle-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Atmospheric Glow Orbs */
+.hero-glow-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(100px);
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.45;
+}
+
+.hero-glow-orb-primary {
+  width: 500px;
+  height: 500px;
+  top: 15%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: radial-gradient(circle, rgba(0, 240, 255, 0.22) 0%, rgba(59, 130, 246, 0.08) 50%, transparent 70%);
+}
+
+.hero-glow-orb-secondary {
+  width: 360px;
+  height: 360px;
+  top: 40%;
+  left: 20%;
+  background: radial-gradient(circle, rgba(99, 102, 241, 0.18) 0%, transparent 70%);
+}
+
+/* --------------------------------------------------------------------------
+   2. 3D Perspective Stage
+   -------------------------------------------------------------------------- */
+.hero-3d-stage {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  perspective: 1200px;
+  perspective-origin: 50% 45%;
+  transform-style: preserve-3d;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+/* --------------------------------------------------------------------------
+   3. Bold 3D Layered Typography ("HI, I'M USMAN")
+   -------------------------------------------------------------------------- */
+.hero-depth-typography-wrapper {
+  position: absolute;
+  top: 42%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  transform-style: preserve-3d;
+  pointer-events: none;
+  width: 100%;
+  text-align: center;
+  z-index: 2;
+}
+
+.hero-3d-title {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-weight: 900;
+  font-size: clamp(3.2rem, 11vw, 7.8rem);
+  line-height: 0.95;
+  letter-spacing: -0.04em;
+  text-transform: uppercase;
+  color: #e2e8f0;
+  white-space: nowrap;
+  user-select: none;
+
+  /* 3D Transform: Sits at translateZ(-80px) BEHIND avatar head (translateZ(60px)) */
+  transform: translate3d(var(--parallax-x, 0px), var(--parallax-y, 0px), -80px);
+  will-change: transform;
+
+  /* Multi-layer 3D extruded drop shadow creating tangible physical relief */
+  text-shadow: 
+    0 1px 0 #1b263b,
+    0 2px 0 #162032,
+    0 3px 0 #121a28,
+    0 4px 0 #0e1420,
+    0 5px 0 #0a0e17,
+    0 6px 1px rgba(0, 0, 0, 0.4),
+    0 12px 30px rgba(0, 240, 255, 0.22),
+    0 24px 60px rgba(0, 0, 0, 0.85);
+
+  background: linear-gradient(180deg, #ffffff 10%, #cbd5e1 55%, #64748b 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+@media (max-width: 600px) {
+  .hero-3d-title {
+    font-size: clamp(2.4rem, 12vw, 3.8rem);
+    white-space: normal;
+    line-height: 1.05;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   4. Sentient 3D / 2.5D Avatar Head Stage
+   -------------------------------------------------------------------------- */
+.avatar-stage-container {
+  position: relative;
+  z-index: 10;
+  width: 320px;
+  height: 380px;
+  margin: 0 auto;
+  transform-style: preserve-3d;
+  cursor: grab;
+  outline: none;
+}
+
+.avatar-stage-container:active {
+  cursor: grabbing;
+}
+
+/* Contact shadow on ground plane */
+.avatar-ground-shadow {
+  position: absolute;
+  bottom: 10px;
+  left: 50%;
+  width: 240px;
+  height: 50px;
+  transform: translate(-50%, 0) rotateX(85deg) translateZ(-140px);
+  background: radial-gradient(ellipse at center, rgba(0, 240, 255, 0.28) 0%, rgba(0, 0, 0, 0.75) 55%, transparent 75%);
+  filter: blur(14px);
+  pointer-events: none;
+  border-radius: 50%;
+  transition: transform var(--duration-normal) var(--ease-smooth);
+}
+
+/* Avatar Head Rig (Controlled by JS Spring Physics) */
+.avatar-head-rig {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  will-change: transform;
+  /* Initial depth set to translateZ(60px), 140px in front of the -80px title */
+  transform: translate3d(0, 0, 60px);
+}
+
+/* 3D Depth Layer Stacking */
+.avatar-3d-layer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  transform-style: preserve-3d;
+}
+
+/* Torso / Navy Suit Jacket & Collared Shirt */
+.avatar-layer-torso {
+  transform: translateZ(0px);
+  will-change: transform;
+}
+
+/* Neck & Collar Shading */
+.avatar-layer-neck {
+  transform: translateZ(20px);
+}
+
+/* Face Silhouette & Jaw */
+.avatar-layer-face-base {
+  transform: translateZ(50px);
+}
+
+/* Ocular Sclera & Dynamic Pupils */
+.avatar-layer-eyes {
+  transform: translateZ(80px);
+}
+
+/* Eyebrows & Sculpted Nose Bridge */
+.avatar-layer-features {
+  transform: translateZ(105px);
+}
+
+/* Interactive Morphing Mouth Path */
+.avatar-layer-mouth {
+  transform: translateZ(92px);
+}
+
+/* Front Hair Volume & Side Part Locks */
+.avatar-layer-hair {
+  transform: translateZ(118px);
+}
+
+/* Dynamic Pupil Eye Tracking */
+.pupil-left, .pupil-right {
+  transform-origin: 50% 50%;
+  will-change: transform;
+}
+
+/* Eyelid Blink & Wink Mechanics */
+.avatar-eyelid, .eyelid-left, .eyelid-right {
+  transform-box: fill-box;
+  transform-origin: top;
+  transform: scaleY(0);
+  transition: transform 0.09s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.blink-shut {
+  transform: scaleY(1) !important;
+}
+
+.wink-closed {
+  transform: scaleY(1) !important;
+}
+
+/* Smooth SVG mouth morphing transition */
+.avatar-mouth-path {
+  transition: d 0.22s var(--ease-smooth);
+}
+
+/* Eyebrows expression shift */
+.eyebrow-left, .eyebrow-right {
+  transition: transform 0.25s var(--ease-smooth);
+}
+
+/* --------------------------------------------------------------------------
+   5. Interactive Avatar Cue Pill & Telemetry
+   -------------------------------------------------------------------------- */
+.avatar-cue-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  margin-top: 18px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-card);
+  border-radius: 20px;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--accent-cyan);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  user-select: none;
+  animation: float-cue 4s ease-in-out infinite;
+}
+
+@keyframes float-cue {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+.cue-icon-sparkle {
+  color: var(--accent-amber);
+}
+
+/* --------------------------------------------------------------------------
+   6. Hero Content & Telemetry Overlay
+   -------------------------------------------------------------------------- */
+.hero-content {
+  position: relative;
+  z-index: 20;
+  width: 100%;
+  max-width: 960px;
+  margin-top: 24px;
+  text-align: center;
+}
+
+.hero-subheadline {
+  font-family: var(--font-heading);
+  font-size: clamp(1.15rem, 3.2vw, 1.75rem);
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 12px;
+  letter-spacing: -0.01em;
+}
+
+.hero-subheadline .highlight {
+  color: var(--accent-cyan);
+  text-shadow: 0 0 20px rgba(0, 240, 255, 0.35);
+}
+
+.hero-description {
+  font-size: clamp(0.95rem, 2vw, 1.1rem);
+  color: var(--text-secondary);
+  max-width: 720px;
+  margin: 0 auto 28px;
+  line-height: 1.65;
+}
+
+/* Telemetry KPI Badges Row */
+.hero-telemetry-grid {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 32px;
+}
+
+.telemetry-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 16px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  backdrop-filter: blur(8px);
+  transition: all var(--duration-fast) var(--ease-smooth);
+}
+
+.telemetry-card:hover {
+  border-color: var(--border-card);
+  background: var(--bg-card-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0, 240, 255, 0.12);
+}
+
+.telemetry-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  background: rgba(0, 240, 255, 0.1);
+  color: var(--accent-cyan);
+}
+
+.telemetry-val {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 0.9375rem;
+  color: var(--text-primary);
+}
+
+.telemetry-lbl {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+/* Action CTA Buttons */
+.hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+}
+
+/* Authentic Portrait Identity Grounding Card */
+.identity-grounding-modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  background: rgba(4, 7, 13, 0.85);
+  backdrop-filter: blur(16px);
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.identity-grounding-modal.is-open {
+  display: flex;
+}
+
+.identity-modal-dialog {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-card);
+  border-radius: 16px;
+  padding: 28px;
+  max-width: 440px;
+  width: 100%;
+  box-shadow: var(--shadow-lg), var(--shadow-glow);
+  position: relative;
+  text-align: center;
+}
+
+.identity-photo-frame {
+  width: 160px;
+  height: 160px;
+  margin: 0 auto 16px;
+  border-radius: 50%;
+  border: 3px solid var(--accent-cyan);
+  overflow: hidden;
+  box-shadow: 0 0 24px rgba(0, 240, 255, 0.4);
+}
+
+.identity-photo-frame img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.identity-close-btn {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--border-subtle);
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.identity-close-btn:hover {
+  background: rgba(0, 240, 255, 0.2);
+  border-color: var(--accent-cyan);
+  color: var(--accent-cyan);
+}

@@ -1,0 +1,355 @@
+/* ==========================================================================
+   CAD.CSS — 3D MECHANICAL VIEWER & EXPLODED ASSEMBLY SIMULATION
+   Site: Usman Saleem — Sentient 3D Showcase (usmansaleem.me)
+   ========================================================================== */
+
+.cad-section {
+  padding: 80px 0;
+  position: relative;
+  width: 100%;
+}
+
+.cad-header {
+  margin-bottom: 32px;
+}
+
+.cad-title {
+  font-family: var(--font-heading);
+  font-size: clamp(1.8rem, 3.5vw, 2.75rem);
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 10px 0 12px;
+  letter-spacing: -0.02em;
+}
+
+.cad-subtitle {
+  font-size: 1.05rem;
+  color: var(--text-secondary);
+  max-width: 720px;
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* CAD Viewer Master Frame */
+.cad-stage-wrapper {
+  position: relative;
+  width: 100%;
+  background: radial-gradient(circle at 50% 50%, #0e1626 0%, #06080d 100%);
+  border: 1px solid var(--border-card);
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), 0 0 40px rgba(0, 240, 255, 0.05);
+  transition: border-color var(--duration-normal) var(--ease-smooth);
+}
+
+.cad-stage-wrapper:hover {
+  border-color: rgba(56, 189, 248, 0.35);
+}
+
+/* Three.js Canvas Container */
+#cad-viewer-container {
+  width: 100%;
+  height: 540px;
+  position: relative;
+  cursor: grab;
+  touch-action: none;
+}
+
+#cad-viewer-container:active {
+  cursor: grabbing;
+}
+
+#cad-viewer-container canvas {
+  width: 100% !important;
+  height: 100% !important;
+  display: block;
+}
+
+/* Top Telemetry Overlay Bar */
+.cad-overlay-top {
+  position: absolute;
+  top: 18px;
+  left: 20px;
+  right: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  pointer-events: none;
+  z-index: 10;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.cad-model-meta {
+  background: rgba(7, 9, 14, 0.75);
+  border: 1px solid var(--border-subtle);
+  backdrop-filter: blur(8px);
+  padding: 6px 14px;
+  border-radius: 30px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cad-model-name {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--accent-cyan);
+  letter-spacing: 0.05em;
+}
+
+.cad-parts-badge {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  color: var(--text-muted);
+}
+
+.cad-status-pill {
+  pointer-events: auto;
+  background: rgba(7, 9, 14, 0.75);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  backdrop-filter: blur(8px);
+  padding: 6px 14px;
+  border-radius: 30px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  color: var(--accent-emerald);
+  font-weight: 600;
+}
+
+/* Bottom Interactive Controls Panel */
+.cad-controls-panel {
+  position: absolute;
+  bottom: 20px;
+  left: 20px;
+  right: 20px;
+  background: rgba(12, 16, 26, 0.85);
+  border: 1px solid rgba(56, 189, 248, 0.22);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-radius: 16px;
+  padding: 14px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  z-index: 10;
+  flex-wrap: wrap;
+}
+
+.cad-slider-group {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex: 1;
+  min-width: 240px;
+}
+
+.cad-slider-label {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.cad-slider {
+  flex: 1;
+  -webkit-appearance: none;
+  appearance: none;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 4px;
+  outline: none;
+  transition: background var(--duration-fast);
+}
+
+.cad-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--accent-cyan);
+  cursor: pointer;
+  box-shadow: 0 0 10px var(--accent-cyan-glow);
+  transition: transform var(--duration-fast) var(--ease-spring);
+}
+
+.cad-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.25);
+}
+
+.cad-slider::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border: none;
+  border-radius: 50%;
+  background: var(--accent-cyan);
+  cursor: pointer;
+  box-shadow: 0 0 10px var(--accent-cyan-glow);
+}
+
+.cad-slider-val {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--accent-cyan);
+  font-weight: 700;
+  min-width: 44px;
+  text-align: right;
+}
+
+/* Control Buttons */
+.cad-btn-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.cad-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all var(--duration-fast) var(--ease-smooth);
+}
+
+.cad-btn:hover {
+  background: rgba(0, 240, 255, 0.1);
+  border-color: rgba(0, 240, 255, 0.3);
+  color: var(--accent-cyan);
+}
+
+.cad-btn.is-active {
+  background: rgba(0, 240, 255, 0.18);
+  border-color: var(--accent-cyan);
+  color: var(--accent-cyan);
+  box-shadow: 0 0 12px rgba(0, 240, 255, 0.2);
+}
+
+/* CAD Loading & Fallback Overlay */
+.cad-loading-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(7, 9, 14, 0.85);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  z-index: 5;
+  transition: opacity var(--duration-normal) var(--ease-smooth);
+}
+
+.cad-loading-overlay.is-hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.cad-spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid rgba(0, 240, 255, 0.15);
+  border-top-color: var(--accent-cyan);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+.cad-loading-text {
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+}
+
+/* Callout Parts Spec Table Below Viewer */
+.cad-spec-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
+  margin-top: 24px;
+}
+
+.cad-spec-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-card);
+  border-radius: 14px;
+  padding: 16px;
+  transition: border-color var(--duration-fast);
+}
+
+.cad-spec-card:hover {
+  border-color: rgba(56, 189, 248, 0.3);
+}
+
+.cad-spec-num {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  color: var(--accent-cyan);
+  margin-bottom: 4px;
+}
+
+.cad-spec-title {
+  font-family: var(--font-heading);
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.cad-spec-desc {
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin: 0;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (max-width: 768px) {
+  .cad-section {
+    padding: 50px 0;
+  }
+
+  #cad-viewer-container {
+    height: 380px;
+  }
+
+  .cad-controls-panel {
+    bottom: 12px;
+    left: 12px;
+    right: 12px;
+    padding: 12px;
+    gap: 12px;
+  }
+
+  .cad-slider-group {
+    width: 100%;
+  }
+
+  .cad-btn-group {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .cad-btn {
+    flex: 1;
+    justify-content: center;
+    padding: 8px 10px;
+  }
+}

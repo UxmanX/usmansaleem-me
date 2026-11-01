@@ -3,1047 +3,351 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Usman Saleem, MEng — Sentient 3D Interactive Portfolio & Engineering Showcase. Mechanical Project Coordinator at ASSA ABLOY Entrance Systems.">
-  <meta name="keywords" content="Usman Saleem, Mechanical Engineer, ASSA ABLOY, University of Ottawa, CAD, Automation, 3D Portfolio">
+  <meta name="description" content="Usman Saleem, MEng  Key Accounts Project Coordinator at ASSA ABLOY Entrance Systems & Autonomous Systems Engineer. Interactive WebGL portfolio.">
   <meta name="author" content="Usman Saleem">
-  <meta name="theme-color" content="#07090e">
-  <title>Usman Saleem, MEng | Sentient 3D Showcase</title>
+  <meta name="theme-color" content="#ff541e">
+  <title>Usman Saleem, MEng | Key Accounts Project Coordinator & Autonomous Systems</title>
 
-  <!-- Google Fonts: Space Grotesk, Plus Jakarta Sans, JetBrains Mono -->
+  <!-- Google Fonts: Plus Jakarta Sans, Inter, JetBrains Mono -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800;900&display=swap" rel="stylesheet">
 
   <!-- Core Stylesheets -->
-  <link rel="stylesheet" href="css/main.css">
-  <link rel="stylesheet" href="css/hero.css">
-  <link rel="stylesheet" href="css/bento.css">
-  <link rel="stylesheet" href="css/cad.css">
-  <link rel="stylesheet" href="css/modal.css">
+  <link rel="stylesheet" href="css/face.css">
+  <link rel="stylesheet" href="css/style.css">
 
   <!-- Favicon Monogram -->
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%2307090e'/><text x='50' y='65' font-size='50' font-family='monospace' font-weight='bold' fill='%2300f0ff' text-anchor='middle'>US</text></svg>">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='24' fill='%23ff541e'/><text x='50' y='66' font-size='48' font-family='sans-serif' font-weight='900' fill='%23ffffff' text-anchor='middle'>US</text></svg>">
 </head>
 <body>
 
-  <!-- Skip Link for Keyboard Accessibility -->
-  <a href="#hero-content" class="skip-to-content">Skip to main content</a>
+  <div class="page-wrapper">
 
-  <!-- ======================================================================
-       Site Header & Sticky Navigation
-       ====================================================================== -->
-  <header class="site-header" role="banner">
-    <div class="container header-inner">
-      <!-- Monogram / Brand -->
-      <a href="#hero" class="brand-monogram" aria-label="Usman Saleem Portfolio Homepage">
-        <div class="brand-badge" aria-hidden="true">US</div>
-        <div class="brand-details">
-          <span class="brand-name">USMAN SALEEM</span>
-          <span class="brand-status">
-            <span class="status-dot"></span>
-            MEng • Autonomous Systems
-          </span>
-        </div>
+    <!-- ======================================================================
+         Top Header Navigation
+         ====================================================================== -->
+    <header class="site-nav" role="banner">
+      <a href="#" class="brand-handle" aria-label="Usman Saleem Homepage">
+        <span class="handle-dot" aria-hidden="true"></span>
+        <span>@usmansaleem</span>
       </a>
 
-      <!-- Desktop Navigation Links -->
-      <nav class="nav-desktop" aria-label="Primary Navigation">
+      <nav aria-label="Primary Navigation">
         <ul class="nav-links">
-          <li><a href="#hero" class="nav-link">Overview</a></li>
           <li><a href="#showcase" class="nav-link">Showcase</a></li>
-          <li><a href="#cad-viewer" class="nav-link">CAD Assembly</a></li>
-          <li><a href="#credentials" class="nav-link">Credentials</a></li>
-          <li><a href="#resume" class="nav-link">Resume</a></li>
+          <li><a href="#about" class="nav-link">About</a></li>
+          <li><a href="#" class="nav-link open-cad-btn">3D CAD</a></li>
+          <li><a href="assets/Usman_Saleem_MEng_Resume.pdf" download="Usman_Saleem_MEng_Resume.pdf" class="nav-link">Resume</a></li>
+          <li>
+            <button id="sound-toggle" class="audio-toggle-btn" type="button" aria-pressed="true" title="Toggle rubber toy sounds">
+              <span>🔊</span>
+              <span class="sound-label">Audio: On</span>
+            </button>
+          </li>
         </ul>
       </nav>
+    </header>
 
-      <!-- Header Action Controls -->
-      <div class="header-actions">
-        <!-- Procedural Web Audio Mute Toggle Button -->
-        <button id="sound-toggle" 
-                class="sound-toggle-btn" 
-                type="button" 
-                aria-pressed="true" 
-                aria-label="Sound effects active. Click or press M to mute." 
-                title="Toggle Web Audio Synthesizer (Press M)">
-          <span class="sound-icon-box" aria-hidden="true">
-            <!-- Active Speaker Icon -->
-            <svg class="sound-icon-on" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
-              <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
-              <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
-              <path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>
-            </svg>
-            <!-- Muted Speaker Icon -->
-            <svg class="sound-icon-off" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" style="display:none">
-              <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
-              <line x1="23" y1="9" x2="17" y2="15"></line>
-              <line x1="17" y1="9" x2="23" y2="15"></line>
-            </svg>
-          </span>
-          <span class="sound-text">AUDIO ON</span>
-        </button>
-
-        <!-- Quick ATS Resume CTA -->
-        <a href="assets/Usman_Saleem_MEng_Resume.pdf" 
-           download="Usman_Saleem_MEng_Resume.pdf" 
-           class="btn btn-secondary btn-resume-header">
-          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-            <polyline points="7 10 12 15 17 10"></polyline>
-            <line x1="12" y1="15" x2="12" y2="3"></line>
-          </svg>
-          Resume
-        </a>
-      </div>
-    </div>
-  </header>
-
-  <!-- ======================================================================
-       HERO SECTION — 3D PERSPECTIVE STAGE & SENSORY IDENTITY (R1)
-       ====================================================================== -->
-  <main id="main-content">
-    <section id="hero" class="hero-section" aria-label="Hero Introduction">
-      <!-- Ambient Interactive Canvas Particle Constellation -->
-      <canvas id="hero-particle-canvas" aria-hidden="true"></canvas>
-
-      <!-- Atmospheric Glow Orbs -->
-      <div class="hero-glow-orb hero-glow-orb-primary" aria-hidden="true"></div>
-      <div class="hero-glow-orb hero-glow-orb-secondary" aria-hidden="true"></div>
-
-      <div class="container hero-3d-stage">
+    <!-- ======================================================================
+         Hero Section (The Viral Elastic Face & Intro)
+         ====================================================================== -->
+    <main role="main">
+      <section class="hero-card" aria-label="Introduction">
         
-        <!-- Layered 3D Typography ("HI, I'M USMAN") at translateZ(-80px) BEHIND avatar head -->
-        <div class="hero-depth-typography-wrapper" aria-hidden="true">
-          <h1 id="hero-3d-text" class="hero-3d-title">HI, I'M USMAN</h1>
-        </div>
-
-        <!-- Sentient 3D / 2.5D Avatar Head Stage at translateZ(60px) -->
-        <div id="avatar-stage" 
-             class="avatar-stage-container" 
-             role="img" 
-             tabindex="0" 
-             aria-label="Interactive 3D avatar of Usman Saleem with real-time eye tracking and spring physics. Click to poke or recoil.">
-          
-          <!-- Contact ground plane shadow -->
-          <div class="avatar-ground-shadow" aria-hidden="true"></div>
-
-          <!-- Avatar Head Rig with 2nd-order Damped Harmonic Spring Physics -->
-          <div class="avatar-head-rig">
-            
-            <!-- LAYER 0: Torso / Navy Tailored Suit & Collared Shirt (translateZ: 0px) -->
-            <div class="avatar-3d-layer avatar-layer-torso" aria-hidden="true">
-              <svg viewBox="0 0 320 380" width="320" height="380">
-                <defs>
-                  <linearGradient id="suitGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stop-color="#1e293b"/>
-                    <stop offset="60%" stop-color="#0f172a"/>
-                    <stop offset="100%" stop-color="#090d16"/>
-                  </linearGradient>
-                  <linearGradient id="shirtGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-                    <stop offset="0%" stop-color="#ffffff"/>
-                    <stop offset="100%" stop-color="#e2e8f0"/>
-                  </linearGradient>
-                </defs>
-                <!-- Suit Shoulders & Jacket -->
-                <path d="M 60 380 C 65 310, 100 270, 160 270 C 220 270, 255 310, 260 380 Z" fill="url(#suitGrad)" stroke="#334155" stroke-width="1.5"/>
-                <!-- Crisp Collared Dress Shirt -->
-                <polygon points="135 270, 185 270, 172 340, 148 340" fill="url(#shirtGrad)"/>
-                <!-- Inner V-Neck Lapels -->
-                <path d="M 115 270 L 160 350 L 138 350 L 100 285 Z" fill="#1b2434"/>
-                <path d="M 205 270 L 160 350 L 182 350 L 220 285 Z" fill="#243044"/>
-                <!-- Lapel seams -->
-                <line x1="160" y1="270" x2="160" y2="380" stroke="#38bdf8" stroke-width="0.75" stroke-dasharray="3,3" opacity="0.4"/>
-              </svg>
-            </div>
-
-            <!-- LAYER 1: Neck & Depth Shadow (translateZ: 20px) -->
-            <div class="avatar-3d-layer avatar-layer-neck" aria-hidden="true">
-              <svg viewBox="0 0 320 380" width="320" height="380">
-                <defs>
-                  <linearGradient id="neckGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-                    <stop offset="0%" stop-color="#c98a63"/>
-                    <stop offset="70%" stop-color="#b67751"/>
-                    <stop offset="100%" stop-color="#8a5334"/>
-                  </linearGradient>
-                </defs>
-                <!-- Neck Column -->
-                <rect x="142" y="210" width="36" height="66" rx="10" fill="url(#neckGrad)"/>
-                <!-- Neck Sternocleidomastoid muscle shadows -->
-                <path d="M 148 220 Q 155 250 146 270" stroke="#8a5334" stroke-width="2" fill="none" opacity="0.4"/>
-                <path d="M 172 220 Q 165 250 174 270" stroke="#8a5334" stroke-width="2" fill="none" opacity="0.4"/>
-              </svg>
-            </div>
-
-            <!-- LAYER 2: Face Base, Jawline & Ears (translateZ: 50px) -->
-            <div class="avatar-3d-layer avatar-layer-face-base" aria-hidden="true">
-              <svg viewBox="0 0 320 380" width="320" height="380">
-                <defs>
-                  <linearGradient id="skinGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stop-color="#f2b48d"/>
-                    <stop offset="50%" stop-color="#e3a17a"/>
-                    <stop offset="100%" stop-color="#ce8c66"/>
-                  </linearGradient>
-                </defs>
-                <!-- Left & Right Ears -->
-                <ellipse cx="106" cy="165" rx="11" ry="19" fill="#d9936d"/>
-                <ellipse cx="106" cy="165" rx="6" ry="11" fill="#b8724d" opacity="0.6"/>
-                <ellipse cx="214" cy="165" rx="11" ry="19" fill="#d9936d"/>
-                <ellipse cx="214" cy="165" rx="6" ry="11" fill="#b8724d" opacity="0.6"/>
-
-                <!-- Facial Silhouette & Sculpted Jawline (Matching Usman's Authentic Photo) -->
-                <path d="M 112 145 C 112 95, 208 95, 208 145 C 208 185, 196 226, 160 228 C 124 226, 112 185, 112 145 Z" 
-                      fill="url(#skinGrad)" 
-                      stroke="#bf7c55" 
-                      stroke-width="1.5"/>
-              </svg>
-            </div>
-
-            <!-- LAYER 3: Ocular Sclera, Dynamic Pupils & Eyelids (translateZ: 80px) -->
-            <div class="avatar-3d-layer avatar-layer-eyes" aria-hidden="true">
-              <svg viewBox="0 0 320 380" width="320" height="380">
-                <defs>
-                  <!-- Eye Socket Clip Paths -->
-                  <clipPath id="leftEyeClip">
-                    <ellipse cx="138" cy="154" rx="13" ry="8"/>
-                  </clipPath>
-                  <clipPath id="rightEyeClip">
-                    <ellipse cx="182" cy="154" rx="13" ry="8"/>
-                  </clipPath>
-                </defs>
-
-                <!-- Left Eye Sclera (White) -->
-                <ellipse cx="138" cy="154" rx="13" ry="8" fill="#f8fafc" stroke="#cbd5e1" stroke-width="0.75"/>
-                <!-- Left Eye Pupil with Dynamic Cursor Tracking -->
-                <g clip-path="url(#leftEyeClip)">
-                  <g class="pupil-left">
-                    <circle cx="138" cy="154" r="5.5" fill="#2b1810"/>
-                    <circle cx="138" cy="154" r="3.2" fill="#0f0704"/>
-                    <!-- Specular Light Reflection -->
-                    <circle cx="136.5" cy="152.5" r="1.5" fill="#ffffff" opacity="0.95"/>
-                  </g>
-                  <!-- Upper Eyelid for Blinking -->
-                  <rect class="eyelid-left" x="122" y="144" width="32" height="19" fill="#c98a63"/>
-                </g>
-
-                <!-- Right Eye Sclera (White) -->
-                <ellipse cx="182" cy="154" rx="13" ry="8" fill="#f8fafc" stroke="#cbd5e1" stroke-width="0.75"/>
-                <!-- Right Eye Pupil with Dynamic Cursor Tracking -->
-                <g clip-path="url(#rightEyeClip)">
-                  <g class="pupil-right">
-                    <circle cx="182" cy="154" r="5.5" fill="#2b1810"/>
-                    <circle cx="182" cy="154" r="3.2" fill="#0f0704"/>
-                    <!-- Specular Light Reflection -->
-                    <circle cx="180.5" cy="152.5" r="1.5" fill="#ffffff" opacity="0.95"/>
-                  </g>
-                  <!-- Upper Eyelid for Blinking & Playful Winking -->
-                  <rect class="eyelid-right" x="166" y="144" width="32" height="19" fill="#c98a63"/>
-                </g>
-              </svg>
-            </div>
-
-            <!-- LAYER 4: Eyebrows, Nose Bridge & Contour (translateZ: 105px) -->
-            <div class="avatar-3d-layer avatar-layer-features" aria-hidden="true">
-              <svg viewBox="0 0 320 380" width="320" height="380">
-                <!-- Left Eyebrow -->
-                <path class="eyebrow-left" d="M 125 142 Q 138 136 151 140" stroke="#1c130d" stroke-width="3.5" stroke-linecap="round" fill="none"/>
-                <!-- Right Eyebrow -->
-                <path class="eyebrow-right" d="M 169 140 Q 182 136 195 142" stroke="#1c130d" stroke-width="3.5" stroke-linecap="round" fill="none"/>
-                <!-- Nose Bridge & Tip -->
-                <path d="M 160 148 L 157 178 Q 160 183 166 181" stroke="#b06d48" stroke-width="2" stroke-linecap="round" fill="none"/>
-                <!-- Subtle Nose highlight -->
-                <ellipse cx="163" cy="179" rx="3.5" ry="2" fill="#fbd3b9" opacity="0.6"/>
-              </svg>
-            </div>
-
-            <!-- LAYER 5: Mouth with Dynamic Expression Morphing (translateZ: 92px) -->
-            <div class="avatar-3d-layer avatar-layer-mouth" aria-hidden="true">
-              <svg viewBox="0 0 320 380" width="320" height="380">
-                <!-- Transformable Mouth Path: Scaled to 320x380 viewport (Center: x=160, y=202) -->
-                <!-- Neutral: M 148 202 Q 160 207 172 202 -->
-                <!-- Hover Smile: M 146 200 Q 160 216 174 200 -->
-                <path class="avatar-mouth-path" 
-                      d="M 148 202 Q 160 207 172 202" 
-                      stroke="#853c2b" 
-                      stroke-width="3.2" 
-                      stroke-linecap="round" 
-                      fill="none"/>
-              </svg>
-            </div>
-
-            <!-- LAYER 6: Hair Volume & Modern Side-Part Style (translateZ: 118px) -->
-            <div class="avatar-3d-layer avatar-layer-hair" aria-hidden="true">
-              <svg viewBox="0 0 320 380" width="320" height="380">
-                <defs>
-                  <linearGradient id="hairGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stop-color="#241b16"/>
-                    <stop offset="60%" stop-color="#140e0b"/>
-                    <stop offset="100%" stop-color="#080504"/>
-                  </linearGradient>
-                </defs>
-                <!-- Usman's Side-Part Styled Hair Volume -->
-                <path d="M 105 140 
-                         C 100 110, 115 82, 155 78 
-                         C 185 75, 215 88, 220 125 
-                         C 222 142, 216 150, 214 140
-                         C 210 108, 185 96, 160 98
-                         C 135 100, 115 116, 108 142 Z" 
-                      fill="url(#hairGrad)"/>
-                <!-- Front Lock Sweep -->
-                <path d="M 130 92 Q 160 88 190 100" stroke="#3d2c23" stroke-width="2.5" fill="none" opacity="0.7"/>
-                <path d="M 140 85 Q 170 82 198 94" stroke="#4a372d" stroke-width="1.8" fill="none" opacity="0.5"/>
-              </svg>
-            </div>
-
-          </div>
-        </div>
-
-        <!-- Interactive Avatar Cue Pill -->
-        <div class="avatar-cue-pill" aria-hidden="true">
-          <span class="cue-icon-sparkle">✦</span>
-          <span>SENTIENT RIG: ACTIVE • 120 FPS SPRING PHYSICS • CLICK TO POKE</span>
-        </div>
-
-        <!-- Hero Content & Technical Profile Intro -->
-        <div id="hero-content" class="hero-content">
-          <div class="badge-tech badge-tech-emerald" style="margin-bottom: 12px;">
-            <span class="status-dot"></span>
-            ASSA ABLOY Entrance Systems // Key Accounts
+        <!-- Left Column: Copy & CTAs -->
+        <div class="hero-content">
+          <div class="hero-tag">
+            <span>⚙️</span> KEY ACCOUNTS PROJECT COORDINATOR · ASSA ABLOY
           </div>
 
-          <h2 class="hero-subheadline">
-            Autonomous Systems Architect & <span class="highlight">Mechanical Project Engineer</span>
-          </h2>
+          <h1 class="hero-title">
+            Hola! My name is <span class="highlight-name">Usman</span>
+          </h1>
 
-          <p class="hero-description">
-            MEng graduate from the University of Ottawa directing multi-million dollar electromechanical automation and key account infrastructure across North America. Pioneering deterministic software swarms, GD&T precision manufacturing, and responsive web experiences.
+          <p class="hero-bio">
+            I love building cool engineering stuff.<br>
+            My passion is turning complex mechanical systems, robotics, and automation into rock-solid software and physical hardware that actually works.
           </p>
 
-          <!-- Telemetry KPI Badges Row -->
-          <div class="hero-telemetry-grid">
-            <div class="telemetry-card">
-              <div class="telemetry-icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
-              </div>
-              <div class="telemetry-data">
-                <div class="telemetry-val">$10M+</div>
-                <div class="telemetry-lbl">Projects Managed</div>
-              </div>
-            </div>
+          <p class="hero-bio" style="font-size: 0.98rem; margin-top: -12px;">
+            Currently scaling entrance automation infrastructure across Canada at <strong>ASSA ABLOY Entrance Systems</strong>. Alumnus of the <strong>University of Ottawa</strong> (Master of Engineering in Mechanical & Autonomous Systems).
+          </p>
 
-            <div class="telemetry-card">
-              <div class="telemetry-icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
-              </div>
-              <div class="telemetry-data">
-                <div class="telemetry-val">40+</div>
-                <div class="telemetry-lbl">Concurrent Pipelines</div>
-              </div>
-            </div>
-
-            <div class="telemetry-card">
-              <div class="telemetry-icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"></path><path d="M6 12v5c3 3 9 3 12 0v-5"></path></svg>
-              </div>
-              <div class="telemetry-data">
-                <div class="telemetry-val">MEng</div>
-                <div class="telemetry-lbl">University of Ottawa</div>
-              </div>
-            </div>
-
-            <div class="telemetry-card">
-              <div class="telemetry-icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
-              </div>
-              <div class="telemetry-data">
-                <div class="telemetry-val">100%</div>
-                <div class="telemetry-lbl">Deterministic QA</div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Hero Action Buttons -->
           <div class="hero-actions">
-            <a href="#showcase" class="btn btn-primary">
-              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                <polygon points="5 3 19 12 5 21 5 3"></polygon>
+            <a href="assets/Usman_Saleem_MEng_Resume.pdf" download="Usman_Saleem_MEng_Resume.pdf" class="btn-primary">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
               </svg>
-              Explore Engineering Showcase
+              Download Resume (PDF)
             </a>
 
-            <a href="assets/Usman_Saleem_MEng_Resume.pdf" 
-               download="Usman_Saleem_MEng_Resume.pdf" 
-               class="btn btn-secondary">
+            <button type="button" class="btn-secondary open-cad-btn">
               <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                <polyline points="14 2 14 8 20 8"></polyline>
-                <line x1="16" y1="13" x2="8" y2="13"></line>
-                <line x1="16" y1="17" x2="8" y2="17"></line>
-                <polyline points="10 9 9 9 8 9"></polyline>
+                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path>
               </svg>
-              Download ATS Resume
-            </a>
-
-            <button id="btn-verify-identity" type="button" class="btn btn-secondary">
-              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                <circle cx="12" cy="12" r="10"></circle>
-                <path d="M12 8v4"></path>
-                <path d="M12 16h.01"></path>
-              </svg>
-              Verified Identity
+              Explore 3D SL500
             </button>
-          </div>
 
-        </div>
+            <div class="social-pills">
+              <a href="https://github.com/UxmanX" target="_blank" rel="noopener" class="social-pill" title="GitHub (@UxmanX)">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+                  <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+                </svg>
+              </a>
 
-      </div>
-    </section>
-
-    <!-- ======================================================================
-         SECTION 01: 12-COLUMN RESPONSIVE BENTO GRID & LIVE METRICS HUD (R2)
-         ====================================================================== -->
-    <section id="showcase" class="bento-section container" aria-label="Engineering Showcase">
-      <div class="bento-header">
-        <div class="section-label">01 // ENGINEERING SHOWCASE</div>
-        <h2 class="bento-title">Autonomous Architecture & Key Accounts Delivery</h2>
-        <p class="bento-subtitle">
-          Directing multi-million dollar commercial automation infrastructure, technical project lifecycles, and CAD manufacturing across North America.
-        </p>
-      </div>
-
-      <div class="bento-grid">
-        <!-- CARD 1: Enterprise Project Delivery (Span 8 cols) -->
-        <article class="bento-card col-span-8 card-enterprise">
-          <div class="bento-card-header">
-            <span class="badge-tech badge-tech-emerald">
-              <span class="status-dot"></span>
-              ASSA ABLOY Entrance Systems // Key Accounts
-            </span>
-            <span class="badge-tech">ACTIVE TENURE • APR 2026 – PRESENT</span>
-          </div>
-
-          <h3 class="bento-card-title">Key Accounts Project Coordinator</h3>
-          <p class="bento-card-desc">
-            Directing end-to-end commercial entrance automation and national facility modernization across Canadian enterprise accounts. Spearheading technical estimating, site take-off formulas (ROW, OFW, ROH, MH), Baan ERP integration, and field commissioning to ensure 100% architectural fitment and zero dimensional deviations.
-          </p>
-
-          <!-- Interactive Visual Stepper: Project Lifecycle Stages -->
-          <div class="project-lifecycle-stepper" aria-label="Project Delivery Lifecycle Stepper">
-            <div class="stepper-step">
-              <span class="stepper-num">1</span>
-              <span class="stepper-label">Quote</span>
+              <a href="mailto:usman.saleem@uottawa.ca" class="social-pill" title="Email Usman">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                  <polyline points="22,6 12,13 2,6"></polyline>
+                </svg>
+              </a>
             </div>
-            <div class="stepper-step">
-              <span class="stepper-num">2</span>
-              <span class="stepper-label">Take-Off</span>
-            </div>
-            <div class="stepper-step">
-              <span class="stepper-num">3</span>
-              <span class="stepper-label">Review</span>
-            </div>
-            <div class="stepper-step">
-              <span class="stepper-num">4</span>
-              <span class="stepper-label">Execution</span>
-            </div>
-            <div class="stepper-step">
-              <span class="stepper-num">5</span>
-              <span class="stepper-label">Commission</span>
-            </div>
-            <div class="stepper-step">
-              <span class="stepper-num">6</span>
-              <span class="stepper-label">Invoice</span>
-            </div>
-          </div>
-
-          <div class="tech-tags-list">
-            <span class="tech-tag">Baan ERP</span>
-            <span class="tech-tag">Dynamics 365</span>
-            <span class="tech-tag">iSAC CRM</span>
-            <span class="tech-tag">GD&T Take-Offs</span>
-            <span class="tech-tag">Subcontractor Coordination</span>
-            <span class="tech-tag">Safety Standards</span>
-          </div>
-        </article>
-
-        <!-- CARD 2: Live Operational Metrics HUD (Span 4 cols) -->
-        <article class="bento-card col-span-4 card-metrics-hud">
-          <div class="bento-card-header">
-            <span class="section-label" style="margin-bottom: 0;">LIVE TELEMETRY // HUD</span>
-            <span class="hud-live-indicator">
-              <span class="status-dot"></span>
-              REAL-TIME
-            </span>
-          </div>
-
-          <h3 class="bento-card-title">Operational Impact HUD</h3>
-          <p class="bento-card-desc">
-            Deterministic quantitative telemetry verified directly against authentic corporate portfolio records and project logs.
-          </p>
-
-          <div class="hud-counter-grid">
-            <div class="hud-counter-box">
-              <div class="hud-val" data-target="10" data-prefix="$" data-suffix="M+">$10M+</div>
-              <div class="hud-lbl">Projects Managed</div>
-            </div>
-
-            <div class="hud-counter-box">
-              <div class="hud-val" data-target="40" data-prefix="" data-suffix="+">40+</div>
-              <div class="hud-lbl">Concurrent Pipelines</div>
-            </div>
-
-            <div class="hud-counter-box">
-              <div class="hud-val" data-target="60" data-prefix="" data-suffix="+">60+</div>
-              <div class="hud-lbl">Technicians Coordinated</div>
-            </div>
-
-            <div class="hud-counter-box">
-              <div class="hud-val" data-target="100" data-prefix="" data-suffix="%">100%</div>
-              <div class="hud-lbl">Deterministic QA</div>
-            </div>
-          </div>
-
-          <div class="tech-tags-list" style="margin-top: auto;">
-            <span class="tech-tag">Zero Defect Tolerance</span>
-            <span class="tech-tag">Data Reconciliation</span>
-          </div>
-        </article>
-
-        <!-- CARD 3: 3D CAD & Electromechanical Assembly (Span 6 cols) -->
-        <article class="bento-card col-span-6 card-cad-preview">
-          <div class="bento-card-header">
-            <span class="badge-tech">ELECTROMECHANICAL SIMULATION // CAD</span>
-            <span class="badge-tech badge-tech-emerald">THREE.JS r128</span>
-          </div>
-
-          <h3 class="bento-card-title">ASSA ABLOY SL500 Sliding Door Operator</h3>
-          <p class="bento-card-desc">
-            High-precision 3D digital twin of the premier commercial entrance mechanism. Simulates brushless DC drive motor, microprocessor control unit, dual-roller carriage trolleys, and active infrared safety sensor curtain.
-          </p>
-
-          <div class="cad-badge-row">
-            <span class="tech-tag">360° Orbit & Zoom</span>
-            <span class="tech-tag">Exploded View Lerp</span>
-            <span class="tech-tag">Wireframe Mode</span>
-            <span class="tech-tag">Web Audio Servos</span>
-          </div>
-
-          <div style="margin-top: auto; padding-top: 14px;">
-            <button type="button" class="btn btn-primary" onclick="document.getElementById('cad-viewer').scrollIntoView({behavior: 'smooth'})" style="display: inline-flex; width: auto;">
-              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
-              Launch Interactive CAD Viewer
-            </button>
-          </div>
-        </article>
-
-        <!-- CARD 4: Academic Rigor & Graduate Education (Span 6 cols) -->
-        <article class="bento-card col-span-6 card-education">
-          <div class="bento-card-header">
-            <span class="badge-tech">ACADEMIC RIGOR // GRADUATE STUDIES</span>
-            <span class="badge-tech badge-tech-emerald">CONFERRED MARCH 2025</span>
-          </div>
-
-          <h3 class="bento-card-title">Master of Engineering (MEng)</h3>
-          <p class="bento-card-desc" style="margin-bottom: 14px;">
-            Rigorous graduate engineering training from top Canadian and international institutions.
-          </p>
-
-          <div class="credential-item">
-            <div class="credential-icon-box" aria-hidden="true">
-              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"></path><path d="M6 12v5c3 3 9 3 12 0v-5"></path></svg>
-            </div>
-            <div>
-              <div class="credential-degree">Master of Engineering — Mechanical Engineering</div>
-              <div class="credential-school">University of Ottawa (uOttawa) — Ottawa, Canada</div>
-              <div class="credential-date">Completed Jan 2025 • Senate Conferred March 2025</div>
-            </div>
-          </div>
-
-          <div class="credential-item">
-            <div class="credential-icon-box" aria-hidden="true">
-              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
-            </div>
-            <div>
-              <div class="credential-degree">Bachelor of Science — Mechanical Engineering</div>
-              <div class="credential-school">University of Engineering and Technology (UET) — Lahore</div>
-              <div class="credential-date">Conferred July 2021 • First Division Honours</div>
-            </div>
-          </div>
-
-          <div class="tech-tags-list" style="margin-top: 14px;">
-            <span class="tech-tag">Finite Element Analysis (FEA)</span>
-            <span class="tech-tag">GD&T</span>
-            <span class="tech-tag">Autonomous Robotics</span>
-            <span class="tech-tag">Advanced HVAC</span>
-          </div>
-        </article>
-
-        <!-- CARD 5: Autodesk Professional Certifications (Span 6 cols) -->
-        <article class="bento-card col-span-6 card-certifications">
-          <div class="bento-card-header">
-            <span class="badge-tech">INDUSTRY CREDENTIALS // AUTODESK</span>
-            <span class="badge-tech">VERIFIED BADGES</span>
-          </div>
-
-          <h3 class="bento-card-title">Autodesk Certified Specialist</h3>
-          <p class="bento-card-desc">
-            Certified expertise in digital prototyping, generative design algorithms, and advanced manufacturing workflows.
-          </p>
-
-          <div class="cert-badge-list">
-            <div class="cert-badge-item">
-              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="8" r="7"></circle><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline></svg>
-              <span>CAD and Digital Manufacturing (Autodesk Certified)</span>
-            </div>
-            <div class="cert-badge-item">
-              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="8" r="7"></circle><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline></svg>
-              <span>Generative Design for Manufacturing (Autodesk Certified)</span>
-            </div>
-            <div class="cert-badge-item">
-              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="8" r="7"></circle><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline></svg>
-              <span>Engineering Design Process with Fusion 360 (Autodesk Certified)</span>
-            </div>
-          </div>
-        </article>
-
-        <!-- CARD 6: Autonomous Automation & Data Systems (Span 6 cols) -->
-        <article class="bento-card col-span-6 card-automation">
-          <div class="bento-card-header">
-            <span class="badge-tech">SOFTWARE SWARMS // ENTERPRISE DATA</span>
-            <span class="badge-tech badge-tech-emerald">FULL-STACK AUTOMATION</span>
-          </div>
-
-          <h3 class="bento-card-title">Technical Toolchain & Data Engineering</h3>
-          <p class="bento-card-desc">
-            Bridging mechanical engineering with modern software architecture to automate enterprise workflows and eliminate manual errors.
-          </p>
-
-          <div class="toolchain-grid">
-            <div>
-              <div class="toolchain-col-title">CAD & Modeling</div>
-              <div class="tech-tags-list">
-                <span class="tech-tag">SolidWorks</span>
-                <span class="tech-tag">AutoCAD</span>
-                <span class="tech-tag">Fusion 360</span>
-                <span class="tech-tag">Three.js</span>
-              </div>
-            </div>
-            <div>
-              <div class="toolchain-col-title">Enterprise & Data</div>
-              <div class="tech-tags-list">
-                <span class="tech-tag">Python 3.12</span>
-                <span class="tech-tag">SQL</span>
-                <span class="tech-tag">Baan ERP</span>
-                <span class="tech-tag">Dynamics 365</span>
-                <span class="tech-tag">Power Automate</span>
-                <span class="tech-tag">Power BI</span>
-              </div>
-            </div>
-          </div>
-        </article>
-
-        <!-- CARD 7: Industrial Commissioning & Multi-Sector Track Record (Span 12 cols) -->
-        <article class="bento-card col-span-12 card-career-track">
-          <div class="bento-card-header">
-            <span class="badge-tech">FIELD ENGINEERING // MULTI-SECTOR TRACK RECORD</span>
-            <span class="badge-tech">INDUSTRIAL COMMISSIONING</span>
-          </div>
-
-          <h3 class="bento-card-title">Heavy Industrial Plants, Automotive & Global Brand Leadership</h3>
-          <p class="bento-card-desc">
-            Hands-on technical coordination across complex manufacturing facilities, robotic automotive assembly lines, and multi-disciplinary field crews.
-          </p>
-
-          <div class="career-timeline-grid">
-            <div class="timeline-item">
-              <div class="timeline-company">Bühler Group</div>
-              <div class="timeline-role">Trainee Installation Engineer</div>
-              <div class="timeline-date">Nov 2021 – Dec 2022 • Pakistan</div>
-              <p class="timeline-desc">
-                Supervised ~60 technicians during complete turnkey food processing facility erection (Ismail Industries, Karachi). Performed laser shaft alignment and conveyor balancing.
-              </p>
-            </div>
-
-            <div class="timeline-item">
-              <div class="timeline-company">Style Textile (Pvt.) Ltd.</div>
-              <div class="timeline-role">Maintenance Engineer</div>
-              <div class="timeline-date">Aug 2021 – Dec 2021 • Lahore</div>
-              <p class="timeline-desc">
-                Administered planned maintenance on high-speed textile machinery. Conducted root-cause failure analysis (RCFA) and vibration analysis on high-load drive shafts.
-              </p>
-            </div>
-
-            <div class="timeline-item">
-              <div class="timeline-company">Honda Atlas Cars Ltd.</div>
-              <div class="timeline-role">Engineering Intern</div>
-              <div class="timeline-date">Jun 2019 – Jul 2019 • Lahore</div>
-              <p class="timeline-desc">
-                Modeled exhaust routing layouts and sheet-metal bracket assemblies in CAD. Conducted GD&T tolerance stacking audits on robotic chassis welding fixtures.
-              </p>
-            </div>
-
-            <div class="timeline-item">
-              <div class="timeline-company">Starbucks Canada</div>
-              <div class="timeline-role">Assistant Store Manager</div>
-              <div class="timeline-date">Sep 2025 – Apr 2026 • Ottawa</div>
-              <p class="timeline-desc">
-                Supervised and scheduled a high-performing team of ~15 retail employees, orchestrating peak-hour operations, inventory control, and health & safety compliance.
-              </p>
-            </div>
-          </div>
-        </article>
-      </div>
-    </section>
-
-    <!-- ======================================================================
-         SECTION 02: 3D MECHANICAL / CAD ASSEMBLY EXPLODED VIEWER (R2)
-         ====================================================================== -->
-    <section id="cad-viewer" class="cad-section container" aria-label="Electromechanical CAD Simulation">
-      <div class="cad-header">
-        <div class="section-label">02 // ELECTROMECHANICAL CAD</div>
-        <h2 class="cad-title">Interactive ASSA ABLOY SL500 CAD Assembly</h2>
-        <p class="cad-subtitle">
-          Real-time interactive 3D simulation of commercial automatic sliding door operator mechanism. Inspect drive components, toggle wireframe ghosting, or simulate exploded assembly expansion along mechanical vectors.
-        </p>
-      </div>
-
-      <div class="cad-stage-wrapper">
-        <!-- Telemetry Top Bar -->
-        <div class="cad-overlay-top">
-          <div class="cad-model-meta">
-            <span class="cad-model-name">ASSA ABLOY SL500 // OPERATOR MECHANISM</span>
-            <span class="cad-parts-badge">8 CORE SUB-ASSEMBLIES</span>
-          </div>
-          <div class="cad-status-pill">
-            <span class="status-dot"></span>
-            SIMULATION ONLINE • 60 FPS
           </div>
         </div>
 
-        <!-- Three.js Canvas Mount -->
-        <div id="cad-viewer-container" role="region" aria-label="Interactive 3D Three.js Canvas. Drag to rotate 360 degrees, scroll to zoom.">
-          <!-- Canvas injected dynamically by cad-viewer.js -->
-        </div>
+        <!-- Right Column: Interactive Elastic Face (Plushie) -->
+        <div class="hero-stage">
+          <div class="plush-container">
+            
+            <!-- Speech reaction bubble -->
+            <div id="hero-bubble" class="hero-bubble" aria-live="polite">
+              <span id="hero-bubble-kicker" class="hero-bubble-kicker">PSST.</span>
+              <span id="hero-bubble-text" class="hero-bubble-text">Click and pull my face like elastic!</span>
+            </div>
 
-        <!-- Controls Toolbar Overlay -->
-        <div class="cad-controls-panel">
-          <div class="cad-slider-group">
-            <label for="cad-explode-slider" class="cad-slider-label">Explosion Distance:</label>
-            <input type="range" id="cad-explode-slider" class="cad-slider" min="0" max="100" value="0" step="1" aria-label="Exploded View Distance Slider (0% to 100%)">
-            <span id="cad-slider-val" class="cad-slider-val">0%</span>
+            <!-- The WebGL Plush Element -->
+            <div class="plush" id="usman-plush" data-frame="circle">
+              <div class="plush-frame"></div>
+              <!-- Fallback photo if WebGL is unavailable -->
+              <img src="assets/usman_smile.webp" alt="Usman Saleem, MEng" style="display:none; width:100%; height:100%; object-fit:cover; border-radius:50%;">
+              <canvas role="img" aria-label="Interactive 3D elastic face of Usman Saleem"></canvas>
+              <button type="button" class="plush-hit" aria-label="Poke Usman"></button>
+            </div>
+
           </div>
 
-          <div class="cad-btn-group">
-            <button id="cad-btn-explode" class="cad-btn" type="button">Explode View</button>
-            <button id="cad-btn-wireframe" class="cad-btn" type="button">Wireframe</button>
-            <button id="cad-btn-reset" class="cad-btn" type="button">Reset View</button>
+          <div class="hero-subhint">
+            <span>🖐</span> Grab cheek or nose to stretch · Procedural rubber physics active
           </div>
         </div>
-      </div>
 
-      <!-- Callout Component Specs Grid -->
-      <div class="cad-spec-grid">
-        <div class="cad-spec-card">
-          <div class="cad-spec-num">01 // DRIVE POWERTRAIN</div>
-          <div class="cad-spec-title">Brushless DC Motor & Gearbox</div>
-          <p class="cad-spec-desc">
-            Heavy-duty 24V DC brushless motor with high static torque, internal optical encoder, and sealed planetary reduction gearbox for 1M+ continuous door cycles.
-          </p>
+      </section>
+
+      <!-- ======================================================================
+           Featured Logos & System Deployments
+           ====================================================================== -->
+      <section class="featured-strip" aria-label="Organizations and Frameworks">
+        <div class="featured-label">ENGINEERING CREDENTIALS & INDUSTRY DEPLOYMENTS</div>
+        <div class="featured-logos">
+          <div class="featured-logo-item">ASSA ABLOY Entrance Systems</div>
+          <div class="featured-logo-item">University of Ottawa · MEng</div>
+          <div class="featured-logo-item">Baan IV ERP Core</div>
+          <div class="featured-logo-item">Three.js WebGL CAD</div>
+          <div class="featured-logo-item">Autonomous Robotics</div>
         </div>
+      </section>
 
-        <div class="cad-spec-card">
-          <div class="cad-spec-num">02 // CONTROL & TELEMETRY</div>
-          <div class="cad-spec-title">Microprocessor Control Unit (MCU)</div>
-          <p class="cad-spec-desc">
-            Intelligent self-learning microprocessor with real-time obstacle detection, monitored safety inputs, and telemetry interface for remote building management.
-          </p>
-        </div>
-
-        <div class="cad-spec-card">
-          <div class="cad-spec-num">03 // SUSPENSION CARRIAGE</div>
-          <div class="cad-spec-title">Dual-Roller Trolley Brackets</div>
-          <p class="cad-spec-desc">
-            Reinforced steel hanger brackets with whisper-quiet dual nylon wheels, anti-jump eccentric safety cams, and micrometer height adjustment.
-          </p>
-        </div>
-
-        <div class="cad-spec-card">
-          <div class="cad-spec-num">04 // PRESENCE DETECTION</div>
-          <div class="cad-spec-title">Active Infrared Presence Sensor</div>
-          <p class="cad-spec-desc">
-            Overhead microwave radar and dual-curtain active infrared presence detector complying with ANSI/BHMA A156.10 and EN 16005 pedestrian safety standards.
-          </p>
-        </div>
-      </div>
-    </section>
-
-    <!-- ======================================================================
-         SECTION 03: VERIFIED CREDENTIALS & ACADEMIC ACCREDITATION
-         ====================================================================== -->
-    <section id="credentials" class="container" style="padding: 70px 24px;" aria-label="Credentials & Education">
-      <div class="bento-header">
-        <div class="section-label">03 // CREDENTIALS & EDUCATION</div>
-        <h2 class="bento-title">Master of Engineering — University of Ottawa</h2>
-        <p class="bento-subtitle">
-          Graduate accreditation, verified academic achievements, and industry certifications.
-        </p>
-      </div>
-
-      <div class="bento-grid">
-        <div class="bento-card col-span-6">
-          <div class="badge-tech badge-tech-emerald" style="margin-bottom: 12px;">OFFICIAL GRADUATE DEGREE</div>
-          <h3 class="bento-card-title">University of Ottawa (uOttawa)</h3>
-          <p class="bento-card-desc">
-            <strong>Degree:</strong> Master of Engineering (MEng) in Mechanical Engineering<br>
-            <strong>Completed:</strong> January 13, 2025 • <strong>Senate Awarded:</strong> March 18, 2025<br>
-            <strong>Graduation Date:</strong> March 2025 • Ottawa, Ontario, Canada<br>
-            <strong>Key Focus:</strong> Advanced Manufacturing Systems, Finite Element Analysis (FEA), Autonomous Robotics, Control Engineering, Thermal Fluids & Applied HVAC.
-          </p>
-        </div>
-
-        <div class="bento-card col-span-6">
-          <div class="badge-tech" style="margin-bottom: 12px;">UNDERGRADUATE DEGREE</div>
-          <h3 class="bento-card-title">University of Engineering and Technology (UET)</h3>
-          <p class="bento-card-desc">
-            <strong>Degree:</strong> Bachelor of Science (BSc) in Mechanical Engineering<br>
-            <strong>Conferred:</strong> July 2021 • Lahore, Pakistan<br>
-            <strong>Accreditation:</strong> Washington Accord & PEC Accredited Engineering Degree<br>
-            <strong>Key Focus:</strong> Machine Design, CAD/CAM, Thermodynamics, Manufacturing Technology, Fluid Mechanics, Quality Control & Operations Research.
-          </p>
-        </div>
-      </div>
-    </section>
-
-    <!-- ======================================================================
-         SECTION 04: ATS RESUME ARCHIVE & 1-CLICK DOWNLOAD
-         ====================================================================== -->
-    <section id="resume" class="container" style="padding: 70px 24px;" aria-label="Resume Archive">
-      <div class="bento-header">
-        <div class="section-label">04 // CAREER ARCHIVE</div>
-        <h2 class="bento-title">Verified ATS Resume & Transcript</h2>
-        <p class="bento-subtitle">
-          1-Click direct download of the clean ATS-optimized PDF resume or interactive dual-mode modal preview with copyable plain-text transcript.
-        </p>
-      </div>
-
-      <div class="bento-card col-span-12" style="background: linear-gradient(135deg, rgba(16, 24, 39, 0.92) 0%, rgba(9, 13, 22, 0.98) 100%);">
-        <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 24px;">
+      <!-- ======================================================================
+           Showcase: Featured Engineering Projects
+           ====================================================================== -->
+      <section id="showcase" aria-labelledby="showcase-heading">
+        <div class="section-head">
           <div>
-            <div class="badge-tech badge-tech-emerald" style="margin-bottom: 8px;">
-              <span class="status-dot"></span>
-              VERIFIED AUTHENTIC DOCUMENT
-            </div>
-            <h3 style="font-family: var(--font-heading); font-size: 1.4rem; color: var(--text-primary); margin: 4px 0 8px;">
-              Usman_Saleem_MEng_Resume.pdf
-            </h3>
-            <p style="font-size: 0.9375rem; color: var(--text-secondary); max-width: 620px; margin: 0; line-height: 1.6;">
-              Formatted according to strict ATS parsing benchmarks. Verified directly against authentic University of Ottawa records and ASSA ABLOY Entrance Systems portfolio telemetry.
-            </p>
-          </div>
-
-          <div style="display: flex; gap: 14px; flex-wrap: wrap;">
-            <a href="assets/Usman_Saleem_MEng_Resume.pdf" 
-               download="Usman_Saleem_MEng_Resume.pdf" 
-               class="btn btn-primary">
-              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-              Download ATS Resume (PDF)
-            </a>
-
-            <button id="btn-open-resume-modal" type="button" class="btn btn-secondary">
-              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-              Preview & Copy Transcript
-            </button>
+            <h2 id="showcase-heading" class="section-title">Some things I've built</h2>
+            <p class="section-subtitle">Real-world electromechanical automation, distributed intelligence, and robotics.</p>
           </div>
         </div>
-      </div>
-    </section>
-  </main>
 
-  <!-- ======================================================================
-       Authentic Identity Grounding Modal (Rule 2 Compliance)
-       ====================================================================== -->
-  <div id="identity-modal" class="identity-grounding-modal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="modal-identity-title">
-    <div class="identity-modal-dialog">
-      <button id="btn-close-identity" class="identity-close-btn" type="button" aria-label="Close Identity Dialog">✕</button>
-      
-      <div class="identity-photo-frame">
-        <img src="assets/headshot.jpg" alt="Authentic portrait photograph of Usman Saleem, MEng" width="160" height="160">
-      </div>
-
-      <div class="badge-tech badge-tech-emerald" style="margin-bottom: 8px;">
-        <span class="status-dot"></span>
-        Verified Authentic Identity
-      </div>
-
-      <h3 id="modal-identity-title" style="font-family: var(--font-heading); font-size: 1.35rem; margin: 8px 0 4px; color: var(--text-primary);">
-        Usman Saleem, MEng
-      </h3>
-      <p style="font-family: var(--font-mono); font-size: 0.8125rem; color: var(--accent-cyan); margin: 0 0 12px;">
-        Mechanical Engineer & Project Coordinator
-      </p>
-      <p style="font-size: 0.875rem; color: var(--text-secondary); line-height: 1.5; margin-bottom: 20px;">
-        Grounded directly in authentic credentials: MEng University of Ottawa, ASSA ABLOY Entrance Systems Key Accounts, and verified engineering telemetry.
-      </p>
-
-      <a href="assets/Usman_Saleem_MEng_Resume.pdf" download="Usman_Saleem_MEng_Resume.pdf" class="btn btn-primary" style="width: 100%;">
-        Download Official Resume (PDF)
-      </a>
-    </div>
-  </div>
-
-  <!-- ======================================================================
-       ATS Resume Modal (Dual Tabs: PDF Embed + Copyable Plain Text)
-       ====================================================================== -->
-  <div id="resume-modal" class="resume-modal-backdrop" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="resume-modal-title">
-    <div class="resume-modal-dialog">
-      <!-- Modal Header -->
-      <div class="resume-modal-header">
-        <div class="resume-modal-title-group">
-          <span class="badge-tech badge-tech-emerald">
-            <span class="status-dot"></span>
-            ATS-CERTIFIED
-          </span>
-          <h3 id="resume-modal-title" class="resume-modal-title">
-            Usman Saleem, MEng — Career Profile & Resume
-          </h3>
-        </div>
-        <button id="btn-close-resume" class="resume-modal-close-btn" type="button" aria-label="Close Resume Modal">✕</button>
-      </div>
-
-      <!-- Tab Navigation -->
-      <div class="resume-modal-tabs" role="tablist" aria-label="Resume View Modes">
-        <button id="tab-btn-pdf" class="resume-tab-btn is-active" type="button" role="tab" aria-selected="true" aria-controls="tab-panel-pdf">
-          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-          PDF Document Preview
-        </button>
-        <button id="tab-btn-ats" class="resume-tab-btn" type="button" role="tab" aria-selected="false" aria-controls="tab-panel-ats">
-          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="4 7 4 4 20 4 20 7"></polyline><line x1="9" y1="20" x2="15" y2="20"></line><line x1="12" y1="4" x2="12" y2="20"></line></svg>
-          ATS Plain-Text Transcript
-        </button>
-      </div>
-
-      <!-- Tab Panels -->
-      <div class="resume-tab-body">
-        <!-- PDF Tab Panel -->
-        <div id="tab-panel-pdf" class="resume-tab-panel is-active" role="tabpanel" aria-labelledby="tab-btn-pdf">
-          <iframe src="assets/Usman_Saleem_MEng_Resume.pdf#toolbar=1" class="resume-pdf-frame" title="Usman Saleem MEng Resume PDF Preview"></iframe>
-        </div>
-
-        <!-- ATS Transcript Tab Panel -->
-        <div id="tab-panel-ats" class="resume-tab-panel" role="tabpanel" aria-labelledby="tab-btn-ats">
-          <div class="resume-ats-container">
-            <div class="resume-ats-toolbar">
-              <span class="hud-lbl">CLEAN PARSABLE PLAIN-TEXT TRANSCRIPT (100% ATS PARSER COMPLIANT)</span>
-              <div style="display: flex; align-items: center; gap: 12px;">
-                <span id="ats-copy-status" class="ats-copy-status">✓ Copied to Clipboard!</span>
-                <button id="btn-copy-ats" class="ats-copy-btn" type="button">
-                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-                  Copy Clean ATS Text
-                </button>
+        <div class="projects-grid">
+          
+          <!-- Project 1 -->
+          <article class="project-card">
+            <div class="project-card-top">
+              <div class="project-meta">
+                <span class="project-badge">ENTERPRISE AUTOMATION</span>
+                <span class="project-metric">99.8% RECONCILIATION</span>
               </div>
+              <h3 class="project-title">ASSA ABLOY Operations Dispatcher & Invoicing Intelligence</h3>
+              <p class="project-desc">
+                High-throughput operational data hub uniting Baan IV ERP, SSRS reporting telemetry, and field service management. Eliminates manual dispatch errors and guarantees deterministic pricing reconciliation across Canada.
+              </p>
             </div>
+            <div class="project-tags">
+              <span class="project-tag">Baan ERP</span>
+              <span class="project-tag">Python 3.12</span>
+              <span class="project-tag">SSRS Telemetry</span>
+              <span class="project-tag">SQL</span>
+            </div>
+          </article>
 
-            <pre id="resume-ats-text" class="resume-ats-pre">USMAN SALEEM, MEng
-Mississauga, Ontario, Canada | +1 613-698-0104 | usman.saleem@uottawa.ca
-LinkedIn: https://www.linkedin.com/in/usmansal/ | Portfolio: https://usmansaleem.me
+          <!-- Project 2 -->
+          <article class="project-card">
+            <div class="project-card-top">
+              <div class="project-meta">
+                <span class="project-badge">3D DIGITAL TWIN</span>
+                <span class="project-metric">60 FPS WEBGL</span>
+              </div>
+              <h3 class="project-title">ASSA ABLOY SL500 Electromechanical 3D Simulator</h3>
+              <p class="project-desc">
+                Interactive real-time 3D CAD digital twin of the commercial SL500 automatic sliding door operator. Features orbital controls, dynamic exploded assembly view, wireframe mode, and mechanical servo sound synthesis.
+              </p>
+            </div>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:14px;">
+              <div class="project-tags" style="margin-top:0;">
+                <span class="project-tag">Three.js</span>
+                <span class="project-tag">CAD / GLTF</span>
+                <span class="project-tag">WebGL</span>
+              </div>
+              <button type="button" class="btn-primary open-cad-btn" style="padding:6px 14px; font-size:0.8rem;">
+                Open 3D Model ↗
+              </button>
+            </div>
+          </article>
 
-PROFESSIONAL SUMMARY
-Mechanical Engineer and Technical Project Coordinator with Master of Engineering (MEng) from the University of Ottawa. Directing electromechanical installation pipelines, engineering take-offs, and enterprise ERP data synchronization for ASSA ABLOY Entrance Systems. Proven track record managing up to 40 concurrent key account projects, coordinating 60+ field technicians and trade millwrights, and administering a multi-million dollar operational portfolio ($10M+). Expert in GD&T, CAD design, automated data reconciliation, and process optimization.
+          <!-- Project 3 -->
+          <article class="project-card">
+            <div class="project-card-top">
+              <div class="project-meta">
+                <span class="project-badge">GRADUATE RESEARCH</span>
+                <span class="project-metric">uOTTAWA MEng</span>
+              </div>
+              <h3 class="project-title">Autonomous Swarm Robotics & Kinematic Trajectory Engine</h3>
+              <p class="project-desc">
+                Multi-agent robotic trajectory planning, obstacle avoidance algorithms, and kinematic modeling developed for autonomous systems. Evaluated on simulated multi-rover environments with decentralized state machines.
+              </p>
+            </div>
+            <div class="project-tags">
+              <span class="project-tag">Robotics</span>
+              <span class="project-tag">ROS</span>
+              <span class="project-tag">Kinematics</span>
+              <span class="project-tag">C++ / Python</span>
+            </div>
+          </article>
 
-CORE COMPETENCIES
-- Engineering & Manufacturing: Electromechanical Systems, GD&T, Root-Cause Analysis, FEA, Equipment Safety, Prototyping
-- CAD & Simulation: AutoCAD, SolidWorks, Autodesk Fusion 360, Three.js, Engineering Layouts, Parametric Modeling
-- Project Coordination: Quote-to-Invoicing Lifecycle, Site Audits & Take-offs (ROW, OFW, ROH, MH), Resource Scheduling, Field Supervision
-- Data & Enterprise Systems: Python 3.12, SQL, Baan ERP, Microsoft Dynamics 365, iSAC CRM, Power BI, Power Automate, SharePoint
+          <!-- Project 4 -->
+          <article class="project-card">
+            <div class="project-card-top">
+              <div class="project-meta">
+                <span class="project-badge">AGENTIC AI</span>
+                <span class="project-metric">0% PRO QUOTA</span>
+              </div>
+              <h3 class="project-title">Distributed Multi-Agent Engineering Bridge</h3>
+              <p class="project-desc">
+                High-concurrency distributed engineering harness orchestrating Microsoft Copilot Sol 6.1, Google AI Studio pooled key clusters, and AST code verification pipelines with zero marginal compute cost.
+              </p>
+            </div>
+            <div class="project-tags">
+              <span class="project-tag">Distributed Systems</span>
+              <span class="project-tag">Substrate</span>
+              <span class="project-tag">AST Patching</span>
+            </div>
+          </article>
 
-PROFESSIONAL EXPERIENCE
+        </div>
+      </section>
 
-ASSA ABLOY ENTRANCE SYSTEMS | Mississauga, ON
-Key Accounts Project Coordinator | April 2026 – Present
-- Direct end-to-end technical execution for up to 40 concurrent commercial entrance automation projects across Canadian national key accounts.
-- Oversee comprehensive project lifecycles from preliminary site take-off and quote estimation to engineering review, subcontractor dispatch, commissioning, and final invoicing.
-- Validate site survey formulas (Rough Opening Width, Overall Frame Width, Rough Opening Height, Masonry Header) to eliminate dimensional fitment errors prior to factory manufacturing release.
-- Reconcile multi-tier pricing, purchase orders, and billings across Baan ERP and Microsoft Dynamics 365, ensuring 100% financial and contract compliance across a $10M+ managed operational portfolio.
+      <!-- ======================================================================
+           Spotlight Banner: Interactive 3D CAD Operator
+           ====================================================================== -->
+      <section class="cad-banner" aria-label="3D CAD Feature">
+        <div class="cad-banner-content">
+          <div class="hero-tag" style="background:rgba(255,84,30,0.2); color:#ff7a4d;">DIGITAL TWIN SPOTLIGHT</div>
+          <h3>ASSA ABLOY SL500 Automatic Door Operator</h3>
+          <p>
+            Interact with the complete 3D electromechanical assembly right in your browser. Inspect motors, drive belts, microprocessors, and track geometry in real time.
+          </p>
+        </div>
+        <button type="button" class="btn-primary open-cad-btn" style="background:#ff541e; white-space:nowrap;">
+          Launch 3D Explorer 🚀
+        </button>
+      </section>
 
-STARBUCKS CANADA | Ottawa, ON
-Assistant Store Manager | September 2025 – April 2026
-- Supervised and scheduled a multidisciplinary team of ~15 retail partners, optimizing peak-hour labor deployment and customer satisfaction metrics.
-- Managed lean inventory procurement, weekly waste reduction protocols, cash management, and health & safety compliance.
+      <!-- ======================================================================
+           About & Credentials
+           ====================================================================== -->
+      <section id="about" class="about-card" aria-label="About Usman Saleem">
+        <div class="about-col">
+          <h3>Mechanical Engineering Meets Intelligent Systems</h3>
+          <p>
+            I am a Mechanical Project Coordinator and Autonomous Systems Engineer based in Canada. My work centers on bridging heavy physical mechanical hardware with scalable software, automation, and computer vision.
+          </p>
+          <p>
+            At <strong>ASSA ABLOY Entrance Systems</strong>, I spearhead Key Accounts technical coordination, ensure structural and life-safety compliance, and develop automated telemetry platforms that streamline national operations.
+          </p>
+          <p>
+            I earned my <strong>Master of Engineering (MEng)</strong> from the <strong>University of Ottawa</strong>, focusing on autonomous robotics, kinematic control, and computational simulation.
+          </p>
+        </div>
 
-BÜHLER GROUP | Lahore & Karachi, Pakistan
-Trainee Installation Engineer | November 2021 – December 2022
-- Coordinated on-site mechanical erection, structural alignment, and commissioning of a complete industrial food processing facility at Ismail Industries, Karachi.
-- Supervised and scheduled daily tasks for approximately 60 technicians, fabricators, and millwrights adhering to strict safety standards.
-- Performed precision shaft laser alignment, dynamic conveyor belt balancing, pneumatic piping pressure checks, and electrical drive motor commissioning.
+        <div class="about-col">
+          <h3>Technical Stack & Methodologies</h3>
+          <p style="font-size:0.88rem; color:var(--text-faint);">CORE COMPETENCIES & INDUSTRY TOOLS</p>
 
-STYLE TEXTILE (PVT.) LIMITED | Lahore, Pakistan
-Maintenance Engineer | August 2021 – December 2021
-- Planned and executed scheduled maintenance routines across circular knitting machines and high-speed textile processing equipment.
-- Utilized root-cause failure analysis (RCFA) and vibration telemetry to troubleshoot bearing fatigue and reduce unexpected line stoppages.
+          <div class="skills-cloud">
+            <span class="skill-pill featured">ASSA ABLOY SL500</span>
+            <span class="skill-pill featured">Key Accounts Coordination</span>
+            <span class="skill-pill featured">Autonomous Robotics</span>
+            <span class="skill-pill">SolidWorks CAD</span>
+            <span class="skill-pill">AutoCAD</span>
+            <span class="skill-pill">GD&T Standards</span>
+            <span class="skill-pill">Baan IV ERP</span>
+            <span class="skill-pill">Python 3.12</span>
+            <span class="skill-pill">C++</span>
+            <span class="skill-pill">Three.js / WebGL</span>
+            <span class="skill-pill">PLC Automation</span>
+            <span class="skill-pill">SSRS Reporting</span>
+            <span class="skill-pill">Technical Proposals</span>
+            <span class="skill-pill">Git / DevOps</span>
+          </div>
 
-HONDA ATLAS CARS (PAKISTAN) LTD. | Lahore, Pakistan
-Engineering Intern | June 2019 – July 2019
-- Modeled exhaust routing layouts and sheet-metal bracket assemblies in CAD, applying standard GD&T tolerance stacking rules.
-- Supported robotic spot welding quality audits on automotive unibody chassis assembly fixtures.
-
-NESTLÉ PAKISTAN | Sheikhupura, Pakistan
-Operations Intern | July 2019 – August 2019
-- Analyzed packaging line throughput, standard operating procedures, and automated palletizer maintenance logs to identify bottleneck stages.
-
-EDUCATION
-Master of Engineering (MEng) in Mechanical Engineering
-University of Ottawa (uOttawa), Ottawa, ON | Conferred March 2025
-- Focus: Advanced Manufacturing, Finite Element Analysis (FEA), Autonomous Robotics, Control Systems, HVAC Engineering.
-
-Bachelor of Science (BSc) in Mechanical Engineering
-University of Engineering and Technology (UET), Lahore, Pakistan | Conferred July 2021
-- Focus: Machine Design, Thermodynamics, Fluid Dynamics, Materials Science, Industrial Engineering.
-
-CERTIFICATIONS
-- Autodesk Certified: CAD and Digital Manufacturing
-- Autodesk Certified: Generative Design for Manufacturing
-- Autodesk Certified: Engineering Design Process with Autodesk Fusion 360
-- Emergency First Aid CPR/AED Level C</pre>
+          <div style="margin-top: 28px;">
+            <a href="assets/Usman_Saleem_MEng_Resume.pdf" download="Usman_Saleem_MEng_Resume.pdf" class="btn-secondary" style="width: 100%; justify-content: center;">
+              Download Complete Resume Dossier (PDF)
+            </a>
           </div>
         </div>
+      </section>
+
+    </main>
+
+    <!-- ======================================================================
+         Site Footer
+         ====================================================================== -->
+    <footer class="site-footer" role="contentinfo">
+      <div class="footer-left">
+        <span class="handle-dot" aria-hidden="true"></span>
+        <span class="footer-copy">© 2026 Usman Saleem, MEng · Built with pure WebGL & 0% bloat.</span>
       </div>
 
-      <!-- Modal Footer -->
-      <div class="resume-modal-footer">
-        <div class="resume-footer-meta">
-          Verified against authentic uOttawa degree records and ASSA ABLOY Entrance Systems credentials.
-        </div>
-        <a href="assets/Usman_Saleem_MEng_Resume.pdf" download="Usman_Saleem_MEng_Resume.pdf" class="btn btn-primary" style="padding: 8px 16px; font-size: 0.8125rem;">
-          Download PDF
-        </a>
+      <ul class="footer-links">
+        <li><a href="#showcase" class="footer-link">Showcase</a></li>
+        <li><a href="#about" class="footer-link">About</a></li>
+        <li><a href="https://github.com/UxmanX" target="_blank" rel="noopener" class="footer-link">GitHub</a></li>
+        <li><a href="mailto:usman.saleem@uottawa.ca" class="footer-link">Email</a></li>
+      </ul>
+    </footer>
+
+  </div>
+
+  <!-- ======================================================================
+       3D CAD Viewer Modal
+       ====================================================================== -->
+  <div id="cad-modal" class="modal-backdrop" role="dialog" aria-modal="true" aria-label="3D CAD Model Viewer">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h4>ASSA ABLOY SL500 Automatic Door Operator — 3D CAD Explorer</h4>
+        <button id="close-cad-modal" class="modal-close-btn" type="button" aria-label="Close modal">×</button>
+      </div>
+      <div class="modal-canvas-frame">
+        <iframe id="cad-iframe" title="Interactive 3D SL500 CAD Model"></iframe>
       </div>
     </div>
   </div>
 
-  <!-- ======================================================================
-       Site Footer
-       ====================================================================== -->
-  <footer class="site-footer" style="border-top: 1px solid var(--border-subtle); padding: 32px 0; background: var(--bg-secondary); margin-top: 60px;">
-    <div class="container" style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 16px;">
-      <div style="font-family: var(--font-mono); font-size: 0.8125rem; color: var(--text-muted);">
-        © 2026 Usman Saleem. Hosted on <span style="color: var(--accent-cyan);">usmansaleem.me</span> via GitHub Pages.
-      </div>
-      <div style="display: flex; gap: 16px;">
-        <a href="https://github.com/UxmanX/usmansaleem-me" target="_blank" rel="noopener noreferrer" class="nav-link">GitHub Repository</a>
-        <a href="https://linkedin.com/in/usmansal" target="_blank" rel="noopener noreferrer" class="nav-link">LinkedIn</a>
-      </div>
-    </div>
-  </footer>
-
-  <!-- ======================================================================
-       JavaScript Orchestration Scripts
-       ====================================================================== -->
-  <!-- Three.js & OrbitControls (Local offline-ready with CDN fallback) -->
-  <script src="js/vendor/three.min.js"></script>
-  <script src="js/vendor/OrbitControls.js"></script>
-
-  <script src="js/audio.js"></script>
-  <script src="js/avatar.js"></script>
-  <script src="js/cad-viewer.js"></script>
-  <script src="js/resume-modal.js"></script>
-  <script src="js/main.js"></script>
+  <!-- Scripts -->
+  <script type="module" src="js/app.js"></script>
 </body>
 </html>

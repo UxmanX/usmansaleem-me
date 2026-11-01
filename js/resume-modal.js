@@ -26,6 +26,8 @@
     const atsPre = document.getElementById('resume-ats-text');
 
     let previousActiveElement = null;
+    let copyFeedbackTimer = null;
+    const originalCopyBtnHtml = copyBtn ? copyBtn.innerHTML : '';
 
     // Open Modal
     function openModal() {
@@ -38,9 +40,14 @@
         window.soundEngine.playChime();
       }
 
-      // Focus close button or first tab
+      // Focus close button immediately and with microtask/short timer fallback for WCAG AA compliance
       if (closeBtn) {
         closeBtn.focus();
+        setTimeout(() => {
+          if (modal.classList.contains('is-open') && document.activeElement !== closeBtn) {
+            closeBtn.focus();
+          }
+        }, 50);
       }
     }
 
@@ -49,6 +56,13 @@
       modal.classList.remove('is-open');
       modal.setAttribute('aria-hidden', 'true');
       document.body.style.overflow = '';
+
+      if (copyFeedbackTimer) {
+        clearTimeout(copyFeedbackTimer);
+        copyFeedbackTimer = null;
+        if (copyStatus) copyStatus.classList.remove('is-visible');
+        if (copyBtn && originalCopyBtnHtml) copyBtn.innerHTML = originalCopyBtnHtml;
+      }
 
       if (window.soundEngine) {
         window.soundEngine.playPop();
@@ -123,22 +137,32 @@
     }
 
     function showCopyFeedback() {
+      if (copyFeedbackTimer) {
+        clearTimeout(copyFeedbackTimer);
+        copyFeedbackTimer = null;
+      }
+
       if (copyStatus) {
         copyStatus.classList.add('is-visible');
-        setTimeout(() => {
-          copyStatus.classList.remove('is-visible');
-        }, 2500);
       }
+
       if (copyBtn) {
-        const originalText = copyBtn.innerHTML;
         copyBtn.innerHTML = '✓ Copied to Clipboard!';
-        setTimeout(() => {
-          copyBtn.innerHTML = originalText;
-        }, 2500);
       }
+
       if (window.soundEngine) {
         window.soundEngine.playChime();
       }
+
+      copyFeedbackTimer = setTimeout(() => {
+        if (copyStatus) {
+          copyStatus.classList.remove('is-visible');
+        }
+        if (copyBtn && originalCopyBtnHtml) {
+          copyBtn.innerHTML = originalCopyBtnHtml;
+        }
+        copyFeedbackTimer = null;
+      }, 2500);
     }
 
     // Attach Listeners
@@ -170,11 +194,13 @@
         closeModal();
       }
 
-      // Focus Trap
+      // Focus Trap (Filter to interactable, currently visible elements only)
       if (e.key === 'Tab') {
-        const focusable = modal.querySelectorAll(
+        const focusable = Array.from(modal.querySelectorAll(
           'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-        );
+        )).filter((el) => {
+          return el.offsetParent !== null && !el.disabled && getComputedStyle(el).visibility !== 'hidden';
+        });
         if (focusable.length === 0) return;
 
         const firstElem = focusable[0];

@@ -135,8 +135,44 @@
     }
 
     _loadAssembly() {
-      // Build the authentic ASSA ABLOY SL500 automatic door mechanism
-      this._buildProceduralSL500();
+      // Attempt to load binary GLB model if GLTFLoader is present, with seamless procedural fallback
+      if (typeof THREE.GLTFLoader !== 'undefined') {
+        const loader = new THREE.GLTFLoader();
+        loader.load(
+          'assets/assa_abloy_sl500.glb',
+          (gltf) => {
+            if (gltf && gltf.scene) {
+              const root = gltf.scene;
+              root.name = 'ASSA_ABLOY_SL500_GLB_ASSEMBLY';
+              let idx = 0;
+              root.traverse((child) => {
+                if (child.isMesh) {
+                  this._registerPart(
+                    child,
+                    child.name || `SL500_SubAssembly_${++idx}`,
+                    new THREE.Vector3(0, 0.2 + idx * 0.05, 0)
+                  );
+                }
+              });
+              if (this.parts.length >= 8) {
+                this.scene.add(root);
+                return;
+              }
+            }
+            // Fallback if glb lacks sufficient discrete sub-assemblies
+            this._buildProceduralSL500();
+          },
+          undefined,
+          (err) => {
+            console.info('[CAD Viewer] GLB asset loading bypassed/failed; activating procedural SL500:', err ? err.message : '');
+            this._buildProceduralSL500();
+          }
+        );
+      } else {
+        // Procedural geometry guarantees 100% offline uptime, zero CORS issues under file:///,
+        // and 11 distinct mathematical explosion vectors.
+        this._buildProceduralSL500();
+      }
     }
 
     _buildProceduralSL500() {

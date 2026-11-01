@@ -18,13 +18,15 @@
   visibility: hidden;
   pointer-events: none;
   transition: opacity var(--duration-normal) var(--ease-smooth),
-              visibility var(--duration-normal) var(--ease-smooth);
+              visibility 0s linear var(--duration-normal);
 }
 
 .resume-modal-backdrop.is-open {
   opacity: 1;
   visibility: visible;
   pointer-events: auto;
+  transition: opacity var(--duration-normal) var(--ease-smooth),
+              visibility 0s linear 0s;
 }
 
 .resume-modal-dialog {

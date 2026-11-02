@@ -4,9 +4,9 @@
  * - Continuum WebGL Viscoelastic Face Deformation with Multi-Expression Morphing
  * - Real-Time Tensile Strain Gauge (0 to 12.4 MPa) & Persistent Pull Telemetry
  * - Tactile Quick Actions (Boop Nose, Max Stretch, Espresso Overclock)
- * - Playable ASSA ABLOY SL500 Electromechanical Sliding Door Simulator
+ * - Playable ASSA ABLOY SL500 Commercial Sliding Door Operator Simulator
  * - Project Category Filter Tabs
- * - Procedural Web Audio API Synthesizer (Squeaks, Chirps, Brushless Servo Hums)
+ * - Procedural Web Audio API Synthesizer (Squeaks, Chirps, Brushless DC Drive Motor Hums)
  * - Modern Web Guidance Native <dialog> Modal with Discrete Transitions
  */
 

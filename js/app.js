@@ -200,6 +200,8 @@ let isAudioEnabled = true;
 document.addEventListener("DOMContentLoaded", () => {
   initPlushFace();
   initSL500Simulator();
+  initMobileMenu();
+  initReadMore();
   initProjectFilters();
   initCadDialog();
   initCopyEmail();
@@ -963,5 +965,58 @@ function initSmoothScroll() {
         targetEl.scrollIntoView({ behavior: "smooth" });
       }
     });
+  });
+}
+
+/* ==========================================================================
+   Mobile menu: the nav links are hidden below 640px, so a menu button reveals them
+   ========================================================================== */
+function initMobileMenu() {
+  const nav = document.querySelector(".site-nav");
+  const btn = document.querySelector(".nav-menu-btn");
+  if (!nav || !btn) return;
+  const setOpen = (open) => {
+    nav.classList.toggle("menu-open", open);
+    btn.setAttribute("aria-expanded", String(open));
+    btn.setAttribute("aria-label", open ? "Close menu" : "Open menu");
+  };
+  btn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    setOpen(!nav.classList.contains("menu-open"));
+  });
+  nav.querySelectorAll(".nav-link").forEach((a) => a.addEventListener("click", () => setOpen(false)));
+  document.addEventListener("click", (e) => {
+    if (!nav.contains(e.target)) setOpen(false);
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && nav.classList.contains("menu-open")) {
+      setOpen(false);
+      btn.focus();
+    }
+  });
+  window.matchMedia("(min-width: 641px)").addEventListener("change", (m) => {
+    if (m.matches) setOpen(false);
+  });
+}
+
+/* ==========================================================================
+   Project cards: on phones, long descriptions collapse with a Read more toggle
+   ========================================================================== */
+function initReadMore() {
+  document.querySelectorAll(".project-desc").forEach((desc, i) => {
+    if (!desc.id) desc.id = `project-desc-${i + 1}`;
+    desc.classList.add("is-clamped");
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "desc-toggle";
+    btn.setAttribute("aria-controls", desc.id);
+    btn.setAttribute("aria-expanded", "false");
+    btn.textContent = "Read more";
+    btn.addEventListener("click", () => {
+      const open = desc.classList.toggle("is-clamped") === false;
+      btn.setAttribute("aria-expanded", String(open));
+      btn.textContent = open ? "Show less" : "Read more";
+    });
+    desc.after(btn);
   });
 }

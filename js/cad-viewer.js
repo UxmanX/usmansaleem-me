@@ -64,6 +64,7 @@
         this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'high-performance' });
         this.renderer.setSize(width, height);
         this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+        this.renderer.outputEncoding = THREE.sRGBEncoding;
         this.renderer.shadowMap.enabled = true;
         this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
         this.container.innerHTML = '';
@@ -141,38 +142,79 @@
         loader.load(
           'assets/assa_abloy_sl500.glb',
           (gltf) => {
-            if (gltf && gltf.scene) {
-              const root = gltf.scene;
-              root.name = 'ASSA_ABLOY_SL500_GLB_ASSEMBLY';
-              let idx = 0;
-              root.traverse((child) => {
-                if (child.isMesh) {
-                  this._registerPart(
-                    child,
-                    child.name || `SL500_SubAssembly_${++idx}`,
-                    new THREE.Vector3(0, 0.2 + idx * 0.05, 0)
-                  );
-                }
-              });
-              if (this.parts.length >= 8) {
-                this.scene.add(root);
-                return;
-              }
-            }
-            // Fallback if glb lacks sufficient discrete sub-assemblies
-            this._buildProceduralSL500();
+            if (!this._mountGlb(gltf && gltf.scene)) this._buildProceduralSL500();
+            this._hideLoading();
           },
           undefined,
           (err) => {
-            console.info('[CAD Viewer] GLB asset loading bypassed/failed; activating procedural SL500:', err ? err.message : '');
+            console.info('[CAD Viewer] GLB load failed; using the procedural SL500:', err ? err.message : '');
             this._buildProceduralSL500();
+            this._hideLoading();
           }
         );
       } else {
-        // Procedural geometry guarantees 100% offline uptime, zero CORS issues under file:///,
-        // and 11 distinct mathematical explosion vectors.
+        // Procedural geometry keeps the viewer working offline and under file:///
         this._buildProceduralSL500();
+        this._hideLoading();
       }
+    }
+
+    // Centre and scale the BIM export to the viewer's stage, then give every mesh an outward explode vector
+    _mountGlb(root) {
+      if (!root) return false;
+      root.name = 'ASSA_ABLOY_SL500_GLB_ASSEMBLY';
+      const box = new THREE.Box3().setFromObject(root);
+      const size = box.getSize(new THREE.Vector3());
+      const centre = box.getCenter(new THREE.Vector3());
+      const stage = new THREE.Group();
+      root.position.sub(centre);
+      stage.add(root);
+      stage.scale.setScalar(2.7 / (Math.max(size.x, size.y, size.z) || 1));
+      stage.updateMatrixWorld(true);
+      const meshes = [];
+      root.traverse((child) => { if (child.isMesh) meshes.push(child); });
+      if (meshes.length < 4) return false;
+      meshes.forEach((mesh, i) => {
+        mesh.castShadow = true;
+        mesh.receiveShadow = true;
+        // BIM glazing arrives as opaque blue: make it read as glass
+        const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+        mats.forEach((m) => {
+          if (!m || !m.color) return;
+          const { r, g, b } = m.color;
+          if (/glass|glaz/i.test(m.name || '') || (b > 0.2 && b > r * 1.4 && b > g * 1.1)) {
+            m.transparent = true;
+            m.opacity = 0.3;
+            m.depthWrite = false;
+            m.color.setRGB(0.62, 0.8, 0.92);
+            if ('metalness' in m) m.metalness = 0.1;
+            if ('roughness' in m) m.roughness = 0.08;
+          }
+        });
+        const c = new THREE.Box3().setFromObject(mesh).getCenter(new THREE.Vector3());
+        const planar = new THREE.Vector3(c.x, c.y, c.z * 0.35);
+        const dir = planar.lengthSq() > 1e-4 ? planar.normalize() : new THREE.Vector3(0, 1, 0);
+        const a = mesh.parent.worldToLocal(c.clone());
+        const b = mesh.parent.worldToLocal(c.clone().add(dir.multiplyScalar(0.3)));
+        this._registerPart(mesh, mesh.name || `SL500_SubAssembly_${i + 1}`, b.sub(a));
+      });
+      this.scene.add(stage);
+      // Neutral light for the real model (the cyan key light suits the procedural mock-up only)
+      this.scene.traverse((o) => { if (o.isDirectionalLight) o.color.set(0xffffff); });
+      this.scene.add(new THREE.HemisphereLight(0xffffff, 0x1e293b, 0.55));
+      // Three-quarter view so the depth of the header and leaves reads
+      this.initialCameraPos = { x: 1.1, y: 0.6, z: 3.25 };
+      this.camera.position.set(1.1, 0.6, 3.25);
+      if (this.controls) {
+        this.controls.update();
+        this.controls.saveState();
+      }
+      return true;
+    }
+
+    _hideLoading() {
+      const el = document.getElementById('cad-loading');
+      if (el) el.classList.add('is-hidden');
     }
 
     _buildProceduralSL500() {

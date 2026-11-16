@@ -69,27 +69,36 @@
       pointer-events: none;
     }
     .watermark span { color: #ff541e; font-weight: bold; }
+    .cad-loading {
+      position: fixed; inset: 0; display: grid; place-items: center; pointer-events: none;
+      color: #94a3b8; font: 600 12px/1 "JetBrains Mono", ui-monospace, monospace; letter-spacing: 0.12em; text-transform: uppercase;
+      transition: opacity 0.3s ease, visibility 0.3s ease;
+    }
+    .cad-loading.is-hidden { opacity: 0; visibility: hidden; }
+    .ctrl-btn.is-active { border-color: #ff541e; color: #ff541e; }
   </style>
 </head>
 <body>
 
   <div class="watermark">ASSA ABLOY <span>SL500 OPERATOR</span> · THREE.JS DIGITAL TWIN</div>
   <div id="cad-viewer-container"></div>
+  <div id="cad-loading" class="cad-loading" role="status">Loading SL500 model…</div>
 
   <div class="cad-controls-bar">
-    <button id="cad-explode-btn" class="ctrl-btn" type="button">
+    <button id="cad-btn-explode" class="ctrl-btn" type="button">
       Explode View
     </button>
-    <button id="cad-wireframe-btn" class="ctrl-btn" type="button">
+    <button id="cad-btn-wireframe" class="ctrl-btn" type="button">
       Wireframe
     </button>
-    <button id="cad-reset-btn" class="ctrl-btn" type="button">
+    <button id="cad-btn-reset" class="ctrl-btn" type="button">
       Reset Camera
     </button>
   </div>
 
   <script src="js/vendor/three.min.js"></script>
   <script src="js/vendor/OrbitControls.js"></script>
+  <script src="js/vendor/GLTFLoader.js"></script>
   <script src="js/cad-viewer.js"></script>
 </body>
 </html>

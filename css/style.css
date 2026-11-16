@@ -1046,7 +1046,7 @@ body {
 }
 
 .beam-status-armed {
-  color: var(--accent-green) !important;
+  color: var(--accent-green); /* no !important: the simulator script recolours this for LOCKED / BLOCKED / TRANSIT */
 }
 
 .door-viewport-stage {

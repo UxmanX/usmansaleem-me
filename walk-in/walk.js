@@ -763,25 +763,80 @@ async function init() {
   scene.add(kiosk);
   rounded(0.72, 1.02, 0.52, 0.05, M.solid, 0, 0.51, 0, { parent: kiosk });
   rounded(0.16, 0.3, 0.16, 0.03, M.black, 0, 1.15, -0.05, { parent: kiosk });
-  const kioskTex = canvasTex(1024, 640, (g, w, h) => {
-    g.fillStyle = '#15191d'; g.fillRect(0, 0, w, h);
-    g.fillStyle = '#e9edf1'; g.font = '800 46px "JetBrains Mono", monospace'; spacing(g, 2);
-    g.fillText('STORE AUDIT', 56, 92);
-    g.fillStyle = '#9aa3ad'; g.font = '700 32px "JetBrains Mono", monospace';
-    g.fillText('15 / 15 DOORS', 56, 146);
+  // The kiosk runs the audit race: Insight Collector clears a 15-door store while the manual
+  // portal crawl is still on door 1. A simulation at 3x speed using the case-study times (~3 h vs 15 s).
+  const RACE = { APP_S: 15, MANUAL_S: 3 * 3600, SPEED: 3 };
+  const still = !S.motion || CLEAN;
+  const KS = { phase: still ? 'done' : 'idle', t: still ? RACE.APP_S : 0, auto: false, delay: 0, acc: 0 };
+  S.kiosk = KS; // test hook
+  const hms = (s) => { s = Math.max(0, Math.floor(s)); return `${Math.floor(s / 3600)}:${String(Math.floor(s / 60) % 60).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`; };
+  const MONO = '"JetBrains Mono", monospace';
+  const STEPS = ['INVOICES', 'SERVICE CALLS', 'DOOR CONDITIONS', 'TAKE-OFF'];
+  const pillPath = (g, x, y, w, h) => { g.beginPath(); if (g.roundRect) g.roundRect(x, y, w, h, h / 2); else g.rect(x, y, w, h); };
+  function doorRow(g, y, done, partial, col) {
     for (let i = 0; i < 15; i++) {
-      const x = 56 + (i % 5) * 84, y = 190 + Math.floor(i / 5) * 84;
-      g.fillStyle = '#35d07f'; g.fillRect(x, y, 66, 66);
-      g.strokeStyle = '#15191d'; g.lineWidth = 9; g.beginPath(); g.moveTo(x + 16, y + 34); g.lineTo(x + 29, y + 48); g.lineTo(x + 51, y + 20); g.stroke();
+      const x = 48 + i * 62;
+      if (i < done) {
+        g.fillStyle = col; g.fillRect(x, y, 50, 50);
+        g.strokeStyle = '#15191d'; g.lineWidth = 7;
+        g.beginPath(); g.moveTo(x + 12, y + 26); g.lineTo(x + 22, y + 36); g.lineTo(x + 39, y + 15); g.stroke();
+      } else {
+        g.strokeStyle = '#3a424b'; g.lineWidth = 3; g.strokeRect(x + 1.5, y + 1.5, 47, 47);
+        if (i === done && partial > 0) {
+          const f = Math.max(3, 47 * Math.min(1, partial));
+          g.globalAlpha = 0.6; g.fillStyle = col; g.fillRect(x + 1.5, y + 48.5 - f, 47, f); g.globalAlpha = 1;
+        }
+      }
     }
-    g.fillStyle = '#9aa3ad'; g.font = '700 40px "JetBrains Mono", monospace';
-    g.fillText('was 3:00:00', 560, 150);
-    g.fillRect(556, 136, 268, 5);
-    g.fillStyle = '#ff541e'; g.font = '800 190px "JetBrains Mono", monospace';
-    g.fillText('0:15', 540, 360);
-    g.fillStyle = '#35d07f'; g.fillRect(56, 470, w - 112, 18);
-    g.fillStyle = '#e9edf1'; g.font = '700 34px "JetBrains Mono", monospace'; g.fillText('ROI · TAKE-OFF · PROPOSAL READY', 56, 560);
-  });
+  }
+  function drawKiosk(g, w, h) {
+    const t = KS.t, appDone = t >= RACE.APP_S, n = Math.min(15, Math.floor(t));
+    g.textAlign = 'left';
+    g.fillStyle = '#15191d'; g.fillRect(0, 0, w, h);
+    spacing(g, 2); g.fillStyle = '#e9edf1'; g.font = `800 38px ${MONO}`;
+    g.fillText('STORE AUDIT · 15 DOORS', 48, 76);
+    spacing(g, 1); g.font = `800 26px ${MONO}`;
+    const pw = g.measureText('SIMULATION').width + 40;
+    g.fillStyle = '#ff541e'; pillPath(g, w - 48 - pw, 42, pw, 46); g.fill();
+    g.fillStyle = '#15191d'; g.fillText('SIMULATION', w - 48 - pw + 20, 74);
+    // lane A: Insight Collector
+    g.fillStyle = '#35d07f'; g.font = `800 46px ${MONO}`; g.fillText('INSIGHT COLLECTOR', 48, 172);
+    g.textAlign = 'right'; g.fillStyle = '#ff541e'; g.font = `800 96px ${MONO}`;
+    g.fillText(`0:${String(n).padStart(2, '0')}`, w - 48, 196); g.textAlign = 'left';
+    doorRow(g, 214, n, appDone ? 0 : t % 1, '#35d07f');
+    g.font = `700 34px ${MONO}`;
+    if (appDone) { g.fillStyle = '#35d07f'; g.fillText('ROI · TAKE-OFF · PROPOSAL READY ✓', 48, 310); }
+    else if (t > 0) { g.fillStyle = '#c3cad2'; g.fillText(`DOOR ${n + 1} OF 15 · ${STEPS[Math.floor((t % 1) * 4)]}`, 48, 310); }
+    else { g.fillStyle = '#8a939c'; g.fillText('READY TO RUN', 48, 310); }
+    g.fillStyle = '#262c33'; g.fillRect(48, 344, w - 96, 3);
+    // lane B: the manual portal crawl, ~12 min per door
+    g.fillStyle = '#c3cad2'; g.font = `800 46px ${MONO}`; g.fillText('MANUAL PORTAL CRAWL', 48, 412);
+    g.textAlign = 'right'; g.fillStyle = '#e9edf1'; g.font = `800 60px ${MONO}`; g.fillText(hms(t), w - 48, 414); g.textAlign = 'left';
+    doorRow(g, 444, 0, t / (RACE.MANUAL_S / 15), '#9aa3ad');
+    g.font = `700 34px ${MONO}`; g.fillStyle = '#c3cad2';
+    g.fillText(`DOOR 1 OF 15 · ${((100 * t) / RACE.MANUAL_S).toFixed(1)}%`, 48, 540);
+    if (t > 0) { g.textAlign = 'right'; g.fillStyle = '#ff8a5c'; g.fillText(`${hms(RACE.MANUAL_S - t)} TO GO`, w - 48, 540); g.textAlign = 'left'; }
+    spacing(g, 0); g.fillStyle = '#6f7983'; g.font = `600 22px ${MONO}`;
+    g.fillText('Case-study times: ~3 h by hand vs 15 s · shown at 3× speed', 48, 606);
+  }
+  const kioskTex = canvasTex(1024, 640, drawKiosk);
+  const redrawKiosk = () => { drawKiosk(kioskTex.image.getContext('2d'), 1024, 640); kioskTex.needsUpdate = true; };
+  function startRace() {
+    KS.delay = 0;
+    if (S.motion && !CLEAN) { KS.phase = 'run'; KS.t = 0; KS.acc = 0; } else { KS.phase = 'done'; KS.t = RACE.APP_S; }
+    redrawKiosk(); S.dirty = true;
+  }
+  function updateKiosk(dt) {
+    if (S.active === 3 && Math.abs(S.u - 3) < 0.03 && !KS.auto && KS.phase === 'idle') { KS.auto = true; KS.delay = 0.45; } // first visit runs by itself
+    if (KS.delay > 0) { KS.delay -= dt; if (KS.delay <= 0) startRace(); return true; }
+    if (KS.phase !== 'run') return false;
+    if (!S.motion) { KS.t = RACE.APP_S; KS.phase = 'done'; redrawKiosk(); return true; }
+    KS.t = Math.min(RACE.APP_S, KS.t + dt * RACE.SPEED);
+    KS.acc += dt;
+    if (KS.t >= RACE.APP_S) { KS.phase = 'done'; redrawKiosk(); }
+    else if (KS.acc >= 1 / 30) { KS.acc = 0; redrawKiosk(); }
+    return true;
+  }
   const screen = new THREE.Group();
   screen.position.set(0, 1.42, 0); screen.rotation.x = -0.26; kiosk.add(screen);
   rounded(1.02, 0.66, 0.07, 0.02, M.black, 0, 0, 0, { parent: screen });
@@ -797,6 +852,26 @@ async function init() {
   const tag = plane(0.34, 0.2, lit(tagTex), 0.1, 0.74, 0.262, { parent: kiosk }); // promo sticker on the kiosk front
   tag.rotation.z = -0.06;
   contact(1.5, 1.3, -3.9, -4.6, 0.32);
+  // the kiosk's own button, placed under its screen from the scene
+  const runBtn = $('.wk-run'), runAt = new THREE.Vector3(), kioskCard = $('#stop-kiosk .card');
+  let runShown = false;
+  runBtn?.addEventListener('click', () => startRace());
+  function updateRunBtn() {
+    if (!runBtn) return;
+    const sheetOpen = isSmall() && !!kioskCard?.classList.contains('is-open'); // the phone sheet owns that space
+    const want = !CLEAN && S.ready && S.motion && !sheetOpen && S.active === 3 && Math.abs(S.u - 3) < 0.05;
+    if (want !== runShown) { runShown = want; runBtn.hidden = !want; }
+    if (!want) return;
+    screen.localToWorld(runAt.set(0, -0.42, 0.04)).project(camera);
+    runBtn.style.transform = `translate3d(${(((runAt.x + 1) / 2) * innerWidth).toFixed(1)}px, ${(((1 - runAt.y) / 2) * innerHeight).toFixed(1)}px, 0) translateX(-50%)`;
+    const st = KS.phase === 'run' || KS.delay > 0 ? 'run' : KS.phase;
+    if (runBtn.dataset.state !== st) {
+      runBtn.dataset.state = st;
+      runBtn.innerHTML = st === 'run' ? '<span aria-hidden="true">●</span> Running · 3× speed'
+        : st === 'done' ? '<span aria-hidden="true">↻</span> Run it again' : '<span aria-hidden="true">▶</span> Run the audit';
+      runBtn.disabled = st === 'run';
+    }
+  }
   // framed print on the wall beside the kiosk, so the corner isn't a blank plane
   {
     const printTex = canvasTex(600, 800, (g) => {
@@ -1290,12 +1365,13 @@ async function init() {
     { p: [0, 1.62, 9.6], t: [0, 2.05, 0] },          // street
     { p: [1.3, 1.62, 3.75], t: [0.95, 1.8, -6] },    // entrance: just outside the sensor zone, door closed
     { p: [0.5, 1.62, -1.0], t: [2.8, 0.85, -3.8] },  // featured display
-    { p: [-1.4, 1.62, -2.6], t: [-3.9, 1.15, -4.6] }, // kiosk
+    { p: [-1.87, 1.62, -2.98], t: [-3.9, 1.12, -4.6] }, // kiosk: close enough to read the race, base still in frame
     { p: [1.9, 1.62, -6.4], t: [5.8, 1.75, -7.7] },  // shelf
     { p: [-0.6, 1.62, -7.7], t: [0.8, 1.0, -11.0] }, // plant model
     { p: [-1.9, 1.62, -9.6], t: [-3.4, 1.55, -13.0] }, // checkout
   ].slice(0, N);
   if (isSmall()) { KF[1].p = [0, 1.62, 5.6]; KF[1].t = [0, 1.85, -6]; } // portrait: the whole header fits only from further back
+  if (isSmall()) { KF[3].p = [-2.35, 1.62, -3.35]; KF[3].t = [-3.9, 1.32, -4.6]; } // portrait: step up to the kiosk screen
   const v3 = (a) => new THREE.Vector3(...a);
   const posCurve = new THREE.CatmullRomCurve3(KF.map((k) => v3(k.p)), false, 'centripetal');
   const tgtCurve = new THREE.CatmullRomCurve3(KF.map((k) => v3(k.t)), false, 'centripetal');
@@ -1370,12 +1446,18 @@ async function init() {
   }
 
   function updateHud() {
-    const show = S.ready && S.u < 2.6;
+    const atKiosk = !CLEAN && Math.abs(S.u - 3) < 0.45;
+    const show = S.ready && (S.u < 2.6 || atKiosk);
     hud.classList.toggle('is-visible', show);
     if (!show) return;
     const inDoorway = Math.abs(camera.position.z + 0.15) < 1.0;
     let txt, st;
-    if (S.door <= 0 && !S.detect) { txt = 'Door closed · sensor watching'; st = 'idle'; }
+    if (atKiosk) {
+      if (KS.phase === 'run') { txt = `Simulating · ${Math.floor(KS.t)} s of 15 · 3× speed`; st = 'opening'; }
+      else if (KS.phase === 'done') { txt = '15 s vs ~3 h · manual still on door 1'; st = 'hold'; }
+      else { txt = 'Audit race · simulation'; st = 'idle'; }
+    }
+    else if (S.door <= 0 && !S.detect) { txt = 'Door closed · sensor watching'; st = 'idle'; }
     else if (S.detect && S.door < 1) { txt = 'Motion detected · opening'; st = 'opening'; }
     else if (S.detect && inDoorway) { txt = 'Someone in the doorway · holding open'; st = 'hold'; }
     else if (S.detect) { txt = 'Presence detected · holding open'; st = 'hold'; }
@@ -1432,10 +1514,11 @@ async function init() {
     updateDoor(dt, now);
     const prevXr = XR.on;
     updateXray(dt);
+    const racing = updateKiosk(dt);
     const turning = S.motion && S.u > 1.5 && S.u < 3.5;
     const pulsing = S.motion && S.detect && S.u < 2.6;
     const moving = Math.abs(S.u - prevU) > 1e-6 || S.door !== prevDoor || framing || XR.on !== prevXr;
-    if (!(moving || turning || pulsing || S.dirty)) { animT = 0; return; }
+    if (!(moving || turning || pulsing || racing || S.dirty)) { animT = 0; return; }
     S.dirty = false;
     if (turning) {
       turn.rotation.y = FEAT_FACE + Math.sin(now / 2000) * 0.6; // sway, so the door never ends up edge-on
@@ -1453,6 +1536,7 @@ async function init() {
     } else pulseMat.opacity = 0;
     updateHud();
     updateTags();
+    updateRunBtn();
     if (S.door !== prevDoor || S.frames === 0) renderer.shadowMap.needsUpdate = true;
     renderer.render(scene, camera);
     renderDetail();

@@ -387,3 +387,18 @@ main { position: relative; z-index: 10; }
 @media (max-width: 899px) {
   .detail-parts { gap: 4px 8px; padding: 5px 10px 5px 5px; font-size: 10.5px; }
 }
+
+/* kiosk: run the audit race (placed under the kiosk screen from the scene) */
+.wk-run {
+  position: fixed; left: 0; top: 0; z-index: 11; min-height: 44px; padding: 0 18px; /* under the phone sheet (12) and dock (14) */
+  display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; cursor: pointer;
+  border: 1.5px solid rgba(255, 255, 255, 0.22); border-radius: 999px;
+  background: rgba(16, 19, 22, 0.9); color: #f4f1ea; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+  font: 800 12.5px/1 var(--mono); letter-spacing: 0.05em; text-transform: uppercase;
+}
+.wk-run[hidden] { display: none; }
+.wk-run span { color: #ff6a35; font-size: 14px; }
+.wk-run[data-state="run"] span { color: #35d07f; }
+.wk-run:disabled { cursor: default; opacity: 0.8; }
+.wk-run:hover:not(:disabled) { background: rgba(28, 33, 38, 0.95); }
+.wk-run:focus-visible { outline: 3px solid #ff6a35; outline-offset: 3px; }

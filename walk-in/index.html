@@ -22,7 +22,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
   <!-- 3D: three.js (MIT, see vendor/three/LICENSE). Textures and sky: Poly Haven (polyhaven.com), CC0. -->
-  <link rel="stylesheet" href="walk.css?v=5">
+  <link rel="stylesheet" href="walk.css?v=6">
   <script type="importmap">
     { "imports": { "three": "./vendor/three/build/three.module.js", "three/addons/": "./vendor/three/examples/jsm/" } }
   </script>
@@ -49,6 +49,7 @@
 
   <div class="wk-hud" id="wk-hud" aria-hidden="true"><span class="wk-hud-led"></span><span id="wk-hud-text">Building the shop…</span><em>illustrative</em></div>
   <div class="wk-tags" aria-hidden="true"><div class="wk-detail"><p class="detail-title"><b>A</b>Detail · the drive · illustrative</p><ol class="detail-parts"><li><b>1</b>Control unit</li><li><b>2</b>Motor<span class="long"> + gearbox</span></li><li><b>3</b>Toothed belt</li><li><b>4</b>Carriage</li></ol></div><div class="wk-detail-mark"><b>A</b></div></div>
+  <button class="wk-run" type="button" hidden></button>
 
   <nav class="wk-stops" aria-label="Stops on the walk">
     <ol>
@@ -120,6 +121,7 @@
         <h2 id="h-kiosk" tabindex="-1">Installation &amp; Facility Insight Collector</h2>
         <div class="card-body" id="more-kiosk">
           <p>A multi-threaded desktop platform that replaces a 3-hour manual service-portal crawl for a 15-door store. It untangles invoice ledgers, separates emergency calls from planned maintenance, pulls door conditions and take-off dimensions from technician notes, calculates replacement ROI and drafts review-ready proposals.</p>
+          <p class="fine">The race on the kiosk screen is a simulation at 3× speed, using these case-study times.</p>
           <ul class="tags"><li>Python 3.12 &amp; PySide6</li><li>PowerShell RunspacePool</li><li>SSRS &amp; OpenXML</li></ul>
         </div>
         <button class="card-toggle" type="button" aria-expanded="false" aria-controls="more-kiosk"><span data-label>More</span><svg viewBox="0 0 10 6" aria-hidden="true"><path d="M1 1l4 4 4-4"/></svg></button>
@@ -185,6 +187,6 @@
   </main>
 
   <noscript><p class="wk-noscript">The 3D walk needs JavaScript. Everything above is still readable.</p></noscript>
-  <script type="module" src="walk.js?v=5"></script>
+  <script type="module" src="walk.js?v=6"></script>
 </body>
 </html>

@@ -27,7 +27,7 @@ const S = {
   dirty: true, active: -1, ready: false, frames: 0, dpr: 1, dprScale: 1,
   viewY: 0, viewYCur: 0, announce: false,
 };
-window.__walk = S; // handy for testing in the console
+if (/[?&]debug\b/.test(location.search)) window.__walk = S; // test hook: only with ?debug in the URL
 
 /* ------------------------------------------------------------------ DOM: stops, cards, controls */
 const sections = $$('main > .stop');
@@ -1559,7 +1559,6 @@ async function init() {
       XR.tags.push({ el, pill: el.lastChild, at: new THREE.Vector3(x, y, z), fx: x, follow, view, on: false, hw: 0 });
     }
   }
-  XR.debug = { cam: detailCam, rect: () => detailRect, parts: { cu: cuBox, motor: motorSpin, carriage: carR, hb } }; // test hook
   function updateXray(dt) {
     const want = S.u > 0.45 && S.u < 1.7 ? 1 : 0;
     XR.on = S.motion ? clamp(XR.on + Math.sign(want - XR.on) * (dt / 1.2), 0, 1) : want;

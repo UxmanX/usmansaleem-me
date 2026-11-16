@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Wrong entrance (404) · Usman Saleem, MEng</title>
+  <meta name="description" content="This page doesn't exist. Use the main entrance to Usman Saleem's portfolio.">
+  <meta name="robots" content="noindex">
+  <meta name="theme-color" content="#ff541e">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='24' fill='%23ff541e'/><text x='50' y='66' font-size='48' font-family='sans-serif' font-weight='900' fill='%23ffffff' text-anchor='middle'>US</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@600;700&family=Plus+Jakarta+Sans:wght@500;700;800&display=swap" rel="stylesheet">
+  <!-- GitHub Pages serves this file for every missing address, at any depth: keep every URL root-relative. -->
+  <style>
+    :root {
+      --bg-page: #fbf8f3; --bg-card: #fff; --bg-subtle: #f6f3eb; --bg-badge: #eee9df;
+      --ink: #14171a; --muted: #5e6876;
+      --orange: #ff541e; --orange-text: #c2410c; --orange-glow: rgba(255, 84, 30, 0.3);
+      --red: #ef4444; --border: rgba(0, 0, 0, 0.08);
+      --shadow: 0 18px 40px -14px rgba(20, 23, 26, 0.1), 0 2px 6px -1px rgba(20, 23, 26, 0.05);
+      --sans: 'Plus Jakarta Sans', Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      --mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+    }
+    * { box-sizing: border-box; }
+    html { -webkit-text-size-adjust: 100%; }
+    body { margin: 0; min-height: 100vh; min-height: 100svh; display: flex; flex-direction: column; background: var(--bg-page); color: var(--ink); font-family: var(--sans); -webkit-font-smoothing: antialiased; }
+    a { color: inherit; }
+    :focus-visible { outline: 3px solid var(--orange); outline-offset: 3px; }
+    .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+    .top { padding: 16px clamp(16px, 4vw, 40px); }
+    .brand { display: inline-flex; align-items: center; gap: 10px; min-height: 44px; text-decoration: none; font-weight: 700; font-size: 15px; border-radius: 12px; }
+    .mark { width: 34px; height: 34px; border-radius: 10px; background: var(--orange); color: #fff; display: grid; place-items: center; font: 800 14px/1 var(--sans); letter-spacing: -0.02em; }
+
+    main { flex: 1; display: grid; place-items: center; padding: 0 clamp(12px, 4vw, 40px) clamp(20px, 5vh, 48px); }
+    .card { width: min(1080px, 100%); display: grid; overflow: hidden; background: var(--bg-card); border: 1px solid var(--border); border-radius: 28px; box-shadow: var(--shadow); }
+
+    /* copy */
+    .copy { padding: clamp(22px, 4.6vw, 52px); display: flex; flex-direction: column; justify-content: center; }
+    .kicker { margin: 0; display: flex; align-items: center; gap: 9px; font: 700 12px/1.2 var(--mono); letter-spacing: 0.12em; text-transform: uppercase; color: var(--orange-text); }
+    .dot { width: 8px; height: 8px; flex: none; border-radius: 50%; background: var(--red); box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.16); }
+    h1 { margin: 14px 0 12px; font-size: clamp(36px, 6.2vw, 66px); line-height: 1; font-weight: 800; letter-spacing: -0.035em; }
+    .lede { margin: 0 0 24px; max-width: 36ch; font-size: clamp(16px, 1.7vw, 18px); line-height: 1.55; color: var(--muted); }
+    .lede code { font: 600 0.86em var(--mono); color: var(--ink); background: var(--bg-badge); padding: 2px 7px; border-radius: 7px; word-break: break-all; }
+    .actions { display: flex; flex-wrap: wrap; gap: 10px; }
+    .btn { min-height: 48px; padding: 0 20px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; border-radius: 999px; border: 1px solid var(--border); background: var(--bg-subtle); text-decoration: none; font-weight: 700; font-size: 15px; transition: transform 0.15s ease, box-shadow 0.2s ease, background-color 0.15s ease; }
+    .btn:hover { transform: translateY(-1px); background: #efe9dd; }
+    .btn.primary { background: var(--ink); color: #fff; border-color: transparent; box-shadow: 0 12px 26px -12px rgba(20, 23, 26, 0.55); }
+    .btn.primary:hover { background: #000; box-shadow: 0 14px 30px -10px var(--orange-glow); }
+    .btn.primary span { color: var(--orange); transition: transform 0.2s ease; }
+    .btn.primary:hover span, .btn.primary:focus-visible span { transform: translateX(3px); }
+    .btn .tag { font: 700 11px/1 var(--mono); letter-spacing: 0.06em; color: var(--muted); }
+    .note { margin: 22px 0 0; font-size: 14px; line-height: 1.5; color: var(--muted); }
+    .note a { color: var(--ink); font-weight: 700; text-underline-offset: 3px; word-break: break-word; }
+
+    /* door stage */
+    .stage-wrap { display: flex; flex-direction: column; background: #05070b; }
+    .stage { position: relative; flex: none; height: 240px; overflow: hidden;
+      background:
+        radial-gradient(58% 52% at 50% 60%, rgba(255, 170, 90, 0.16), transparent 72%),
+        linear-gradient(to right, rgba(255, 255, 255, 0.035) 1px, transparent 1px) 0 0 / 20px 20px,
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.035) 1px, transparent 1px) 0 0 / 20px 20px,
+        #05070b; }
+    .stage::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 12%; background: linear-gradient(#0e131c, #07090e); border-top: 1px solid rgba(255, 255, 255, 0.08); }
+    .door { position: absolute; left: 50%; bottom: 12%; z-index: 1; transform: translateX(-50%); font-size: 8.5px; width: 28em; height: 22em; } /* script fits the scale to the stage; this is the no-JS size */
+    .door::before, .door::after { content: ""; position: absolute; top: 3em; bottom: 0; width: 0.9em; z-index: 2; background: linear-gradient(90deg, #262e3c, #4a566b 55%, #262e3c); }
+    .door::before { left: 0; } .door::after { right: 0; }
+    .head { position: absolute; top: 0; left: -0.4em; right: -0.4em; height: 3em; z-index: 3; display: flex; align-items: center; justify-content: space-between; padding: 0 1.1em; background: linear-gradient(180deg, #3a465b, #1e2634); border: 1px solid rgba(255, 255, 255, 0.16); border-radius: 0.5em 0.5em 0.2em 0.2em; box-shadow: 0 0.4em 1.2em rgba(0, 0, 0, 0.6); font: 700 0.95em/1 var(--mono); letter-spacing: 0.04em; color: #94a3b8; white-space: nowrap; }
+    .lock { display: flex; align-items: center; gap: 0.5em; color: #f87171; }
+    .led { width: 0.7em; height: 0.7em; border-radius: 50%; background: var(--red); box-shadow: 0 0 0.8em var(--red); animation: blink 2.4s ease-in-out infinite; }
+    .radar { position: absolute; top: 3em; left: 50%; z-index: 4; width: 5.2em; height: 1.5em; margin-left: -2.6em; background: linear-gradient(#1b212c, #0d1117); border: 1px solid rgba(255, 255, 255, 0.14); border-top: 0; border-radius: 0 0 0.7em 0.7em; box-shadow: 0 0.3em 0.8em rgba(0, 0, 0, 0.55); }
+    .radar::before { content: ""; position: absolute; left: 50%; top: 0.3em; width: 2.6em; height: 0.75em; margin-left: -1.3em; border-radius: 0.4em; background: radial-gradient(60% 80% at 40% 35%, #6b7a93, #222a37 70%); }
+    .radar::after { content: ""; position: absolute; right: 0.45em; top: 0.5em; width: 0.42em; height: 0.42em; border-radius: 50%; background: var(--orange); box-shadow: 0 0 0.6em var(--orange); }
+    .stage.open .radar::after, .stage.open .led { background: #34d399; box-shadow: 0 0 0.6em #34d399; animation: none; }
+    .stage.open .lock { color: #34d399; }
+    .radar i { position: absolute; left: 50%; top: -0.2em; width: 2.6em; height: 2.6em; margin-left: -1.3em; border-radius: 50%; border: 0.15em solid rgba(255, 84, 30, 0.6); opacity: 0; }
+    .stage.radar .radar i, .stage.open .radar i { animation: wave 1.5s ease-out infinite; }
+    .stage.radar .radar i:nth-child(2), .stage.open .radar i:nth-child(2) { animation-delay: 0.45s; }
+    .stage.radar .radar i:nth-child(3), .stage.open .radar i:nth-child(3) { animation-delay: 0.9s; }
+    .opening { position: absolute; top: 3em; left: 0.9em; right: 0.9em; bottom: 0; overflow: hidden; background: #120d09; }
+    .interior { position: absolute; left: 0; right: 0; top: 0.45em; bottom: 0.6em; background:
+        radial-gradient(1.5em 1.5em at 30% 20%, rgba(255, 222, 160, 0.95), rgba(255, 190, 110, 0.35) 45%, transparent 72%),
+        radial-gradient(1.5em 1.5em at 70% 20%, rgba(255, 222, 160, 0.95), rgba(255, 190, 110, 0.35) 45%, transparent 72%),
+        linear-gradient(90deg, transparent calc(30% - 0.06em), rgba(255, 220, 170, 0.35) calc(30% - 0.06em), rgba(255, 220, 170, 0.35) calc(30% + 0.06em), transparent calc(30% + 0.06em)) 0 0 / 100% 18% no-repeat,
+        linear-gradient(90deg, transparent calc(70% - 0.06em), rgba(255, 220, 170, 0.35) calc(70% - 0.06em), rgba(255, 220, 170, 0.35) calc(70% + 0.06em), transparent calc(70% + 0.06em)) 0 0 / 100% 18% no-repeat,
+        repeating-linear-gradient(90deg, rgba(255, 226, 190, 0.7) 0 0.9em, transparent 0.9em 1.25em, rgba(214, 120, 74, 0.75) 1.25em 1.95em, transparent 1.95em 2.3em, rgba(120, 170, 190, 0.65) 2.3em 3em, transparent 3em 3.5em) 50% 42% / 74% 8% no-repeat,
+        repeating-linear-gradient(90deg, rgba(232, 178, 92, 0.75) 0 1.2em, transparent 1.2em 1.6em, rgba(255, 236, 210, 0.65) 1.6em 2.2em, transparent 2.2em 2.6em, rgba(190, 96, 70, 0.7) 2.6em 3.4em, transparent 3.4em 3.9em) 50% 61.5% / 74% 6.5% no-repeat,
+        linear-gradient(transparent 50%, rgba(18, 12, 8, 0.75) 50%, rgba(18, 12, 8, 0.75) 52%, transparent 52%) 50% 0 / 78% 100% no-repeat,
+        linear-gradient(transparent 68%, rgba(18, 12, 8, 0.7) 68%, rgba(18, 12, 8, 0.7) 70%, transparent 70%) 50% 0 / 78% 100% no-repeat,
+        linear-gradient(transparent 84%, rgba(255, 205, 160, 0.16) 84%, rgba(255, 205, 160, 0.06)),
+        radial-gradient(75% 65% at 50% 66%, rgba(255, 190, 125, 0.68), rgba(80, 52, 30, 0.62) 64%, #120d09); }
+    .opening::before { content: ""; position: absolute; top: 0; left: 0; right: 0; height: 0.5em; z-index: 2; background: linear-gradient(#8792a5, #3a4455); box-shadow: 0 0.12em 0.3em rgba(0, 0, 0, 0.5); }
+    .opening::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 0.6em; z-index: 2; background: linear-gradient(#9aa5b6, #4a5463); }
+    .leaf::before { content: ""; position: absolute; top: 0.25em; left: 14%; width: 72%; height: 0.95em; z-index: 3; border-radius: 0.25em; background: radial-gradient(circle at 16% 38%, #c5ccd8 0 0.26em, #5a6578 0.27em 0.34em, transparent 0.35em), radial-gradient(circle at 84% 38%, #c5ccd8 0 0.26em, #5a6578 0.27em 0.34em, transparent 0.35em), linear-gradient(#4b566a, #2f3746); box-shadow: 0 0.1em 0.25em rgba(0, 0, 0, 0.5); }
+    .leaf { position: absolute; top: 0; bottom: 0; width: 50%; border: 0.25em solid #3f4a5e; background: linear-gradient(115deg, transparent 30%, rgba(255, 255, 255, 0.1) 38%, transparent 47%), linear-gradient(160deg, rgba(0, 210, 255, 0.2), rgba(0, 150, 200, 0.12)), #0b1118; box-shadow: inset 0 0 1.8em rgba(0, 210, 255, 0.12); transition: transform 0.75s cubic-bezier(0.16, 1, 0.3, 1); }
+    .leaf.l { left: 0; border-right-width: 0.16em; } .leaf.r { right: 0; border-left-width: 0.16em; }
+    .stage.open .leaf.l { transform: translateX(-102%); } .stage.open .leaf.r { transform: translateX(102%); }
+    .stage.rattle .leaf.l { animation: rattle-l 0.5s ease-in-out; } .stage.rattle .leaf.r { animation: rattle-r 0.5s ease-in-out; }
+    .sign { position: absolute; top: 13%; left: 50%; width: 11.3em; padding: 0.95em 0.75em 0.85em; transform: translateX(-50%) rotate(-3deg); background: #fdfbf4; color: #1b1d20; box-shadow: 0 0.35em 0.9em rgba(0, 0, 0, 0.5); text-align: center; font: 800 1em/1.08 var(--sans); text-transform: uppercase; letter-spacing: 0.01em; }
+    .sign strong { display: block; font-size: 1.32em; font-weight: 800; }
+    .sign::before, .sign::after { content: ""; position: absolute; top: -0.55em; width: 3.4em; height: 1.2em; background: rgba(236, 224, 186, 0.8); }
+    .sign::before { left: -0.6em; transform: rotate(-24deg); } .sign::after { right: -0.6em; transform: rotate(22deg); }
+    .sign em { display: block; margin-top: 0.6em; padding-top: 0.55em; border-top: 0.14em solid #1b1d20; font: 800 1.2em/1.15 var(--sans); font-style: normal; letter-spacing: 0.02em; }
+    .decal { position: absolute; top: 52%; left: 50%; transform: translate(-50%, -50%); padding: 0.55em 1em; border: 0.14em solid rgba(255, 255, 255, 0.78); border-radius: 99em; color: rgba(255, 255, 255, 0.92); font: 800 0.9em/1 var(--sans); letter-spacing: 0.08em; white-space: nowrap; }
+    .arrow-side { display: none; }
+    .tele-row { display: flex; align-items: center; gap: 12px; min-height: 64px; padding: 10px 16px; border-top: 1px solid rgba(255, 255, 255, 0.08); }
+    .status { flex: 1; min-width: 0; margin: 0; font: 600 11px/1.3 var(--mono); letter-spacing: 0.06em; text-transform: uppercase; color: #94a3b8; }
+    .status.warn { color: #fbbf24; } .status.ok { color: #34d399; }
+    .try { flex: none; min-height: 44px; padding: 0 16px; border-radius: 999px; border: 1px solid rgba(255, 255, 255, 0.2); background: rgba(255, 255, 255, 0.06); color: #e2e8f0; font: 700 12px/1 var(--mono); letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; }
+    .try:hover { background: rgba(255, 255, 255, 0.12); }
+
+    @keyframes wave { 0% { transform: scale(0.5); opacity: 0.9; } 100% { transform: scale(4.2); opacity: 0; } }
+    @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+    @keyframes rattle-l { 0%, 100% { transform: translateX(0); } 20% { transform: translateX(-0.55em); } 40% { transform: translateX(-0.12em); } 60% { transform: translateX(-0.45em); } 80% { transform: translateX(-0.08em); } }
+    @keyframes rattle-r { 0%, 100% { transform: translateX(0); } 20% { transform: translateX(0.55em); } 40% { transform: translateX(0.12em); } 60% { transform: translateX(0.45em); } 80% { transform: translateX(0.08em); } }
+
+    @media (max-width: 1199px) {
+      .btn.primary { flex: 1 1 100%; }
+      .btn:not(.primary) { flex: 1 1 0; padding: 0 14px; }
+    }
+    @media (min-width: 600px) and (max-width: 859px) { .stage { height: 300px; } }
+    @media (max-width: 859px) {
+      .top { padding: 10px 16px; }
+      .tele-row { min-height: 54px; padding: 5px 6px 5px 14px; }
+      .stage-wrap { order: -1; } /* door on top on phones; the copy stays first for keyboard and screen readers */
+    }
+    @media (min-width: 860px) {
+      .card { grid-template-columns: minmax(0, 1.12fr) minmax(0, 1fr); }
+      .stage-wrap { min-height: 470px; }
+      .stage { flex: 1 1 auto; height: auto; min-height: 380px; }
+      .door { font-size: 12px; }
+      .arrow-side { display: inline; } .arrow-down { display: none; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation: none !important; transition: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <header class="top">
+    <a class="brand" href="/"><span class="mark" aria-hidden="true">US</span>Usman Saleem, MEng</a>
+  </header>
+  <main>
+    <section class="card" aria-labelledby="title">
+      <div class="copy">
+        <p class="kicker"><i class="dot" aria-hidden="true"></i>Error 404 · Mode: locked</p>
+        <h1 id="title">Wrong entrance.</h1>
+        <p class="lede">There's no page at <code id="path">this address</code>, so this door stays locked. The main entrance is open.</p>
+        <nav class="actions" aria-label="Ways in">
+          <a class="btn primary" id="main-entrance" href="/">Main entrance <span aria-hidden="true">&rarr;</span></a>
+          <a class="btn" href="/walk-in/">Walk-in tour</a>
+          <a class="btn" href="/assets/Usman_Saleem_MEng_Resume.pdf">Résumé <span class="tag">PDF</span></a>
+        </nav>
+        <p class="note">Followed a broken link? Tell me at <a href="mailto:usman.saleem@uottawa.ca">usman.saleem@uottawa.ca</a> and I'll fix it.</p>
+        <p class="sr" id="live" aria-live="polite"></p>
+      </div>
+      <div class="stage-wrap">
+        <div class="stage" id="stage" aria-hidden="true">
+          <div class="door">
+            <div class="head"><span data-t="label">ENTRANCE 404 · DRIVE</span><span class="lock"><i class="led"></i><span data-t="badge">LOCKED</span></span></div>
+            <div class="radar"><i></i><i></i><i></i></div>
+            <div class="opening">
+              <div class="interior"></div>
+              <div class="leaf l">
+                <div class="sign"><strong>Sorry, this entrance is closed</strong><em><span class="arrow-side">&larr;</span><span class="arrow-down">&darr;</span> Please use the main entrance</em></div>
+              </div>
+              <div class="leaf r"><span class="decal">AUTOMATIC DOOR</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="tele-row">
+          <p class="status" data-t="status" aria-hidden="true">Radar watching · lock engaged</p>
+          <button type="button" class="try" id="try" hidden>Try the door</button>
+        </div>
+      </div>
+    </section>
+  </main>
+  <script>
+    (() => {
+      const stage = document.getElementById('stage');
+      const door = stage.querySelector('.door');
+      // Scale the drawing to the stage: 22em tall within ~80% of its height, 28em wide within ~81% of its width.
+      const fit = () => { door.style.fontSize = Math.max(6, Math.min(14, 0.0365 * stage.clientHeight, 0.029 * stage.clientWidth)).toFixed(2) + 'px'; };
+      if ('ResizeObserver' in window) new ResizeObserver(fit).observe(stage);
+      fit();
+      const t = (k) => document.querySelector('[data-t="' + k + '"]');
+      const live = document.getElementById('live');
+
+      let path = location.pathname;
+      try { path = decodeURIComponent(path); } catch (e) { /* keep it encoded */ }
+      if (path && path !== '/') document.getElementById('path').textContent = path.length > 48 ? path.slice(0, 45) + '…' : path;
+
+      const status = (text, tone) => { const el = t('status'); el.textContent = text; el.className = 'status' + (tone ? ' ' + tone : ''); };
+      const badge = (text) => { t('badge').textContent = text; };
+      const IDLE = 'Radar watching · lock engaged';
+
+      // Try the door: the radar sees you, the motor pulls, the lock holds.
+      const LINES = [
+        ['Motion detected · lock held · no such entrance', 'The door rattles but stays locked. This entrance does not exist.'],
+        ['Still locked · the main entrance works', 'Still locked. The main entrance works.'],
+        ["It won't open · promise", 'It will not open.'],
+      ];
+      let tries = 0, busy = false;
+      const timers = [];
+      const later = (ms, fn) => timers.push(setTimeout(fn, ms));
+      function attempt() {
+        if (busy || stage.classList.contains('open')) return;
+        busy = true;
+        const [line, spoken] = LINES[Math.min(tries++, LINES.length - 1)];
+        stage.classList.add('radar');
+        status('Motion detected', 'warn');
+        later(380, () => { stage.classList.add('rattle'); status(line, 'warn'); live.textContent = spoken; });
+        later(900, () => stage.classList.remove('rattle'));
+        later(2600, () => { stage.classList.remove('radar'); status(IDLE); busy = false; });
+      }
+      const tryBtn = document.getElementById('try');
+      tryBtn.hidden = false;
+      tryBtn.addEventListener('click', attempt);
+      stage.addEventListener('pointerdown', attempt);
+      stage.addEventListener('pointerenter', (e) => { if (e.pointerType === 'mouse') attempt(); });
+
+      // The main entrance works: pointing at it unlocks this door and slides it open.
+      const open = (on) => {
+        timers.splice(0).forEach(clearTimeout);
+        busy = false;
+        stage.classList.remove('rattle', 'radar');
+        stage.classList.toggle('open', on);
+        badge(on ? 'UNLOCKED' : 'LOCKED');
+        t('label').textContent = on ? 'MAIN ENTRANCE · DRIVE' : 'ENTRANCE 404 · DRIVE';
+        if (on) status('Unlocked · main entrance, this way', 'ok'); else status(IDLE);
+      };
+      const entrance = document.getElementById('main-entrance');
+      entrance.addEventListener('pointerenter', (e) => { if (e.pointerType === 'mouse') open(true); });
+      entrance.addEventListener('pointerleave', (e) => { if (e.pointerType === 'mouse') open(false); });
+      entrance.addEventListener('focus', () => open(true));
+      entrance.addEventListener('blur', () => open(false));
+    })();
+  </script>
+</body>
+</html>

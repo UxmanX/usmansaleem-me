@@ -242,6 +242,23 @@ main { position: relative; z-index: 10; }
   height: 40px; margin-top: 8px;
   background: repeating-linear-gradient(90deg, #1d2024 0 2px, transparent 2px 4px, #1d2024 4px 7px, transparent 7px 9px, #1d2024 9px 10px, transparent 10px 13px, #1d2024 13px 16px, transparent 16px 18px);
 }
+/* your visit: one line item per stop, ticked once you stayed on it; missed ones link back */
+.card .receipt .r-visit-head { display: flex; justify-content: space-between; gap: 8px; margin: 0 0 8px; font-weight: 800; letter-spacing: 0.06em; }
+.r-items { display: grid; gap: 5px; margin: 0; padding: 0; list-style: none; }
+.r-items li { display: flex; align-items: baseline; gap: 6px; }
+.r-mark { flex: none; width: 1.1em; font-weight: 800; }
+.r-name { flex: 1; display: flex; align-items: baseline; gap: 6px; min-width: 0; white-space: nowrap; }
+.r-name::after { content: ""; flex: 1; min-width: 8px; border-bottom: 1.5px dotted rgba(29, 32, 36, 0.4); transform: translateY(-4px); }
+.r-what { flex: none; font-weight: 800; white-space: nowrap; }
+.r-items li.is-missed { color: rgba(29, 32, 36, 0.72); }
+.r-back { padding: 0; border: 0; background: none; color: #c2410c; font: inherit; font-weight: 800; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.r-back:hover { color: #9a3412; }
+/* the whole row is the target: the button's ::before spans the row (li is its containing block) */
+.r-items li { position: relative; }
+.r-back::before { content: ""; position: absolute; inset: calc(-1 * var(--hit, 2px)) 0; }
+@media (pointer: coarse) { .r-items { gap: 12px; --hit: 6px; } }
+.r-back:focus-visible { outline: 2px solid #ff6a35; outline-offset: 2px; border-radius: 2px; }
+.card .receipt .r-hint { margin: 8px 0 0; font-size: 12.5px; font-weight: 700; color: #c2410c; }
 .receipt-actions .wk-btn { box-shadow: 0 6px 20px rgba(20, 23, 26, 0.12); }
 .js .stop-checkout.is-active .receipt { animation: print 1.5s steps(26, end) both; }
 @keyframes print { from { clip-path: inset(0 0 100% 0); } to { clip-path: inset(0 0 -40px 0); } }

@@ -184,6 +184,45 @@ addEventListener('scrollend', () => { goal = -1; });
 addEventListener('touchstart', (e) => { if (!e.target.closest?.('.wk-dock')) goal = -1; }, { passive: true });
 addEventListener('wheel', () => { goal = -1; }, { passive: true });
 
+// Your visit: a stop counts once you stay on it for a moment; the checkout receipt lists them
+const VISIT = { seen: new Set(), t0: performance.now(), timer: 0, printAt: 0 };
+S.visit = VISIT; // test hook
+function noteVisit(i) {
+  clearTimeout(VISIT.timer);
+  VISIT.timer = setTimeout(() => { if (S.active === i) VISIT.seen.add(i); }, 700);
+}
+const fmtDur = (ms) => {
+  const s = Math.max(0, Math.round(ms / 1000)), h = Math.floor(s / 3600), m = Math.floor(s / 60) % 60, ss = String(s % 60).padStart(2, '0');
+  return h ? `${h}:${String(m).padStart(2, '0')}:${ss}` : `${m}:${ss}`;
+};
+function renderVisit() {
+  const items = $$('[data-visit-items] li');
+  if (!items.length) return;
+  let seen = 0;
+  items.forEach((li, k) => {
+    const ok = VISIT.seen.has(k);
+    if (ok) seen++;
+    li.classList.toggle('is-missed', !ok);
+    li.querySelector('.r-mark').textContent = ok ? '✓' : '○';
+    const nm = li.querySelector('.r-name');
+    const label = nm.dataset.label || (nm.dataset.label = nm.textContent.trim());
+    nm.innerHTML = ok ? `<span class="visually-hidden">Visited: </span>${label}`
+      : `<button type="button" class="r-back" data-go="${k}"><span class="visually-hidden">Missed: </span>${label}<span class="visually-hidden">. Go back to this stop</span></button>`;
+  });
+  $('[data-visit-sum]').textContent = `${seen} of ${items.length} stops · ${fmtDur(performance.now() - VISIT.t0)}`;
+  const missed = items.length - seen, hint = $('[data-visit-hint]');
+  hint.hidden = missed === 0;
+  const verb = coarse.matches ? 'tap' : 'click';
+  hint.textContent = missed === 1 ? `Missed 1 stop · ${verb} it to go back` : `Missed ${missed} stops · ${verb} one to go back`;
+  $('[data-visit]').hidden = false;
+  VISIT.printAt = performance.now(); // the register prints the same receipt
+  S.dirty = true;
+}
+$('[data-visit-items]')?.addEventListener('click', (e) => {
+  const b = e.target.closest('.r-back');
+  if (b) jumpTo(+b.dataset.go);
+});
+
 function setActive(i) {
   if (i === S.active) return;
   S.active = i;
@@ -196,6 +235,8 @@ function setActive(i) {
   if (i === goal) goal = -1;
   updateDock(i);
   updateFraming();
+  noteVisit(i);
+  if (i === N - 1) renderVisit();
 }
 
 function onScroll() {
@@ -1162,6 +1203,7 @@ async function init() {
   }
 
   /* ---------- stop 5: checkout, credentials wall, exit ---------- */
+  let updatePrint = () => false;
   {
     const co = new THREE.Group();
     co.position.set(-2.9, 0, -11.4); co.rotation.y = 0.2; scene.add(co);
@@ -1169,8 +1211,44 @@ async function init() {
     rounded(2.75, 0.05, 0.85, 0.02, M.quartz, 0, 1.025, 0, { parent: co });
     block(2.5, 0.08, 0.7, M.black, 0, 0.04, 0, { parent: co, cast: false });
     rounded(0.24, 0.13, 0.26, 0.02, M.black, 0.85, 1.115, -0.05, { parent: co });
-    const paper = plane(0.09, 0.3, std({ color: 0xffffff, roughness: 0.9, side: THREE.DoubleSide }), 0.85, 1.3, 0.09, { parent: co });
-    paper.rotation.x = -0.3;
+    // the register prints the same visit receipt as the card when you arrive (decorative at this distance)
+    const RW = 192, RH = 736;
+    const drawRcpt = (g, w, h) => {
+      const names = $$('[data-visit-items] .r-name').map((n) => (n.dataset.label || n.textContent).trim());
+      let seen = 0;
+      g.fillStyle = '#fffdf8'; g.fillRect(0, 0, w, h);
+      g.fillStyle = '#1d2024'; g.textAlign = 'center'; spacing(g, 1);
+      g.font = `800 21px ${MONO}`; g.fillText('USMAN SALEEM', w / 2, 48);
+      g.font = `700 13px ${MONO}`; g.fillText('WALK-IN RECEIPT', w / 2, 72);
+      const dash = (y) => { g.strokeStyle = 'rgba(29,32,36,0.45)'; g.lineWidth = 2; g.setLineDash([6, 5]); g.beginPath(); g.moveTo(14, y); g.lineTo(w - 14, y); g.stroke(); g.setLineDash([]); };
+      dash(94);
+      g.textAlign = 'left'; g.font = `700 14px ${MONO}`; spacing(g, 0);
+      names.forEach((nm, k) => {
+        const ok = VISIT.seen.has(k);
+        if (ok) seen++;
+        g.fillStyle = ok ? '#1d2024' : '#a3a8ae';
+        g.fillText(`${ok ? '✓' : '○'} ${nm.toUpperCase()}`.slice(0, 21), 14, 126 + k * 32);
+      });
+      const y0 = 126 + names.length * 32;
+      dash(y0 - 6);
+      g.textAlign = 'center'; g.fillStyle = '#1d2024'; g.font = `800 18px ${MONO}`;
+      g.fillText(`${seen} OF ${names.length} STOPS`, w / 2, y0 + 34);
+      g.font = `700 13px ${MONO}`; g.fillText('THANK YOU FOR VISITING', w / 2, y0 + 70);
+      for (let x = 18, k = 0; x < w - 22; k++) { const bw = 1 + ((k * 7) % 4); g.fillRect(x, h - 96, bw, 58); x += bw + 2 + ((k * 5) % 3); }
+    };
+    const rcptTex = canvasTex(RW, RH, drawRcpt);
+    const rcpt = new THREE.Group(); rcpt.position.set(0.85, 1.175, 0.07); rcpt.rotation.x = -0.3; co.add(rcpt);
+    const pGeo = new THREE.PlaneGeometry(0.09, 0.345); pGeo.translate(0, 0.1725, 0); // grows up out of the slot
+    const paper = new THREE.Mesh(pGeo, std({ map: rcptTex, roughness: 0.9, side: THREE.DoubleSide }));
+    rcpt.add(paper);
+    let printedAt = -1;
+    updatePrint = (now) => {
+      if (VISIT.printAt !== printedAt) { printedAt = VISIT.printAt; drawRcpt(rcptTex.image.getContext('2d'), RW, RH); rcptTex.needsUpdate = true; }
+      const f = Math.max(0.002, S.motion && !CLEAN ? clamp((now - VISIT.printAt) / 1500, 0, 1) : 1);
+      if (f === paper.scale.y) return false;
+      paper.scale.y = f; rcptTex.repeat.y = f; rcptTex.offset.y = 1 - f;
+      return true;
+    };
     add(new THREE.Mesh(new THREE.SphereGeometry(0.07, 24, 12, 0, Math.PI * 2, 0, Math.PI / 2), M.chrome), co).position.set(-0.7, 1.05, 0.12);
     contact(3.4, 1.8, -2.9, -11.4, 0.3);
   }
@@ -1694,7 +1772,7 @@ async function init() {
     updateDoor(dt, now);
     const prevXr = XR.on;
     updateXray(dt);
-    const racing = updateKiosk(dt) + updatePipeline(dt) + updatePlant(dt, now) > 0; // all always tick
+    const racing = updateKiosk(dt) + updatePipeline(dt) + updatePlant(dt, now) + updatePrint(now) > 0; // all always tick
     const turning = S.motion && S.u > 1.5 && S.u < 3.5;
     const pulsing = S.motion && S.detect && S.u < 2.6;
     const moving = Math.abs(S.u - prevU) > 1e-6 || S.door !== prevDoor || framing || XR.on !== prevXr;

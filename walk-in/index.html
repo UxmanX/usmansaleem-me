@@ -22,7 +22,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
   <!-- 3D: three.js (MIT, see vendor/three/LICENSE). Textures and sky: Poly Haven (polyhaven.com), CC0. -->
-  <link rel="stylesheet" href="walk.css?v=8">
+  <link rel="stylesheet" href="walk.css?v=9">
   <script type="importmap">
     { "imports": { "three": "./vendor/three/build/three.module.js", "three/addons/": "./vendor/three/examples/jsm/" } }
   </script>
@@ -161,13 +161,16 @@
           <p class="r-center r-title">USMAN SALEEM</p>
           <p class="r-center">Mechanical Engineer (MEng)<br>Key Accounts Project Coordinator<br>Mississauga, Ontario</p>
           <hr>
-          <dl class="r-lines">
-            <div><dt>Projects in flight</dt><dd>50+</dd></div>
-            <div><dt>Store audit</dt><dd>3 h → 15 s</dd></div>
-            <div><dt>QBR deck, 8 slides</dt><dd>~7 s</dd></div>
-            <div><dt>Accounts on QBR tool</dt><dd>16+</dd></div>
-            <div><dt>Site crew coordinated</dt><dd>~60</dd></div>
-          </dl>
+          <p class="r-visit-head" data-visit hidden><span>YOUR VISIT</span><span data-visit-sum></span></p>
+          <ul class="r-items" data-visit-items>
+            <li><span class="r-mark" aria-hidden="true">·</span><span class="r-name">Street</span><span class="r-what">50+ projects</span></li>
+            <li><span class="r-mark" aria-hidden="true">·</span><span class="r-name">Entrance</span><span class="r-what">sensor + drive</span></li>
+            <li><span class="r-mark" aria-hidden="true">·</span><span class="r-name">Featured display</span><span class="r-what">SL500 3D model</span></li>
+            <li><span class="r-mark" aria-hidden="true">·</span><span class="r-name">Audit kiosk</span><span class="r-what">3 h → 15 s</span></li>
+            <li><span class="r-mark" aria-hidden="true">·</span><span class="r-name">Key-accounts shelf</span><span class="r-what">16+ accounts</span></li>
+            <li><span class="r-mark" aria-hidden="true">·</span><span class="r-name">Plant model</span><span class="r-what">crew of ~60</span></li>
+          </ul>
+          <p class="r-hint" data-visit-hint hidden></p>
           <hr>
           <p>MEng Mechanical · University of Ottawa<br>B.Sc. Mechanical · UET Lahore</p>
           <p class="r-route"><abbr title="Lahore, Ottawa, Mississauga">LHE → YOW → YYZ</abbr></p>
@@ -189,6 +192,6 @@
   </main>
 
   <noscript><p class="wk-noscript">The 3D walk needs JavaScript. Everything above is still readable.</p></noscript>
-  <script type="module" src="walk.js?v=8"></script>
+  <script type="module" src="walk.js?v=9"></script>
 </body>
 </html>

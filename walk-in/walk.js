@@ -871,7 +871,7 @@ async function init() {
     const key = `${S.active}:${st}`;
     if (runBtn.dataset.key !== key) {
       runBtn.dataset.key = key; runBtn.dataset.state = st;
-      runBtn.innerHTML = st === 'run' ? '<span aria-hidden="true">●</span> Running · 3× speed'
+      runBtn.innerHTML = st === 'run' ? `<span aria-hidden="true">●</span> ${ex.running || 'Running · 3× speed'}`
         : st === 'done' ? '<span aria-hidden="true">↻</span> Run it again' : `<span aria-hidden="true">▶</span> ${ex.idle}`;
       runBtn.disabled = st === 'run';
     }
@@ -1061,6 +1061,13 @@ async function init() {
   contact(1.6, 3.8, 5.6, -7.6, 0.28);
 
   /* ---------- stop 4: plant scale model in a vitrine ---------- */
+  // Hands-on: "Start the line" commissions the model section by section (intake, milling, conveying,
+  // pasta line): lamps go amber then green, the rollers turn and flour flows. Illustrative, not the PFD.
+  const PLANT = { END: 12, STEP: 3 };
+  const PLANT_SAY = ['intake', 'milling', 'conveying', 'pasta line'];
+  const PS = { phase: still ? 'done' : 'idle', t: still ? PLANT.END : 0, auto: false, delay: 0, flow: 0 };
+  S.plant = PS; // test hook
+  let updatePlant = () => false;
   {
     const mill = new THREE.Group();
     mill.position.set(0.8, 0, -11.0); mill.rotation.y = 0.35; scene.add(mill);
@@ -1091,6 +1098,66 @@ async function init() {
       g.fillStyle = '#14171a'; g.font = '700 30px "JetBrains Mono", monospace'; spacing(g, 2);
       g.fillText('PLANT COMMISSIONING · 1:100', 18, 58);
     }), { transparent: false, depthWrite: true }), 0, 0, 0.011, { parent: p });
+    // --- the working line: flour path (silo -> pipe -> mill -> conveyor -> pasta line), rollers, lamps
+    const flowPath = new THREE.CatmullRomCurve3([
+      [0.58, 0.8, -0.28], [0.5, 0.75, -0.28], [0.21, 0.745, -0.28], [-0.1, 0.745, -0.28], [-0.3, 0.745, -0.26],
+      [-0.4, 0.74, -0.2], [-0.24, 0.735, -0.2], [0.0, 0.644, -0.2], [0.26, 0.54, -0.2], [0.33, 0.46, -0.12],
+      [0.38, 0.37, 0.02], [0.5, 0.345, 0.16], [0.66, 0.345, 0.32],
+    ].map(([x, y, z]) => new THREE.Vector3(x, top + y, z)), false, 'centripetal');
+    const NP = 72;
+    const flour = new THREE.InstancedMesh(new THREE.SphereGeometry(0.018, 10, 8), // wheat gold: reads against the white model
+      std({ color: 0xf0b43c, roughness: 0.5, emissive: 0x9a5c0c, emissiveIntensity: 0.9 }, roomEnv, 0.2), NP);
+    flour.frustumCulled = false; mill.add(flour);
+    const fm = new THREE.Matrix4(), fv = new THREE.Vector3(), hideM = new THREE.Matrix4().makeScale(0, 0, 0);
+    const placeFlour = (front, phase) => {
+      for (let i = 0; i < NP; i++) {
+        const s = (i / NP + phase) % 1;
+        if (s > front) { flour.setMatrixAt(i, hideM); continue; }
+        flowPath.getPointAt(s, fv);
+        flour.setMatrixAt(i, fm.makeTranslation(fv.x, fv.y, fv.z));
+      }
+      flour.instanceMatrix.needsUpdate = true;
+    };
+    const fluted = canvasTex(64, 16, (g, w, h) => { g.fillStyle = '#c9ccd0'; g.fillRect(0, 0, w, h); g.fillStyle = '#5d636a'; for (let i = 0; i < 8; i++) g.fillRect(i * 8, 0, 3, h); });
+    const rollMat = std({ map: fluted, roughness: 0.35, metalness: 0.7 }, roomEnv, 0.6);
+    rounded(0.26, 0.1, 0.17, 0.008, M.model2, -0.45, top + 0.05, 0.2, { parent: mill });
+    const rolls = [-1, 1].map((d) => {
+      const holder = new THREE.Group(); holder.position.set(-0.45, top + 0.135, 0.2 + d * 0.031); holder.rotation.z = Math.PI / 2; mill.add(holder);
+      const r = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.2, 20), rollMat); holder.add(r);
+      r.userData.dir = d; return r;
+    });
+    const lampAt = [[0.35, 0.875, -0.28], [-0.45, 0.88, 0.075], [0.12, 0.44, -0.16], [0.68, 0.338, 0.42]]; // intake, milling, conveying (front of the right post), pasta
+    const lampMats = lampAt.map(() => new THREE.MeshBasicMaterial({ color: 0x3a3f45 }));
+    lampAt.forEach(([x, y, z], i) => { const m = new THREE.Mesh(new THREE.SphereGeometry(0.026, 16, 12), lampMats[i]); m.position.set(x, top + y, z); mill.add(m); });
+    let rollA = 0;
+    const paint = (now) => {
+      const k = Math.min(4, Math.floor(PS.t / PLANT.STEP)); // sections fully commissioned
+      lampMats.forEach((m, i) => m.color.setHex(i < k ? 0x35d07f : i === k && PS.phase === 'run' ? ((now / 260) % 2 < 1 ? 0xffb020 : 0x6b4a0e) : 0x3a3f45));
+      placeFlour(PS.phase === 'done' ? 1 : Math.min(1, PS.t / PLANT.END), PS.flow);
+    };
+    const startPlant = () => {
+      PS.delay = 0;
+      if (S.motion && !CLEAN) { PS.phase = 'run'; PS.t = 0; } else { PS.phase = 'done'; PS.t = PLANT.END; }
+      paint(performance.now()); S.dirty = true;
+    };
+    updatePlant = (dt, now) => {
+      const here = Math.abs(S.u - 5) < 0.6;
+      if (S.active === 5 && Math.abs(S.u - 5) < 0.03 && !PS.auto && PS.phase === 'idle') { PS.auto = true; PS.delay = 0.45; } // first visit runs by itself
+      if (PS.delay > 0) { PS.delay -= dt; if (PS.delay <= 0) startPlant(); return true; }
+      if (PS.phase === 'run') {
+        if (!S.motion) { PS.phase = 'done'; PS.t = PLANT.END; paint(now); return true; }
+        PS.t = Math.min(PLANT.END, PS.t + dt);
+        if (PS.t >= PLANT.END) PS.phase = 'done';
+      } else if (!(PS.phase === 'done' && here && S.motion)) return false; // the line keeps running only while you watch
+      const spin = PS.phase === 'done' ? 1 : clamp((PS.t - PLANT.STEP) / 1.5, 0, 1);
+      rollA += dt * 9 * spin;
+      for (const r of rolls) r.rotation.y = rollA * r.userData.dir;
+      PS.flow = (PS.flow + dt * 0.045) % 1;
+      paint(now);
+      return true;
+    };
+    paint(0);
+    exhibits[5] = { st: PS, start: startPlant, idle: 'Start the line', running: 'Commissioning…', anchor: (v) => mill.localToWorld(v.set(0, 0.0, 1.05)) }; // on the floor in front, clear of the exhibit
     contact(2.9, 2.2, 0.8, -11.0, 0.3);
   }
 
@@ -1548,8 +1615,8 @@ async function init() {
   }
 
   function updateHud() {
-    const atKiosk = !CLEAN && Math.abs(S.u - 3) < 0.45, atShelf = !CLEAN && Math.abs(S.u - 4) < 0.45;
-    const show = S.ready && (S.u < 2.6 || atKiosk || atShelf);
+    const atKiosk = !CLEAN && Math.abs(S.u - 3) < 0.45, atShelf = !CLEAN && Math.abs(S.u - 4) < 0.45, atPlant = !CLEAN && Math.abs(S.u - 5) < 0.45;
+    const show = S.ready && (S.u < 2.6 || atKiosk || atShelf || atPlant);
     hud.classList.toggle('is-visible', show);
     if (!show) return;
     const inDoorway = Math.abs(camera.position.z + 0.15) < 1.0;
@@ -1563,6 +1630,12 @@ async function init() {
       if (QS.phase === 'run') { txt = `Simulating · ${PIPE_SAY[Math.min(3, pipeStep(QS.t))]} · 3× speed`; st = 'opening'; }
       else if (QS.phase === 'done') { txt = 'Lead package ~24 s · QBR deck ~7 s'; st = 'hold'; }
       else { txt = 'Lead → QBR pipeline · simulation'; st = 'idle'; }
+    }
+    else if (atPlant) {
+      const k = Math.min(3, Math.floor(PS.t / PLANT.STEP));
+      if (PS.phase === 'run') { txt = `Commissioning · ${PLANT_SAY[k]} · ${k + 1} of 4`; st = 'opening'; }
+      else if (PS.phase === 'done') { txt = 'Line running · 4 of 4 sections green'; st = 'hold'; }
+      else { txt = 'Plant model · ready to commission'; st = 'idle'; }
     }
     else if (S.door <= 0 && !S.detect) { txt = 'Door closed · sensor watching'; st = 'idle'; }
     else if (S.detect && S.door < 1) { txt = 'Motion detected · opening'; st = 'opening'; }
@@ -1621,7 +1694,7 @@ async function init() {
     updateDoor(dt, now);
     const prevXr = XR.on;
     updateXray(dt);
-    const racing = updateKiosk(dt) + updatePipeline(dt) > 0; // both always tick
+    const racing = updateKiosk(dt) + updatePipeline(dt) + updatePlant(dt, now) > 0; // all always tick
     const turning = S.motion && S.u > 1.5 && S.u < 3.5;
     const pulsing = S.motion && S.detect && S.u < 2.6;
     const moving = Math.abs(S.u - prevU) > 1e-6 || S.door !== prevDoor || framing || XR.on !== prevXr;

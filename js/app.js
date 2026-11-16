@@ -266,7 +266,7 @@ async function initPlushFace() {
       },
       {
             "kicker": "NECKING STAGE",
-            "text": "Coordinating 40 national key accounts simultaneously feels less stretched than my zygomatic arch right now."
+            "text": "Coordinating 50+ projects across national key accounts simultaneously feels less stretched than my zygomatic arch right now."
       },
       {
             "kicker": "NON-LINEAR",
@@ -394,7 +394,7 @@ async function initPlushFace() {
         label: "SMILE",
         icon: "😊",
         kicker: "EQUILIBRIUM",
-        quote: "All 40 projects on schedule, Power BI pipelines green, and mesh at zero residual stress. Drag any vertex!",
+        quote: "All 50+ projects on schedule, Power BI pipelines green, and mesh at zero residual stress. Drag any vertex!",
         sound: () => soundSynth.playRadarChirp(1200, 1600)
       },
       shock: {

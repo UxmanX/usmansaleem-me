@@ -9,6 +9,9 @@
   --card-bg: rgba(251, 248, 243, 0.95);
   --font: "Plus Jakarta Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
   --mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Consolas, monospace;
+  --col-left: clamp(16px, 5vw, 72px);
+  --col-bottom: clamp(16px, 5vh, 48px);
+  --dock-h: 60px;
   color-scheme: light;
 }
 
@@ -112,8 +115,8 @@ main { position: relative; z-index: 10; }
 .js .stop { min-height: 140vh; min-height: 140dvh; padding: 0; }
 .js .stop:first-child { min-height: 115vh; min-height: 115dvh; }
 .js .stop .card {
-  position: fixed; z-index: 12; left: clamp(16px, 5vw, 72px); bottom: clamp(16px, 7vh, 64px);
-  max-height: calc(100vh - 170px); max-height: calc(100dvh - 170px); overflow: auto;
+  position: fixed; z-index: 12; left: var(--col-left); bottom: calc(var(--col-bottom) + var(--dock-h) + 10px);
+  max-height: calc(100vh - 190px - var(--dock-h)); max-height: calc(100dvh - 190px - var(--dock-h)); overflow: auto;
   opacity: 0; transform: translateY(16px); pointer-events: none;
   transition: opacity 0.35s ease, transform 0.35s ease;
 }
@@ -132,9 +135,6 @@ main { position: relative; z-index: 10; }
 .card p { margin: 0 0 12px; font-size: 15px; font-weight: 500; line-height: 1.55; color: #2b3036; }
 .card .lead { font-size: 16px; }
 .card .fine { font-size: 12.5px; color: var(--muted); }
-.card .hint { display: flex; align-items: center; gap: 8px; margin: 4px 0 0; font: 700 12px/1 var(--mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
-.hint span { display: inline-block; animation: nudge 1.6s ease-in-out infinite; }
-@keyframes nudge { 50% { transform: translateY(4px); } }
 .tags { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 2px; padding: 0; list-style: none; }
 .tags li { padding: 7px 9px; border-radius: 8px; background: rgba(20, 23, 26, 0.06); color: #343a41; font: 600 11.5px/1 var(--mono); }
 .card-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
@@ -144,6 +144,76 @@ main { position: relative; z-index: 10; }
   background: var(--accent); color: #fff; font: 800 13px/1 var(--mono); letter-spacing: 0.04em; text-transform: uppercase;
 }
 .sale-tag s { font-weight: 600; opacity: 0.85; }
+
+/* ---------- walk controls: Back / Next, progress and the first-visit hint ---------- */
+.wk-dock { display: none; }
+.js .wk-dock {
+  position: fixed; z-index: 14; left: var(--col-left); bottom: var(--col-bottom);
+  width: min(440px, calc(100vw - 2 * var(--col-left))); height: var(--dock-h);
+  display: flex; align-items: center; gap: 8px; padding: 7px;
+  border: 1px solid var(--line); border-radius: 999px; background: var(--card-bg);
+  box-shadow: 0 14px 40px rgba(20, 23, 26, 0.18);
+  transition: opacity 0.3s ease, transform 0.3s ease, visibility 0s;
+}
+.js.at-end .wk-dock {
+  opacity: 0; transform: translateY(14px); visibility: hidden; pointer-events: none;
+  transition: opacity 0.3s ease, transform 0.3s ease, visibility 0s 0.3s;
+}
+.dock-btn {
+  flex: none; display: inline-flex; align-items: center; justify-content: center; gap: 4px; height: 46px; padding: 0;
+  border: 0; border-radius: 999px; font: 700 14px/1 var(--font); cursor: pointer; -webkit-tap-highlight-color: transparent;
+  transition: background-color 0.15s ease, opacity 0.15s ease;
+}
+.dock-btn svg, .dock-info svg, .dock-hint-ico svg { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.dock-btn svg { width: 20px; height: 20px; }
+.dock-prev { width: 46px; background: rgba(20, 23, 26, 0.07); color: var(--ink); }
+.dock-prev:disabled { opacity: 0.35; cursor: default; }
+.dock-next { gap: 0; margin-left: auto; padding: 0 12px 0 18px; background: var(--ink); color: #fff; }
+.dock-next svg { margin-left: 4px; }
+.js.dock-intro .dock-next { background: #c73a0c; }
+@media (hover: hover) {
+  .dock-prev:not(:disabled):hover { background: rgba(20, 23, 26, 0.13); }
+  .dock-next:hover { background: #000; }
+  .js.dock-intro .dock-next:hover { background: #a93009; }
+}
+.dock-btn:focus-visible, .dock-info:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.dock-progress { flex: 1; min-width: 0; display: grid; gap: 8px; padding: 0 8px; }
+.dock-step { font: 700 13px/1 var(--font); font-variant-numeric: tabular-nums; color: #3f454c; }
+.dock-track { display: block; height: 4px; border-radius: 4px; background: rgba(20, 23, 26, 0.1); overflow: hidden; }
+.dock-track i {
+  display: block; height: 100%; border-radius: inherit; background: var(--accent); transform-origin: left;
+  transform: scaleX(var(--p, 0)); transition: transform 0.45s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+.dock-info {
+  flex: 1; min-width: 0; display: none; align-items: center; gap: 8px; height: 46px; padding: 0 7px 0 12px;
+  border: 0; border-radius: 16px; background: rgba(20, 23, 26, 0.075); color: var(--ink);
+  text-align: left; cursor: pointer; -webkit-tap-highlight-color: transparent; transition: background-color 0.15s ease;
+}
+.dock-title {
+  flex: 1; min-width: 0; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2;
+  overflow: hidden; font: 700 13.5px/1.2 var(--font);
+}
+.dock-count { margin-right: 2px; font-variant-numeric: tabular-nums; color: #c73a0c; }
+.dock-info[aria-expanded="true"] .dock-count { display: none; }
+.dock-more { flex: none; display: grid; place-items: center; width: 18px; color: var(--ink); }
+.dock-more svg { width: 18px; height: 18px; stroke-width: 2.2; transition: transform 0.2s ease; }
+.dock-info[aria-expanded="true"] .dock-more svg { transform: rotate(180deg); }
+@media (hover: hover) { .dock-info:hover { background: rgba(20, 23, 26, 0.11); } }
+.dock-hint { flex: 1; min-width: 0; display: none; align-items: center; gap: 10px; margin: 0; padding-left: 4px; }
+.dock-hint > span:last-child { min-width: 0; }
+.dock-hint b { display: block; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font: 800 14px/1.15 var(--font); color: var(--ink); }
+.dock-hint small { display: block; margin-top: 4px; font: 600 12px/1 var(--font); color: var(--muted); }
+.dock-hint-ico {
+  flex: none; display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%;
+  background: rgba(255, 84, 30, 0.13); color: #c73a0c; animation: nudge 1.8s cubic-bezier(0.3, 0.7, 0.2, 1) infinite;
+}
+.dock-hint-ico svg { width: 18px; height: 18px; stroke-width: 2.2; }
+.dock-hint-ico.is-down { --nudge: 4px; }
+.dock-hint-ico.is-down svg { transform: rotate(180deg); }
+.walked .dock-hint-ico { animation: none; }
+@keyframes nudge { 0%, 70%, 100% { transform: none; } 35% { transform: translateY(var(--nudge, -4px)); } }
+.js.dock-intro .dock-hint { display: flex; }
+.js.dock-intro .dock-prev, .js.dock-intro .dock-progress, .js.dock-intro .dock-info { display: none; }
 
 /* ---------- receipt ---------- */
 .card-receipt { width: min(392px, 100%); padding: 0; border: 0; background: none; box-shadow: none; }
@@ -179,11 +249,11 @@ main { position: relative; z-index: 10; }
 .wk-noscript { position: relative; z-index: 11; margin: 0 clamp(16px, 5vw, 72px) 40px; font-weight: 600; }
 
 /* ---------- motion preferences ---------- */
-.motion-off .hint span, .motion-off .receipt { animation: none !important; }
+.motion-off .dock-hint-ico, .motion-off .receipt { animation: none !important; }
 .motion-off .card { transition: none !important; }
 @media (prefers-reduced-motion: reduce) {
-  .hint span, .receipt { animation: none !important; }
-  .card, .wk-hud, .wk-poster { transition: none !important; }
+  .dock-hint-ico, .receipt { animation: none !important; }
+  .card, .wk-hud, .wk-poster, .wk-dock, .dock-track i { transition: none !important; }
 }
 
 /* ---------- small screens ---------- */
@@ -195,20 +265,39 @@ main { position: relative; z-index: 10; }
   .wk-motion { width: 44px; padding: 0; }
   .wk-stops { display: none; }
   .wk-hud { top: 68px; left: 10px; font-size: 11px; }
-  /* Phone cards are a compact strip: eyebrow, title and two lines of text.
-     "More" opens the rest, so the shop keeps roughly three-quarters of the screen. */
-  .js .stop .card {
-    left: 10px; right: 10px; bottom: max(10px, env(safe-area-inset-bottom)); width: auto;
-    max-height: 62vh; max-height: 62dvh; padding: 13px 16px 14px; border-radius: 18px;
+  /* Phones: one slim dock at the bottom (Back, stop title, Next) and one swipe per stop. After the intro the
+     cards stay closed: the title in the dock opens the full text as a sheet, and the camera lifts the shop above it. */
+  :root { --col-left: 10px; --col-bottom: max(10px, env(safe-area-inset-bottom)); --dock-h: 62px; }
+  html.js { scroll-snap-type: y mandatory; }
+  .js .stop, .js .stop:first-child { height: 100vh; height: 100svh; min-height: 0; scroll-snap-align: start; scroll-snap-stop: always; }
+  .js .wk-dock { right: 10px; width: auto; }
+  .js .dock-progress { display: none; }
+  .js .dock-info { display: flex; }
+  .dock-next-name, .dock-next.is-icon [data-label] { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .dock-next.is-icon { width: 46px; padding: 0; }
+  .dock-next.is-icon svg { margin-left: 2px; }
+  .js .stop:not(.stop-checkout) .card {
+    display: flex; flex-direction: column; left: 10px; right: 10px; width: auto;
+    bottom: calc(var(--col-bottom) + var(--dock-h) + 8px);
+    max-height: min(52svh, calc(100svh - var(--dock-h) - 150px)); padding: 14px 16px 16px; border-radius: 18px;
   }
-  .card h1 { margin-bottom: 6px; font-size: 28px; }
-  .card h2 { margin-bottom: 6px; font-size: 18.5px; line-height: 1.2; }
-  .card p { font-size: 14px; line-height: 1.5; }
-  .card .lead { font-size: 14px; }
-  .card .eyebrow { margin-bottom: 6px; }
+  .js .stop:not(.stop-checkout) .card:not(.is-open) { overflow: hidden; }
+  .js .stop:not(.stop-checkout) .card.is-open { overflow: auto; overscroll-behavior: contain; }
+  .js .stop .card.is-open.has-more { -webkit-mask-image: linear-gradient(#000 calc(100% - 40px), transparent); mask-image: linear-gradient(#000 calc(100% - 40px), transparent); }
+  .js .stop:not(:first-child):not(.stop-checkout) .card:not(.is-open):not(:focus-within) { opacity: 0; transform: translateY(12px); pointer-events: none; }
+  .js .stop:not(.stop-checkout) .card :is(h1, h2) { order: -1; }
+  .js .card:has(.card-toggle) :is(h1, h2) { padding-right: 84px; }
+  .card h1 { margin-bottom: 4px; font-size: 25px; }
+  .card h2 { margin-bottom: 8px; font-size: 18.5px; line-height: 1.2; }
+  .card p { font-size: 14.5px; line-height: 1.5; }
+  .card .lead { font-size: 14.5px; }
+  .card .eyebrow { margin-bottom: 10px; }
+  .js .card-intro .eyebrow { margin-bottom: 0; font-size: 11px; }
+  .js .card-intro.is-open .eyebrow { margin-bottom: 10px; }
+  .js .card-intro:not(.is-open) .card-body, .js .card-intro:not(.is-open) .card-actions { display: none; }
   .tags li { font-size: 10.5px; }
   .js .card-toggle {
-    position: absolute; top: 8px; right: 8px; display: inline-flex; align-items: center; gap: 6px;
+    position: absolute; top: 10px; right: 10px; display: inline-flex; align-items: center; gap: 6px;
     min-height: 40px; padding: 0 12px; border: 1px solid var(--line); border-radius: 999px;
     background: #fff; color: var(--ink); font: 700 11.5px/1 var(--mono); letter-spacing: 0.06em;
     text-transform: uppercase; cursor: pointer; -webkit-tap-highlight-color: transparent;
@@ -216,11 +305,6 @@ main { position: relative; z-index: 10; }
   .card-toggle svg { width: 10px; height: 6px; fill: none; stroke: currentColor; stroke-width: 1.6; transition: transform 0.2s ease; }
   .card.is-open .card-toggle svg { transform: rotate(180deg); }
   .card-toggle:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
-  .js .card:has(.card-toggle) .eyebrow { padding-right: 92px; }
-  .js .card:not(.is-open) .card-body > :not(:first-child) { display: none; }
-  .js .card:not(.is-open) .card-body > :first-child {
-    display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; margin-bottom: 0;
-  }
   .js .card-intro .card-actions { margin-top: 12px; }
   .js .card-intro .card-actions .wk-btn { flex: 1 1 0; justify-content: center; }
   .js .stop-checkout { padding: 88px 10px 40px; }
@@ -229,3 +313,9 @@ main { position: relative; z-index: 10; }
 /* the toggle only exists for the compact phone layout */
 .card-toggle { display: none; }
 @media (max-width: 899px) { .js .card-toggle { display: inline-flex; } }
+@media (max-width: 399px) { .wk-skip-rest { display: none; } }
+@media (max-width: 359px) {
+  .dock-hint b, .dock-title { font-size: 13px; }
+  .dock-next { padding: 0 10px 0 14px; }
+  .wk-motion { display: none; } /* the OS reduced-motion setting still applies */
+}

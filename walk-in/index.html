@@ -22,7 +22,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
   <!-- 3D: three.js (MIT, see vendor/three/LICENSE). Textures and sky: Poly Haven (polyhaven.com), CC0. -->
-  <link rel="stylesheet" href="walk.css?v=3">
+  <link rel="stylesheet" href="walk.css?v=4">
   <script type="importmap">
     { "imports": { "three": "./vendor/three/build/three.module.js", "three/addons/": "./vendor/three/examples/jsm/" } }
   </script>
@@ -36,7 +36,7 @@
     <a class="wk-mark" href="#stop-street" data-jump><span class="wk-mark-dot" aria-hidden="true"></span>Usman Saleem <span class="wk-mark-sub">walk-in edition</span></a>
     <div class="wk-actions">
       <button id="motion-toggle" class="wk-btn wk-motion" type="button" aria-pressed="true" aria-label="Camera motion"><span class="wk-ico" aria-hidden="true">◐</span><span class="wk-lbl" aria-hidden="true">Motion <span data-state>on</span></span></button>
-      <a class="wk-btn" href="#stop-checkout" data-jump>Skip the walk</a>
+      <a class="wk-btn" href="#stop-checkout" data-jump aria-label="Skip the walk">Skip<span class="wk-skip-rest"> the walk</span></a>
       <a class="wk-btn wk-hide-sm" href="../assets/Usman_Saleem_MEng_Resume.pdf" target="_blank" rel="noopener">Résumé</a>
       <a class="wk-btn wk-exit" href="../" aria-label="Exit to the classic site"><b>EXIT</b><span class="wk-exit-label">Classic site</span></a>
     </div>
@@ -61,6 +61,16 @@
     </ol>
   </nav>
 
+  <!-- Walk controls: always-visible Back / Next, so nobody has to guess that scrolling moves the camera -->
+  <nav class="wk-dock" aria-label="Walk controls">
+    <button class="dock-btn dock-prev" type="button"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M12.5 4.5 7 10l5.5 5.5"/></svg><span class="visually-hidden">Back to the previous stop</span></button>
+    <p class="dock-hint" aria-hidden="true"><span class="dock-hint-ico"><svg viewBox="0 0 20 20"><path d="M10 15.5v-11M5.5 9 10 4.5 14.5 9"/></svg></span><span><b data-hint>Swipe up to walk in</b><small>7 stops · about 2 min</small></span></p>
+    <div class="dock-progress" aria-hidden="true"><span class="dock-step"></span><span class="dock-track"><i></i></span></div>
+    <button class="dock-info" type="button" aria-expanded="false"><span class="dock-title"><span class="dock-count" data-step aria-hidden="true"></span> <span data-title></span></span><span class="visually-hidden" data-sr></span><span class="dock-more" aria-hidden="true"><svg viewBox="0 0 20 20"><path d="M5.5 12.5 10 8l4.5 4.5"/></svg></span></button>
+    <button class="dock-btn dock-next" type="button"><span data-label>Walk in</span><span class="dock-next-name"></span><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7.5 4.5 13 10l-5.5 5.5"/></svg></button>
+  </nav>
+  <p class="visually-hidden" id="wk-live" aria-live="polite"></p>
+
   <main>
     <section class="stop" id="stop-street" aria-labelledby="h-street">
       <div class="card card-intro">
@@ -68,7 +78,6 @@
         <h1 id="h-street" tabindex="-1">Usman Saleem</h1>
         <div class="card-body" id="more-street">
           <p class="lead">I coordinate <strong>50+ concurrent</strong> automatic-entrance replacement projects at ASSA ABLOY Entrance Systems in Mississauga, and I build the software that keeps that pace manageable, like a store audit that went from <strong>3 hours to 15 seconds</strong>.</p>
-          <p class="hint" aria-hidden="true">Scroll to walk in <span>↓</span></p>
         </div>
         <button class="card-toggle" type="button" aria-expanded="false" aria-controls="more-street"><span data-label>More</span><svg viewBox="0 0 10 6" aria-hidden="true"><path d="M1 1l4 4 4-4"/></svg></button>
         <div class="card-actions">
@@ -175,6 +184,6 @@
   </main>
 
   <noscript><p class="wk-noscript">The 3D walk needs JavaScript. Everything above is still readable.</p></noscript>
-  <script type="module" src="walk.js?v=3"></script>
+  <script type="module" src="walk.js?v=4"></script>
 </body>
 </html>

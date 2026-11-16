@@ -23,6 +23,7 @@ const S = {
   motion: !reduceMQ.matches && localStorage.getItem('walkin-motion') !== 'off',
   u: 0, uTarget: 0, door: 0, lastSeen: -1e9, detect: false, gate: false,
   dirty: true, active: -1, ready: false, frames: 0, dpr: 1, dprScale: 1,
+  viewY: 0, viewYCur: 0, announce: false,
 };
 window.__walk = S; // handy for testing in the console
 
@@ -54,18 +55,132 @@ function progressFromScroll() {
   return i + ease((f - 0.25) / 0.75);
 }
 
-// Phone cards are compact by default; "More" opens the full text (desktop always shows everything).
+// Phones: the intro card is compact ("More" opens the rest) and later cards open as a sheet from the dock.
+// Desktop always shows everything.
 function setOpen(card, open) {
   card.classList.toggle('is-open', open);
   const b = card.querySelector('.card-toggle');
-  if (!b) return;
-  b.setAttribute('aria-expanded', String(open));
-  b.querySelector('[data-label]').textContent = open ? 'Less' : 'More';
+  if (b) {
+    b.setAttribute('aria-expanded', String(open));
+    b.querySelector('[data-label]').textContent = open ? 'Close' : 'More';
+  }
+  // closing a phone sheet: move focus out, or :focus-within would keep the closed card on screen
+  if (!open && isSmall() && card !== sections[0].querySelector('.card') && card.contains(document.activeElement)) {
+    infoBtn.focus({ preventScroll: true });
+  }
+  syncInfo();
+  updateFraming();
+  requestAnimationFrame(() => syncMore(card));
 }
 $$('.card-toggle').forEach((b) => b.addEventListener('click', () => {
   const card = b.closest('.card');
   setOpen(card, !card.classList.contains('is-open'));
 }));
+
+/* ---------- walk controls: Back / Next, progress, first-visit hint ---------- */
+const dock = $('.wk-dock');
+const prevBtn = $('.dock-prev');
+const nextBtn = $('.dock-next');
+const infoBtn = $('.dock-info');
+const live = $('#wk-live');
+const NAMES = navLinks.map((a) => a.textContent.trim());
+const TITLES = sections.map((s) => s.querySelector('h1, h2')?.textContent.trim() || '');
+const coarse = matchMedia('(pointer: coarse)');
+let walked = localStorage.getItem('walkin-walked') === '1';
+let goal = -1; // stop we are smooth-scrolling to, so repeated taps on Next keep counting
+root.classList.toggle('walked', walked);
+
+function hintCopy() {
+  const touch = coarse.matches;
+  $('[data-hint]').textContent = touch ? 'Swipe up to walk in' : 'Scroll to walk in';
+  $('.dock-hint-ico').classList.toggle('is-down', !touch);
+}
+hintCopy();
+coarse.addEventListener?.('change', hintCopy);
+
+function syncInfo() {
+  const i = Math.max(0, S.active);
+  const open = !!sections[i]?.querySelector('.card')?.classList.contains('is-open');
+  infoBtn.setAttribute('aria-expanded', String(open));
+  infoBtn.querySelector('[data-title]').textContent = open ? 'Hide details' : TITLES[i];
+  infoBtn.querySelector('[data-sr]').textContent = open ? '' : `${/[.!?]$/.test(TITLES[i]) ? ' ' : '. '}Stop ${i + 1} of ${N}. Show details`;
+}
+
+// an open sheet with more text below fades at the bottom edge until it is scrolled to the end
+function syncMore(card) {
+  card.classList.toggle('has-more', card.classList.contains('is-open') && card.scrollHeight - card.scrollTop - card.clientHeight > 4);
+}
+$$('main .card').forEach((c) => c.addEventListener('scroll', () => syncMore(c), { passive: true }));
+
+// Phones: centre the 3D subject in the clear area between the top bar and whatever covers the bottom.
+function updateFraming() {
+  let y = 0;
+  if (isSmall() && !root.classList.contains('at-end')) {
+    const card = sections[S.active]?.querySelector('.card');
+    let top = dock.getBoundingClientRect().top;
+    if (card && (S.active === 0 || card.classList.contains('is-open'))) top = Math.min(top, card.getBoundingClientRect().top);
+    // a slight lift trades ceiling for floor (a little more inside the shop, where the ceiling is dark)
+    y = Math.max(innerHeight * (S.active > 0 ? 0.085 : 0.06), (innerHeight - top - 64) / 2);
+  }
+  if (Math.abs(y - S.viewY) > 0.5) { S.viewY = y; S.dirty = true; }
+}
+
+function updateDock(i) {
+  const intro = i === 0;
+  root.classList.toggle('dock-intro', intro);
+  prevBtn.disabled = intro;
+  const label = intro ? 'Walk in' : i === N - 2 ? 'Checkout' : 'Next';
+  nextBtn.querySelector('[data-label]').textContent = label;
+  nextBtn.querySelector('.dock-next-name').textContent = intro || i >= N - 2 ? '' : ': ' + NAMES[i + 1];
+  nextBtn.disabled = i >= N - 1;
+  nextBtn.classList.toggle('is-icon', !intro && i < N - 2); // phones show a round arrow after the intro
+  $('.dock-step').textContent = `Stop ${i + 1} of ${N}`;
+  infoBtn.querySelector('[data-step]').textContent = `${i + 1}/${N}`;
+  const body = sections[i].querySelector('.card-body');
+  if (body) infoBtn.setAttribute('aria-controls', body.id); else infoBtn.removeAttribute('aria-controls');
+  dock.style.setProperty('--p', String(i / (N - 1)));
+  syncInfo();
+  if (i > 0 && !walked) { walked = true; localStorage.setItem('walkin-walked', '1'); root.classList.add('walked'); }
+  if (S.announce) live.textContent = `${NAMES[i]}, stop ${i + 1} of ${N}`;
+  S.announce = true;
+}
+
+function go(i) {
+  i = clamp(i, 0, N - 1);
+  if (i === S.active && goal < 0) return;
+  goal = i;
+  measure();
+  window.scrollTo({ top: Math.min(tops[i], maxScroll), behavior: S.motion ? 'smooth' : 'instant' });
+}
+const step = (d) => go((goal >= 0 ? goal : S.active) + d);
+prevBtn.addEventListener('click', () => step(-1));
+nextBtn.addEventListener('click', () => step(1));
+infoBtn.addEventListener('click', () => {
+  const card = sections[S.active]?.querySelector('.card');
+  if (!card) return;
+  const open = !card.classList.contains('is-open');
+  setOpen(card, open);
+  if (open) card.querySelector('h1, h2')?.focus({ preventScroll: true });
+});
+// Phones: tapping the shop (outside the sheet) closes the sheet.
+$('main').addEventListener('click', (e) => {
+  if (!isSmall() || e.target.closest('.card')) return;
+  const open = $('.card.is-open');
+  if (open) setOpen(open, false);
+});
+addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    const open = $('.card.is-open');
+    if (open) { setOpen(open, false); if (isSmall()) infoBtn.focus(); }
+    return;
+  }
+  if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey || e.target.closest?.('input, textarea, select, [contenteditable]')) return;
+  if (e.key === 'ArrowRight') { e.preventDefault(); step(1); }
+  else if (e.key === 'ArrowLeft') { e.preventDefault(); step(-1); }
+});
+addEventListener('scrollend', () => { goal = -1; });
+addEventListener('touchstart', (e) => { if (!e.target.closest?.('.wk-dock')) goal = -1; }, { passive: true });
+addEventListener('wheel', () => { goal = -1; }, { passive: true });
 
 function setActive(i) {
   if (i === S.active) return;
@@ -76,12 +191,16 @@ function setActive(i) {
     if (open) setOpen(open, false);
   });
   navLinks.forEach((a, k) => (k === i ? a.setAttribute('aria-current', 'step') : a.removeAttribute('aria-current')));
+  if (i === goal) goal = -1;
+  updateDock(i);
+  updateFraming();
 }
 
 function onScroll() {
   S.uTarget = progressFromScroll();
   setActive(Math.min(N - 1, Math.round(S.uTarget)));
-  root.classList.toggle('at-end', scrollY + innerHeight > tops[N - 1] + innerHeight * 0.1);
+  const end = scrollY + innerHeight * 0.5 > tops[N - 1];
+  if (end !== root.classList.contains('at-end')) { root.classList.toggle('at-end', end); updateFraming(); }
   S.dirty = true;
 }
 
@@ -89,7 +208,10 @@ function jumpTo(i, focus = true) {
   measure();
   window.scrollTo({ top: Math.min(tops[i], maxScroll), behavior: 'instant' });
   onScroll();
-  if (focus) sections[i].querySelector('h1, h2')?.focus({ preventScroll: true });
+  if (!focus) return;
+  // phones keep the middle cards closed, so focus the dock's stop title instead of a hidden heading
+  const target = isSmall() && i > 0 && i < N - 1 ? infoBtn : sections[i].querySelector('h1, h2');
+  target?.focus({ preventScroll: true });
 }
 
 $$('a[data-jump], .wk-stops a').forEach((a) => a.addEventListener('click', (e) => {
@@ -120,7 +242,7 @@ applyMotion();
 let resizeRaf = 0;
 function onResize() {
   cancelAnimationFrame(resizeRaf);
-  resizeRaf = requestAnimationFrame(() => { measure(); onScroll(); if (S.ready) sizeRenderer(); });
+  resizeRaf = requestAnimationFrame(() => { measure(); onScroll(); updateFraming(); if (S.ready) sizeRenderer(); });
 }
 addEventListener('resize', onResize);
 window.visualViewport?.addEventListener('resize', onResize);
@@ -965,6 +1087,13 @@ async function init() {
     hud.dataset.state = st;
   }
 
+  // keep the subject clear of the cards: shift right on desktop; on phones centre it above the dock or sheet
+  const applyView = () => {
+    const w = innerWidth, h = innerHeight;
+    if (w >= 900) camera.setViewOffset(w, h, -w * 0.17, 0, w, h);
+    else camera.setViewOffset(w, h, 0, S.viewYCur, w, h);
+    camera.updateProjectionMatrix();
+  };
   sizeRenderer = () => {
     const w = innerWidth, h = innerHeight;
     const cap = (isSmall() ? 1.25 : 1.5) * S.dprScale;
@@ -974,12 +1103,10 @@ async function init() {
     camera.aspect = w / h;
     const hfov = THREE.MathUtils.degToRad(isSmall() ? 64 : 72);
     camera.fov = clamp(THREE.MathUtils.radToDeg(2 * Math.atan(Math.tan(hfov / 2) / camera.aspect)), 42, 78);
-    // keep the subject clear of the cards: shift right on desktop, slightly up on phones
-    if (w >= 900) camera.setViewOffset(w, h, -w * 0.17, 0, w, h);
-    else camera.setViewOffset(w, h, 0, h * 0.07, w, h); // compact phone cards leave more room
-    camera.updateProjectionMatrix();
+    applyView();
     S.dirty = true;
   };
+  S.viewYCur = S.viewY;
   sizeRenderer();
 
   // compile every shader off the main thread before the first frame, so scrolling never freezes
@@ -996,11 +1123,17 @@ async function init() {
     last = now;
     if (document.hidden) return;
     const prevU = S.u, prevDoor = S.door;
+    const framing = Math.abs(S.viewY - S.viewYCur) > 0.5;
+    if (framing) {
+      S.viewYCur = S.motion ? S.viewYCur + (S.viewY - S.viewYCur) * (1 - Math.exp(-7 * dt)) : S.viewY;
+      if (Math.abs(S.viewY - S.viewYCur) <= 0.5) S.viewYCur = S.viewY;
+      applyView();
+    }
     updateCamera(dt);
     updateDoor(dt, now);
     const turning = S.motion && S.u > 1.5 && S.u < 3.5;
     const pulsing = S.motion && S.detect && S.u < 2.6;
-    const moving = Math.abs(S.u - prevU) > 1e-6 || S.door !== prevDoor;
+    const moving = Math.abs(S.u - prevU) > 1e-6 || S.door !== prevDoor || framing;
     if (!(moving || turning || pulsing || S.dirty)) { animT = 0; return; }
     S.dirty = false;
     if (turning) {

@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ASSA ABLOY SL500 3D CAD Viewer</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #080c14;
+      color: #e2e8f0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      overflow: hidden;
+      width: 100vw;
+      height: 100vh;
+      position: relative;
+    }
+    #cad-viewer-container {
+      width: 100%;
+      height: 100%;
+      display: block;
+      cursor: grab;
+    }
+    #cad-viewer-container:active { cursor: grabbing; }
+    .cad-controls-bar {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 12px;
+      background: rgba(15, 23, 42, 0.85);
+      backdrop-filter: blur(8px);
+      padding: 8px 16px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+      z-index: 10;
+    }
+    .ctrl-btn {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: #f8fafc;
+      font-size: 0.8rem;
+      font-weight: 600;
+      padding: 6px 14px;
+      border-radius: 999px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+    .ctrl-btn:hover {
+      background: #ff541e;
+      border-color: #ff541e;
+    }
+    .ctrl-btn.active {
+      background: #ff541e;
+      border-color: #ff541e;
+    }
+    .watermark {
+      position: absolute;
+      top: 16px;
+      left: 20px;
+      font-family: monospace;
+      font-size: 0.75rem;
+      color: #64748b;
+      pointer-events: none;
+    }
+    .watermark span { color: #ff541e; font-weight: bold; }
+  </style>
+</head>
+<body>
+
+  <div class="watermark">ASSA ABLOY <span>SL500 OPERATOR</span> · THREE.JS DIGITAL TWIN</div>
+  <div id="cad-viewer-container"></div>
+
+  <div class="cad-controls-bar">
+    <button id="cad-explode-btn" class="ctrl-btn" type="button">
+      Explode View
+    </button>
+    <button id="cad-wireframe-btn" class="ctrl-btn" type="button">
+      Wireframe
+    </button>
+    <button id="cad-reset-btn" class="ctrl-btn" type="button">
+      Reset Camera
+    </button>
+  </div>
+
+  <script src="js/vendor/three.min.js"></script>
+  <script src="js/vendor/OrbitControls.js"></script>
+  <script src="js/cad-viewer.js"></script>
+</body>
+</html>

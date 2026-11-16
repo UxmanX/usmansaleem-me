@@ -1,0 +1,484 @@
+/* ==========================================================================
+   BENTO.CSS — 12-COLUMN RESPONSIVE BENTO GRID & LIVE METRICS HUD
+   Site: Usman Saleem — Sentient 3D Showcase (usmansaleem.me)
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. Showcase Section & Bento Grid Layout
+   -------------------------------------------------------------------------- */
+.bento-section {
+  padding: 80px 0;
+  position: relative;
+  width: 100%;
+}
+
+.bento-header {
+  margin-bottom: 40px;
+}
+
+.bento-title {
+  font-family: var(--font-heading);
+  font-size: clamp(1.8rem, 3.5vw, 2.75rem);
+  font-weight: 700;
+  line-height: 1.15;
+  color: var(--text-primary);
+  margin: 10px 0 16px;
+  letter-spacing: -0.02em;
+}
+
+.bento-subtitle {
+  font-size: 1.05rem;
+  color: var(--text-secondary);
+  max-width: 680px;
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* 12-Column Grid Container */
+.bento-grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 20px;
+  width: 100%;
+}
+
+/* --------------------------------------------------------------------------
+   2. Bento Card Base Styling
+   -------------------------------------------------------------------------- */
+.bento-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-card);
+  border-radius: 18px;
+  padding: 28px;
+  position: relative;
+  overflow: hidden;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  transition: transform var(--duration-normal) var(--ease-smooth),
+              border-color var(--duration-normal) var(--ease-smooth),
+              box-shadow var(--duration-normal) var(--ease-smooth),
+              background var(--duration-normal) var(--ease-smooth);
+  display: flex;
+  flex-direction: column;
+}
+
+.bento-card:hover {
+  background: var(--bg-card-hover);
+  border-color: var(--border-glow);
+  transform: translateY(-4px);
+  box-shadow: 0 16px 36px rgba(0, 240, 255, 0.09);
+}
+
+.bento-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.bento-card-title {
+  font-family: var(--font-heading);
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 8px 0 10px;
+  line-height: 1.3;
+}
+
+.bento-card-desc {
+  font-size: 0.9375rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin: 0 0 18px;
+}
+
+/* Card Column Spans (Desktop Default: 12-col) */
+.col-span-12 { grid-column: span 12; }
+.col-span-8  { grid-column: span 8; }
+.col-span-6  { grid-column: span 6; }
+.col-span-4  { grid-column: span 4; }
+
+/* --------------------------------------------------------------------------
+   3. Card 1: Enterprise Project Delivery (Hero Bento)
+   -------------------------------------------------------------------------- */
+.card-enterprise {
+  background: linear-gradient(135deg, rgba(16, 24, 39, 0.88) 0%, rgba(12, 16, 26, 0.95) 100%);
+  border-color: rgba(56, 189, 248, 0.28);
+}
+
+.project-lifecycle-stepper {
+  margin: 20px 0;
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 8px;
+  padding: 16px;
+  background: rgba(7, 9, 14, 0.6);
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+}
+
+.stepper-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  position: relative;
+}
+
+.stepper-step:not(:last-child)::after {
+  content: '→';
+  position: absolute;
+  right: -8px;
+  top: 8px;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  font-family: var(--font-mono);
+}
+
+.stepper-num {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  color: var(--accent-cyan);
+  background: rgba(0, 240, 255, 0.1);
+  border: 1px solid rgba(0, 240, 255, 0.25);
+  border-radius: 50%;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 6px;
+}
+
+.stepper-label {
+  font-size: 0.6875rem;
+  font-family: var(--font-mono);
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-weight: 600;
+}
+
+.tech-tags-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: auto;
+}
+
+.tech-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  transition: all var(--duration-fast) var(--ease-smooth);
+}
+
+.tech-tag:hover {
+  background: rgba(0, 240, 255, 0.08);
+  border-color: rgba(0, 240, 255, 0.3);
+  color: var(--accent-cyan);
+}
+
+/* --------------------------------------------------------------------------
+   4. Card 2: Live Operational Metrics HUD
+   -------------------------------------------------------------------------- */
+.card-metrics-hud {
+  background: linear-gradient(135deg, rgba(14, 22, 38, 0.9) 0%, rgba(9, 13, 22, 0.95) 100%);
+  border-color: rgba(0, 240, 255, 0.32);
+}
+
+.hud-counter-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin: 16px 0;
+}
+
+.hud-counter-box {
+  background: rgba(7, 9, 14, 0.65);
+  border: 1px solid rgba(56, 189, 248, 0.18);
+  border-radius: 12px;
+  padding: 16px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  transition: border-color var(--duration-normal) var(--ease-smooth);
+}
+
+.hud-counter-box:hover {
+  border-color: var(--accent-cyan);
+}
+
+.hud-counter-box::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--accent-cyan), transparent);
+  opacity: 0.7;
+}
+
+.hud-val {
+  font-family: var(--font-heading);
+  font-size: 1.875rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.1;
+  margin-bottom: 6px;
+  letter-spacing: -0.02em;
+}
+
+.hud-lbl {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+}
+
+.hud-live-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  color: var(--accent-emerald);
+  font-weight: 600;
+  letter-spacing: 0.05em;
+}
+
+/* --------------------------------------------------------------------------
+   5. Card 3: 3D CAD Preview Card
+   -------------------------------------------------------------------------- */
+.card-cad-preview {
+  position: relative;
+  background: linear-gradient(135deg, rgba(16, 24, 40, 0.85) 0%, rgba(10, 15, 25, 0.95) 100%);
+}
+
+.cad-badge-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+/* --------------------------------------------------------------------------
+   6. Card 4: Academic Rigor & MEng Credentials
+   -------------------------------------------------------------------------- */
+.card-education {
+  border-left: 3px solid var(--accent-cyan);
+}
+
+.credential-item {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  margin-bottom: 14px;
+}
+
+.credential-item:last-child {
+  margin-bottom: 0;
+}
+
+.credential-icon-box {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: rgba(0, 240, 255, 0.08);
+  border: 1px solid rgba(0, 240, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent-cyan);
+  flex-shrink: 0;
+}
+
+.credential-degree {
+  font-family: var(--font-heading);
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 2px;
+}
+
+.credential-school {
+  font-size: 0.875rem;
+  color: var(--accent-cyan-hover);
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.credential-date {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+/* --------------------------------------------------------------------------
+   7. Card 5: Autodesk Certifications
+   -------------------------------------------------------------------------- */
+.card-certifications {
+  border-left: 3px solid var(--accent-amber);
+}
+
+.cert-badge-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.cert-badge-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: rgba(7, 9, 14, 0.5);
+  border: 1px solid rgba(245, 158, 11, 0.2);
+  border-radius: 10px;
+  font-size: 0.875rem;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.cert-badge-item svg {
+  color: var(--accent-amber);
+  flex-shrink: 0;
+}
+
+/* --------------------------------------------------------------------------
+   8. Card 6: Autonomous Automation & Data Systems
+   -------------------------------------------------------------------------- */
+.card-automation {
+  border-left: 3px solid var(--accent-emerald);
+}
+
+.toolchain-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.toolchain-col-title {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  font-weight: 700;
+  margin-bottom: 6px;
+  letter-spacing: 0.05em;
+}
+
+/* --------------------------------------------------------------------------
+   9. Card 7: Industrial Commissioning & Multi-Sector Track Record
+   -------------------------------------------------------------------------- */
+.card-career-track {
+  background: linear-gradient(135deg, rgba(15, 23, 38, 0.85) 0%, rgba(9, 14, 24, 0.92) 100%);
+}
+
+.career-timeline-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.timeline-item {
+  background: rgba(7, 9, 14, 0.6);
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  padding: 16px;
+  transition: border-color var(--duration-fast) var(--ease-smooth);
+}
+
+.timeline-item:hover {
+  border-color: rgba(56, 189, 248, 0.3);
+}
+
+.timeline-company {
+  font-family: var(--font-heading);
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 2px;
+}
+
+.timeline-role {
+  font-size: 0.8125rem;
+  color: var(--accent-cyan);
+  margin-bottom: 4px;
+}
+
+.timeline-date {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+
+.timeline-desc {
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* --------------------------------------------------------------------------
+   10. Responsive Breakpoints
+   -------------------------------------------------------------------------- */
+@media (max-width: 1024px) {
+  .col-span-8 { grid-column: span 12; }
+  .col-span-4 { grid-column: span 12; }
+  .col-span-6 { grid-column: span 12; }
+}
+
+@media (max-width: 768px) {
+  .bento-section {
+    padding: 50px 0;
+  }
+
+  .bento-card {
+    padding: 20px;
+  }
+
+  .project-lifecycle-stepper {
+    grid-template-columns: repeat(3, 1fr);
+    row-gap: 16px;
+  }
+
+  .stepper-step:not(:last-child)::after {
+    display: none;
+  }
+
+  .hud-counter-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .career-timeline-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .toolchain-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .hud-counter-grid {
+    grid-template-columns: 1fr;
+  }
+}

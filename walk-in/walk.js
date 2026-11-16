@@ -1,7 +1,8 @@
-/* Walk-in edition (test build) — usmansaleem.me/walk-in/
- * Native scroll drives a camera rail through a white scale-model shop.
- * The entrance is a real sliding-door model; it opens on its own timing when the camera enters the
- * (illustrative) sensor zone and holds open while the camera is in or near the threshold.
+/* Walk-in edition — usmansaleem.me/walk-in/
+ * Native scroll drives a camera rail through a small shop at blue hour.
+ * Photoreal pass: CC0 PBR textures and sky from Poly Haven (polyhaven.com), physically based materials,
+ * warm interior light against a cool dusk sky. The entrance is Usman's own SL500 sliding-door model;
+ * it opens when the camera enters the (illustrative) sensor zone and holds open in the threshold.
  * All text lives in the HTML cards; the canvas is decoration (aria-hidden).
  */
 import * as THREE from 'three';
@@ -53,10 +54,27 @@ function progressFromScroll() {
   return i + ease((f - 0.25) / 0.75);
 }
 
+// Phone cards are compact by default; "More" opens the full text (desktop always shows everything).
+function setOpen(card, open) {
+  card.classList.toggle('is-open', open);
+  const b = card.querySelector('.card-toggle');
+  if (!b) return;
+  b.setAttribute('aria-expanded', String(open));
+  b.querySelector('[data-label]').textContent = open ? 'Less' : 'More';
+}
+$$('.card-toggle').forEach((b) => b.addEventListener('click', () => {
+  const card = b.closest('.card');
+  setOpen(card, !card.classList.contains('is-open'));
+}));
+
 function setActive(i) {
   if (i === S.active) return;
   S.active = i;
-  sections.forEach((s, k) => s.classList.toggle('is-active', k === i));
+  sections.forEach((s, k) => {
+    s.classList.toggle('is-active', k === i);
+    const open = k !== i && s.querySelector('.card.is-open');
+    if (open) setOpen(open, false);
+  });
   navLinks.forEach((a, k) => (k === i ? a.setAttribute('aria-current', 'step') : a.removeAttribute('aria-current')));
 }
 
@@ -126,25 +144,66 @@ else init().catch((err) => { console.error(err); fail('The 3D shop could not loa
 /* ------------------------------------------------------------------ 3D */
 async function init() {
   const canvas = $('#wk-canvas');
+  const lite = isSmall() || (navigator.deviceMemory || 8) <= 4;
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
   renderer.outputColorSpace = THREE.SRGBColorSpace;
-  renderer.toneMapping = THREE.NeutralToneMapping;
-  renderer.toneMappingExposure = 1.0;
+  renderer.toneMapping = THREE.AgXToneMapping;
+  renderer.toneMappingExposure = 1.3;
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFShadowMap;
   renderer.shadowMap.autoUpdate = false;
-  const aniso = Math.min(8, renderer.capabilities.getMaxAnisotropy());
+  const aniso = Math.min(lite ? 4 : 8, renderer.capabilities.getMaxAnisotropy());
 
-  // Canvas textures need the web fonts first (never wait more than ~2.5 s).
-  const fontWait = new Promise((r) => setTimeout(r, 2500));
-  await Promise.race([
+  /* ---------- load fonts, textures, sky and the door in parallel ---------- */
+  let want = 0, got = 0;
+  hud.classList.add('is-visible');
+  const tick = () => { got++; hudText.textContent = `Loading the shop… ${Math.round((100 * got) / Math.max(1, want))}%`; };
+  const texLoader = new THREE.TextureLoader();
+  const loadTex = (url, srgb = false, wrap = true) => {
+    want++;
+    return new Promise((res) => texLoader.load(url, (t) => {
+      if (srgb) t.colorSpace = THREE.SRGBColorSpace;
+      if (wrap) t.wrapS = t.wrapT = THREE.RepeatWrapping;
+      t.anisotropy = aniso;
+      tick(); res(t);
+    }, undefined, () => { tick(); res(null); }));
+  };
+  const RES = lite ? '512' : '1k';
+  const NAMES = ['pave', 'asphalt', 'brick', 'tiles', 'plaster', 'wood'];
+  const texJob = Promise.all(NAMES.map((n) => Promise.all([
+    loadTex(`assets/tex/${n}_diff_${RES}.webp`, true),
+    loadTex(`assets/tex/${n}_nor_512.webp`),
+    loadTex(`assets/tex/${n}_arm_512.webp`),
+  ])));
+  const skyJob = loadTex('assets/sky.v2.jpg', true, false);
+  want++;
+  const doorJob = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder).loadAsync('assets/door.v1.glb')
+    .then((g) => { tick(); return g; }, (err) => { tick(); console.warn('Door model failed to load; using a simple stand-in.', err); return null; });
+  // canvas textures need the web fonts first (never wait more than ~2.5 s)
+  const fontJob = Promise.race([
     Promise.all(['800 64px "Plus Jakarta Sans"', '600 64px "Plus Jakarta Sans"', '700 64px "JetBrains Mono"', '600 64px "JetBrains Mono"']
       .map((f) => document.fonts?.load(f))).catch(() => {}),
-    fontWait,
+    new Promise((r) => setTimeout(r, 2500)),
   ]);
+  const [sets, skyTex, gltf] = await Promise.all([texJob, skyJob, doorJob, fontJob]);
+  const TX = Object.fromEntries(NAMES.map((n, i) => [n, { map: sets[i][0], normalMap: sets[i][1], arm: sets[i][2] }]));
 
   const scene = new THREE.Scene();
-  const camera = new THREE.PerspectiveCamera(50, innerWidth / innerHeight, 0.05, 160);
+  const camera = new THREE.PerspectiveCamera(50, innerWidth / innerHeight, 0.05, 220);
+
+  /* ---------- sky and image-based light: dusk sky outside, a soft studio room inside ---------- */
+  const pmrem = new THREE.PMREMGenerator(renderer);
+  const roomEnv = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+  let skyEnv = roomEnv;
+  if (skyTex) {
+    skyTex.mapping = THREE.EquirectangularReflectionMapping;
+    scene.background = skyTex;
+    scene.backgroundIntensity = 0.85; // the sky file is graded to blue hour; keep it below the lit shop
+    skyEnv = pmrem.fromEquirectangular(skyTex).texture;
+  } else scene.background = new THREE.Color(0x4f5670);
+  pmrem.dispose();
+  scene.environment = skyEnv;
+  scene.fog = new THREE.Fog(0x6f6577, 36, 120); // matches the dusk horizon at this background intensity
 
   /* ---------- helpers ---------- */
   function canvasTex(w, h, draw) {
@@ -158,41 +217,93 @@ async function init() {
     return t;
   }
   const spacing = (g, px) => { if ('letterSpacing' in g) g.letterSpacing = px + 'px'; };
-  const mat = (color, roughness = 0.92, extra = {}) => new THREE.MeshStandardMaterial({ color, roughness, metalness: 0, ...extra });
   const basic = (map, extra = {}) => new THREE.MeshBasicMaterial({ map, transparent: true, depthWrite: false, toneMapped: false, ...extra });
-  const lit = (map, extra = {}) => new THREE.MeshStandardMaterial({ map, transparent: true, depthWrite: false, roughness: 0.85, ...extra });
+  const lit = (map, extra = {}) => new THREE.MeshStandardMaterial({ map, transparent: true, depthWrite: false, roughness: 0.7, envMap: roomEnv, envMapIntensity: 0.35, ...extra });
+  const std = (o, env = roomEnv, envI = 0.5) => new THREE.MeshStandardMaterial({ envMap: env, envMapIntensity: envI, ...o });
+  const phys = (o, env = roomEnv, envI = 0.6) => new THREE.MeshPhysicalMaterial({ envMap: env, envMapIntensity: envI, ...o });
 
+  // real-world texture sizes (metres) from Poly Haven's metadata
+  const TILE = { pave: 1.8, asphalt: 2.08, brick: 2.01, tiles: 1.9, plaster: 2.0, wood: 1.7 };
+  function pbr(name, { color = 0xffffff, fallback = 0xbbbbbb, rough = 1, normal = 1, ao = 1, env = skyEnv, envI = 0.5, physical = null } = {}) {
+    const t = TX[name] || {};
+    const o = { color: t.map ? color : fallback, roughness: rough, metalness: 0, envMap: env, envMapIntensity: envI };
+    if (t.map) o.map = t.map;
+    if (t.normalMap) { o.normalMap = t.normalMap; o.normalScale = new THREE.Vector2(normal, normal); }
+    if (t.arm) { o.roughnessMap = t.arm; o.aoMap = t.arm; o.aoMapIntensity = ao; }
+    const m = physical ? new THREE.MeshPhysicalMaterial({ ...o, ...physical }) : new THREE.MeshStandardMaterial(o);
+    m.userData.tile = TILE[name];
+    return m;
+  }
+  // world-scale box projection, so texel density matches across pieces and joints line up
+  function boxUV(geo, tile, ox = 0, oy = 0, oz = 0) {
+    const p = geo.attributes.position, n = geo.attributes.normal;
+    const uv = new Float32Array(p.count * 2);
+    for (let i = 0; i < p.count; i++) {
+      const x = p.getX(i) + ox, y = p.getY(i) + oy, z = p.getZ(i) + oz;
+      const ax = Math.abs(n.getX(i)), ay = Math.abs(n.getY(i)), az = Math.abs(n.getZ(i));
+      let u, v;
+      if (ay >= ax && ay >= az) { u = x; v = z; } else if (ax >= az) { u = z; v = y; } else { u = x; v = y; }
+      uv[2 * i] = u / tile; uv[2 * i + 1] = v / tile;
+    }
+    geo.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
+  }
+
+  // faint diagonal streaks: the cue that makes clear glass read as glass in architectural renders
+  const sheenTex = canvasTex(256, 256, (g, w, h) => {
+    g.fillStyle = 'rgba(255,255,255,0.5)'; g.fillRect(0, 0, w, h);
+    g.translate(w / 2, h / 2); g.rotate(-0.35); g.translate(-w / 2, -h / 2);
+    for (const [x, bw, a] of [[60, 46, 0.5], [128, 14, 0.4], [196, 30, 0.35]]) {
+      const gr = g.createLinearGradient(x - bw, 0, x + bw, 0);
+      gr.addColorStop(0, 'rgba(255,255,255,0)'); gr.addColorStop(0.5, `rgba(255,255,255,${a})`); gr.addColorStop(1, 'rgba(255,255,255,0)');
+      g.fillStyle = gr; g.fillRect(x - bw, -h, bw * 2, h * 3);
+    }
+  });
   const M = {
-    wall: mat(0xf4f1eb),
-    inWall: mat(0xe2dbcf),
-    white: mat(0xf1ede5),
-    fixture: mat(0xfcfbf8, 0.8),
-    floor: mat(0xd6cec1, 0.95),
-    pave: mat(0xe3ded5, 0.97),
-    curb: mat(0xeeebe4),
-    street: mat(0xbcc1c8, 0.98),
-    dark: mat(0x262b31, 0.55),
-    accent: mat(0xff541e, 0.6),
-    alu: new THREE.MeshStandardMaterial({ color: 0x30353b, metalness: 0.55, roughness: 0.38 }),
-    header: new THREE.MeshStandardMaterial({ color: 0x272b30, metalness: 0.5, roughness: 0.4 }),
-    chrome: new THREE.MeshStandardMaterial({ color: 0xd3d7db, metalness: 0.9, roughness: 0.2 }),
-    glass: new THREE.MeshPhysicalMaterial({ color: 0xa9c3d1, roughness: 0.05, transparent: true, opacity: 0.28, depthWrite: false, side: THREE.DoubleSide, envMapIntensity: 1.4 }),
-    doorGlass: new THREE.MeshPhysicalMaterial({ color: 0x92b2c4, roughness: 0.04, transparent: true, opacity: 0.34, depthWrite: false, side: THREE.DoubleSide, envMapIntensity: 1.6 }),
-    vitrine: new THREE.MeshPhysicalMaterial({ color: 0xffffff, roughness: 0.03, transparent: true, opacity: 0.1, depthWrite: false, side: THREE.DoubleSide, envMapIntensity: 1.2 }),
-    edge: new THREE.LineBasicMaterial({ color: 0xb2a99b, transparent: true, opacity: 0.45 }),
+    pave: pbr('pave', { color: 0xe4e0da, fallback: 0xb9b5ae, envI: 0.16 }),
+    asphalt: pbr('asphalt', { color: 0x9a9a9a, fallback: 0x4a4c50, envI: 0.16 }),
+    brick: pbr('brick', { fallback: 0x8a5a48, normal: 1.3, envI: 0.12 }),
+    brickN: pbr('brick', { color: 0xb3a59b, fallback: 0x7d6a60, envI: 0.12 }),
+    renderN: pbr('plaster', { color: 0xdccfbd, fallback: 0xcfc3b1, normal: 0.8, envI: 0.14 }),
+    concrete: pbr('plaster', { color: 0xaaa69f, fallback: 0x9e9a93, normal: 0.6, envI: 0.14 }),
+    tiles: pbr('tiles', { color: 0xf0ebe3, fallback: 0xd9d4cc, normal: 0.6, ao: 0.45, env: roomEnv, envI: 0.35 }),
+    wallIn: pbr('plaster', { color: 0xf1ece4, fallback: 0xeae4da, normal: 0.45, env: roomEnv, envI: 0.12 }),
+    wood: pbr('wood', { color: 0xf4e8da, fallback: 0xb08a63, env: roomEnv, envI: 0.25 }),
+    ceiling: std({ color: 0xf0eee9, roughness: 0.92 }, roomEnv, 0.1),
+    solid: std({ color: 0xe6e2db, roughness: 0.36 }, roomEnv, 0.32),
+    quartz: std({ color: 0xe8e4dd, roughness: 0.2 }, roomEnv, 0.45),
+    black: std({ color: 0x1b1d20, roughness: 0.42, metalness: 0.25 }, roomEnv, 0.4),
+    model: std({ color: 0xdcd7ce, roughness: 0.8 }, roomEnv, 0.2),
+    model2: std({ color: 0xa9a49b, roughness: 0.55, metalness: 0.2 }, roomEnv, 0.3),
+    accent: std({ color: 0xff541e, roughness: 0.5 }, roomEnv, 0.4),
+    steel: std({ color: 0x2b2e33, metalness: 0.8, roughness: 0.42 }, skyEnv, 0.6),
+    alu: std({ color: 0x2d3035, metalness: 0.85, roughness: 0.34 }, skyEnv, 0.7),
+    header: std({ color: 0x26292d, metalness: 0.8, roughness: 0.38 }, skyEnv, 0.6),
+    chrome: std({ color: 0xdfe3e6, metalness: 1, roughness: 0.14 }, roomEnv, 1.0),
+    paint: std({ color: 0xe7e4dc, roughness: 0.6 }, skyEnv, 0.15),
+    panel: std({ color: 0x1c1f23, metalness: 0.55, roughness: 0.32 }, skyEnv, 0.55),
+    winGlass: std({ color: 0x10161d, roughness: 0.05, metalness: 0.1 }, skyEnv, 0.9),
+    winLit: std({ color: 0x1a140e, emissive: 0xffbf85, emissiveIntensity: 0.42, roughness: 0.15 }, skyEnv, 0.6),
+    shopLit: std({ color: 0x17120d, emissive: 0xffb877, emissiveIntensity: 0.3, roughness: 0.1 }, skyEnv, 0.7),
+    glass: std({ color: 0xc6d3da, map: sheenTex, roughness: 0.03, metalness: 0.1, transparent: true, opacity: 0.26, depthWrite: false, side: THREE.DoubleSide }, skyEnv, 1.2),
+    doorGlass: std({ color: 0xbccbd4, roughness: 0.03, metalness: 0.1, transparent: true, opacity: 0.13, depthWrite: false, side: THREE.DoubleSide }, skyEnv, 1.1),
+    vitrine: std({ color: 0xffffff, map: sheenTex, roughness: 0.02, metalness: 0.1, transparent: true, opacity: 0.28, depthWrite: false, side: THREE.DoubleSide }, roomEnv, 1.6),
+    lamp: new THREE.MeshBasicMaterial({ color: 0xfff3e0, toneMapped: false }),
   };
 
   function add(mesh, parent = scene, cast = true, receive = true) {
     mesh.castShadow = cast; mesh.receiveShadow = receive; parent.add(mesh); return mesh;
   }
-  function block(w, h, d, m, x, y, z, { parent = scene, edges = true, cast = true } = {}) {
-    const mesh = add(new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m), parent, cast);
+  function block(w, h, d, m, x, y, z, { parent = scene, cast = true, receive = true } = {}) {
+    const geo = new THREE.BoxGeometry(w, h, d);
+    if (m.userData?.tile) boxUV(geo, m.userData.tile, x, y, z);
+    const mesh = add(new THREE.Mesh(geo, m), parent, cast, receive);
     mesh.position.set(x, y, z);
-    if (edges) mesh.add(new THREE.LineSegments(new THREE.EdgesGeometry(mesh.geometry), M.edge));
     return mesh;
   }
   function rounded(w, h, d, r, m, x, y, z, { parent = scene, cast = true } = {}) {
-    const mesh = add(new THREE.Mesh(new RoundedBoxGeometry(w, h, d, 3, r), m), parent, cast);
+    const geo = new RoundedBoxGeometry(w, h, d, 3, r);
+    if (m.userData?.tile) boxUV(geo, m.userData.tile, x, y, z);
+    const mesh = add(new THREE.Mesh(geo, m), parent, cast);
     mesh.position.set(x, y, z);
     return mesh;
   }
@@ -208,13 +319,13 @@ async function init() {
     gr.addColorStop(0, c0); gr.addColorStop(1, c1);
     g.fillStyle = gr; g.fillRect(0, 0, w, h);
   });
-  const glowTex = radial('rgba(255,204,150,0.9)', 'rgba(255,204,150,0)');
-  const shadowTex = radial('rgba(40,34,26,0.5)', 'rgba(40,34,26,0)');
-  const glow = (w, d, x, z, opacity = 0.5) => plane(w, d, basic(glowTex, { blending: THREE.AdditiveBlending, opacity }), x, 0.008, z, { rx: -Math.PI / 2 });
+  const glowTex = radial('rgba(255,200,140,0.9)', 'rgba(255,200,140,0)');
+  const shadowTex = radial('rgba(20,16,12,0.6)', 'rgba(20,16,12,0)');
+  const glow = (w, d, x, z, opacity = 0.5, y = 0.008) => plane(w, d, basic(glowTex, { blending: THREE.AdditiveBlending, opacity }), x, y, z, { rx: -Math.PI / 2 });
   const contact = (w, d, x, z, opacity = 0.32) => plane(w, d, basic(shadowTex, { opacity, toneMapped: true }), x, 0.006, z, { rx: -Math.PI / 2 });
   const aoTex = canvasTex(8, 128, (g, w, h) => {
     const gr = g.createLinearGradient(0, 0, 0, h);
-    gr.addColorStop(0, 'rgba(40,34,26,0.32)'); gr.addColorStop(1, 'rgba(40,34,26,0)');
+    gr.addColorStop(0, 'rgba(30,24,18,0.34)'); gr.addColorStop(1, 'rgba(30,24,18,0)');
     g.fillStyle = gr; g.fillRect(0, 0, w, h);
   });
   // Soft darkening where a wall meets the floor (cheap baked-AO look). ry rotates the strip.
@@ -225,177 +336,255 @@ async function init() {
     m.rotation.set(-Math.PI / 2, ry, 0);
     return m;
   }
+  let seed = 7;
+  const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
 
-  /* ---------- sky, fog, light ---------- */
-  scene.background = canvasTex(4, 512, (g, w, h) => {
-    const gr = g.createLinearGradient(0, 0, 0, h);
-    gr.addColorStop(0, '#7b8ea9'); gr.addColorStop(0.42, '#aab8c9'); gr.addColorStop(0.7, '#dcd0c3'); gr.addColorStop(1, '#e8d8c6');
-    g.fillStyle = gr; g.fillRect(0, 0, w, h);
-  });
-  scene.fog = new THREE.Fog(0xd5d0ca, 26, 80);
-  const pmrem = new THREE.PMREMGenerator(renderer);
-  scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
-  scene.environmentIntensity = 0.42;
-  pmrem.dispose();
-
-  scene.add(new THREE.HemisphereLight(0xcdd6e3, 0xd3d0c9, 0.8));
-  const sun = new THREE.DirectionalLight(0xffe0c2, 2.5);
-  sun.position.set(-12, 11, 13);
-  sun.target.position.set(0, 0, -3);
-  sun.castShadow = true;
-  const sm = isSmall() ? 1024 : 2048;
-  sun.shadow.mapSize.set(sm, sm);
-  Object.assign(sun.shadow.camera, { left: -17, right: 17, top: 17, bottom: -17, near: 1, far: 60 });
-  sun.shadow.bias = -0.0004;
-  sun.shadow.normalBias = 0.03;
-  scene.add(sun, sun.target);
-  for (const [x, y, z, i] of [[0, 3.7, -2.6, 16], [0.5, 3.7, -8.4, 14], [-3.0, 3.5, -12.0, 12]]) {
-    const l = new THREE.PointLight(0xffdcb8, i, 14, 1.5);
+  /* ---------- light: cool dusk sky, warm 3000 K shop ---------- */
+  const WARM = 0xffb873; // ~2600-2700 K practicals
+  scene.add(new THREE.HemisphereLight(0x8fa0d0, 0x2e2b28, 0.2));
+  const key = new THREE.DirectionalLight(0x8ea2d8, 0.45); // cool skylight, no sun at blue hour
+  key.position.set(-11, 14, 12);
+  key.target.position.set(0, 0, -3);
+  key.castShadow = true;
+  const sm = lite ? 1024 : 2048;
+  key.shadow.mapSize.set(sm, sm);
+  Object.assign(key.shadow.camera, { left: -17, right: 17, top: 17, bottom: -17, near: 1, far: 60 });
+  key.shadow.bias = -0.0004;
+  key.shadow.normalBias = 0.03;
+  key.shadow.radius = 3;
+  scene.add(key, key.target);
+  for (const [x, y, z, i] of [[0, 3.6, -3.0, 15], [-0.6, 3.6, -10.2, 12]]) { // soft general fill
+    const l = new THREE.PointLight(WARM, i, 12, 1.8);
     l.position.set(x, y, z);
     scene.add(l);
   }
+  // accent spots: each exhibit gets its own pool of light (no shadows, except the featured one)
+  for (const [px, pz, tx, ty, tz, i, a] of [
+    [-2.6, -3.6, -3.9, 1.0, -4.6, 42, 0.45],   // kiosk
+    [4.0, -7.6, 5.9, 1.0, -7.6, 48, 0.62],     // shelf wall
+    [0.2, -9.6, 0.8, 0.9, -11.0, 46, 0.45],    // plant model
+    [-3.4, -11.4, -3.6, 1.6, -14.3, 40, 0.62], // credentials wall + checkout
+  ]) {
+    const l = new THREE.SpotLight(0xffc88f, i * 1.35, 9, a, 0.85, 1.6);
+    l.position.set(px, 3.85, pz);
+    l.target.position.set(tx, ty, tz);
+    scene.add(l, l.target);
+  }
+  const spot = new THREE.SpotLight(0xffd6ad, 78, 9, 0.42, 0.7, 1.4); // gallery spot on the featured display
+  spot.position.set(1.6, 3.85, -2.2);
+  spot.target.position.set(2.8, 0.5, -3.8);
+  spot.castShadow = !lite;
+  spot.shadow.mapSize.set(1024, 1024);
+  spot.shadow.bias = -0.0005;
+  spot.shadow.radius = 3;
+  scene.add(spot, spot.target);
+  const canopyLight = new THREE.PointLight(WARM, 14, 5.5, 1.6);
+  canopyLight.position.set(0, 2.72, 0.8);
+  scene.add(canopyLight);
 
   /* ---------- street ---------- */
-  block(40, 0.15, 6.4, M.pave, 0, -0.075, 3.2, { edges: false, cast: false });
-  block(40, 0.16, 0.28, M.curb, 0, -0.07, 6.5, { cast: false });
-  block(40, 0.1, 22, M.street, 0, -0.2, 17.6, { edges: false, cast: false });
-  for (let x = -18; x <= 18; x += 4) block(2, 0.012, 0.14, mat(0xf3f0ea), x, -0.144, 13, { edges: false, cast: false });
-  {
-    const pts = [];
-    for (let x = -20; x <= 20; x += 1.2) pts.push(x, 0.003, 0, x, 0.003, 6.35);
-    for (let z = 1.2; z < 6.4; z += 1.2) pts.push(-20, 0.003, z, 20, 0.003, z);
-    const g = new THREE.BufferGeometry();
-    g.setAttribute('position', new THREE.Float32BufferAttribute(pts, 3));
-    scene.add(new THREE.LineSegments(g, new THREE.LineBasicMaterial({ color: 0xc9c2b6, transparent: true, opacity: 0.55 })));
-  }
-  // neighbouring buildings as plain massing blocks with window reveals
-  const reveal = mat(0xe2dcd2, 0.95);
-  for (const [cx, w, h, front] of [[-10.9, 8.2, 7.4, -0.7], [10.8, 8.0, 5.8, -0.2]]) {
-    block(w, h, 10, M.white, cx, h / 2, front - 5);
-    for (let r = 0; r < Math.floor((h - 1.2) / 2.1); r++) {
+  block(40, 0.15, 6.4, M.pave, 0, -0.075, 3.2, { cast: false });
+  block(40, 0.16, 0.3, M.concrete, 0, -0.07, 6.55, { cast: false });
+  block(40, 0.1, 22, M.asphalt, 0, -0.2, 17.7, { cast: false });
+  for (let x = -18; x <= 18; x += 4.5) block(2.2, 0.01, 0.13, M.paint, x, -0.146, 13.4, { cast: false });
+  block(40, 0.01, 0.1, M.paint, 0, -0.146, 7.5, { cast: false });
+
+  // neighbouring buildings: brick on the left, painted render on the right, real windows
+  function neighbour(cx, w, h, front, wallMat, sign) {
+    block(w, h, 10, wallMat, cx, h / 2, front - 5);
+    block(w + 0.2, 0.14, 0.4, M.concrete, cx, h + 0.07, front - 0.1);
+    block(w - 1.3, 2.62, 0.04, M.steel, cx, 1.4, front + 0.005, { cast: false });
+    block(w - 1.4, 2.5, 0.05, sign ? M.shopLit : M.winGlass, cx, 1.4, front + 0.015, { cast: false });
+    if (sign) {
+      block(w - 1.2, 0.5, 0.1, M.panel, cx, 2.95, front + 0.05);
+      plane(Math.min(3.4, w - 2), 0.3, new THREE.MeshStandardMaterial({
+        map: sign, emissive: 0xffffff, emissiveMap: sign, emissiveIntensity: 0.8, transparent: true, depthWrite: false,
+      }), cx, 2.95, front + 0.104);
+    }
+    const rows = Math.floor((h - 3.6) / 2.1);
+    for (let r = 0; r < rows; r++) {
       for (let c = 0; c < 3; c++) {
-        plane(1.3, 1.5, reveal, cx - w / 2 + 1.5 + c * (w - 3) / 2, 1.9 + r * 2.1, front + 0.004);
+        const x = cx - w / 2 + 1.5 + (c * (w - 3)) / 2, y = 4.35 + r * 2.1;
+        block(1.4, 1.6, 0.03, M.steel, x, y, front + 0.005, { cast: false });
+        block(1.25, 1.45, 0.03, rnd() < 0.35 ? M.winLit : M.winGlass, x, y, front + 0.02, { cast: false });
+        block(1.5, 0.07, 0.18, M.concrete, x, y - 0.83, front + 0.07);
       }
     }
   }
-  function figure(parent, x, z, ry = 0) {
-    const g = new THREE.Group();
-    g.position.set(x, 0, z); g.rotation.y = ry; parent.add(g);
-    add(new THREE.Mesh(new THREE.CapsuleGeometry(0.17, 0.95, 6, 16), M.white), g).position.y = 0.66;
-    add(new THREE.Mesh(new THREE.SphereGeometry(0.115, 20, 14), M.white), g).position.y = 1.49;
-    return g;
-  }
-  function tree(x, z, s = 1) {
-    const g = new THREE.Group();
-    g.position.set(x, 0, z); scene.add(g);
-    add(new THREE.Mesh(new THREE.CylinderGeometry(0.05 * s, 0.07 * s, 2.1 * s, 10), M.white), g).position.y = 1.05 * s;
-    add(new THREE.Mesh(new THREE.IcosahedronGeometry(0.95 * s, 1), mat(0xf4f1ea, 0.9, { flatShading: true })), g).position.y = 2.6 * s;
-    contact(2.2 * s, 2.2 * s, x, z, 0.25);
-  }
-  tree(-8.4, 4.5); tree(8.7, 4.3, 0.9); tree(-15.5, 4.6, 1.1); tree(15.8, 4.4);
-  figure(scene, -4.4, 1.25, Math.PI);
-  contact(0.9, 0.9, -4.4, 1.25, 0.3);
-  // lamp post with a warm pool of light
+  const cafeSign = canvasTex(1024, 90, (g, w) => {
+    g.textAlign = 'center'; g.fillStyle = '#ffe7c7'; g.shadowColor = 'rgba(255,200,140,0.8)'; g.shadowBlur = 10;
+    g.font = '700 58px Georgia, serif'; spacing(g, 16); g.fillText('CAFÉ · BAKERY', w / 2, 66);
+  });
+  neighbour(-10.9, 8.2, 7.4, -0.7, M.brickN, cafeSign);
+  neighbour(10.8, 8.0, 5.8, -0.2, M.renderN, null);
+
+  // street lamp with a warm pool of light
   {
     const lamp = new THREE.Group();
     lamp.position.set(6.3, 0, 5.8); scene.add(lamp);
-    add(new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.07, 4.4, 14), M.white), lamp).position.y = 2.2;
-    rounded(0.95, 0.06, 0.08, 0.025, M.white, -0.44, 4.36, 0, { parent: lamp });
-    rounded(0.44, 0.1, 0.24, 0.03, new THREE.MeshStandardMaterial({ color: 0xfff3e2, emissive: 0xffd6a0, emissiveIntensity: 1.8 }), -0.86, 4.28, 0, { parent: lamp });
-    glow(5, 5, 5.45, 5.6, 0.42);
+    add(new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.075, 4.4, 16), M.steel), lamp).position.y = 2.2;
+    add(new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.14, 0.42, 16), M.steel), lamp).position.y = 0.21;
+    rounded(0.95, 0.06, 0.08, 0.025, M.steel, -0.44, 4.36, 0, { parent: lamp });
+    rounded(0.48, 0.1, 0.26, 0.03, M.steel, -0.86, 4.3, 0, { parent: lamp });
+    plane(0.4, 0.2, M.lamp, -0.86, 4.248, 0, { parent: lamp, rx: Math.PI / 2 });
+    const l = new THREE.PointLight(0xe4ebff, 60, 14, 1.5); // cool LED street lamp
+    l.position.set(-0.86, 4.1, 0); lamp.add(l);
+    glow(5, 5, 5.45, 5.6, 0.32);
   }
 
   /* ---------- storefront (facade plane z = 0, outside is +z) ---------- */
   const H = 4.6, W = 13, T = 0.3;
-  block(W, H - 2.74, T, M.wall, 0, 2.74 + (H - 2.74) / 2, -T / 2);
-  block(W + 0.3, 0.14, 0.5, M.white, 0, H + 0.07, -0.12);
+  block(W, H - 2.74, T, M.brick, 0, 2.74 + (H - 2.74) / 2, -T / 2);
+  block(W + 0.3, 0.12, 0.44, M.concrete, 0, H + 0.06, -0.1);
   for (const sx of [-1, 1]) {
-    block(0.5, 2.74, T, M.wall, sx * 6.25, 1.37, -T / 2);
-    block(0.56, 2.74, T, M.wall, sx * 2.72, 1.37, -T / 2);
-    block(3.0, 0.55, T, M.wall, sx * 4.5, 0.275, -T / 2);
-    block(0.06, 2.19, 0.1, M.alu, sx * 4.5, 0.55 + 1.095, -0.15, { edges: false });
-    block(3.0, 0.07, 0.1, M.alu, sx * 4.5, 2.705, -0.15, { edges: false });
-    block(3.0, 0.07, 0.1, M.alu, sx * 4.5, 0.585, -0.15, { edges: false });
-    for (const jx of [-1.465, 1.465]) block(0.07, 2.19, 0.1, M.alu, sx * 4.5 + jx, 0.55 + 1.095, -0.15, { edges: false });
+    block(0.5, 2.74, T, M.brick, sx * 6.25, 1.37, -T / 2);
+    block(0.56, 2.74, T, M.brick, sx * 2.72, 1.37, -T / 2);
+    block(3.0, 0.55, T, M.brick, sx * 4.5, 0.275, -T / 2);
+    block(3.06, 0.06, 0.36, M.concrete, sx * 4.5, 0.565, -0.12);
+    block(0.06, 2.12, 0.12, M.alu, sx * 4.5, 0.6 + 1.06, -0.15);
+    block(3.0, 0.07, 0.12, M.alu, sx * 4.5, 2.705, -0.15);
+    block(3.0, 0.07, 0.12, M.alu, sx * 4.5, 0.63, -0.15);
+    for (const jx of [-1.465, 1.465]) block(0.07, 2.14, 0.12, M.alu, sx * 4.5 + jx, 0.6 + 1.07, -0.15);
     plane(3.0, 2.19, M.glass, sx * 4.5, 0.55 + 1.095, -0.13);
   }
-  block(7.7, 1.16, 0.12, M.white, 0, 3.66, 0.06);
+  // sign band: dark composite panel with halo-lit letters
+  block(7.7, 1.16, 0.12, M.panel, 0, 3.72, 0.06);
   const signTex = canvasTex(2048, 310, (g, w) => {
     g.textAlign = 'center';
-    g.fillStyle = '#14171a'; g.font = '800 150px "Plus Jakarta Sans", sans-serif'; spacing(g, 14);
-    g.fillText('USMAN SALEEM', w / 2, 168);
-    g.fillStyle = '#ff541e'; g.fillRect(w / 2 - 70, 204, 140, 9);
-    g.fillStyle = '#30363c'; g.font = '800 62px "JetBrains Mono", monospace'; spacing(g, 18);
-    g.fillText('MECHANICAL ENGINEER', w / 2, 290);
+    g.shadowColor = 'rgba(255,214,170,0.75)'; g.shadowBlur = 18;
+    g.fillStyle = '#fffaf2'; g.font = '800 150px "Plus Jakarta Sans", sans-serif'; spacing(g, 14);
+    g.fillText('USMAN SALEEM', w / 2, 160);
+    g.shadowBlur = 16;
+    g.fillStyle = '#ff6a35'; g.fillRect(w / 2 - 70, 194, 140, 9);
+    g.fillStyle = 'rgba(255,240,225,0.86)'; g.font = '800 62px "JetBrains Mono", monospace'; spacing(g, 18);
+    g.fillText('MECHANICAL ENGINEER', w / 2, 276);
   });
-  plane(7.3, 7.3 * 310 / 2048, lit(signTex), 0, 3.66, 0.123);
+  plane(7.3, (7.3 * 310) / 2048, new THREE.MeshStandardMaterial({
+    map: signTex, emissive: 0xffffff, emissiveMap: signTex, emissiveIntensity: 0.8,
+    transparent: true, depthWrite: false, roughness: 0.5,
+  }), 0, 3.72, 0.123);
+  // cantilevered steel canopy over the entrance, with downlights
+  block(4.9, 0.12, 1.25, M.steel, 0, 2.93, 0.62);
+  block(4.9, 0.2, 0.05, M.steel, 0, 2.92, 1.245);
+  for (const x of [-1.6, 0, 1.6]) {
+    const d = new THREE.Mesh(new THREE.CircleGeometry(0.06, 24), M.lamp);
+    d.rotation.x = Math.PI / 2; d.position.set(x, 2.868, 0.75); scene.add(d);
+    const trim = new THREE.Mesh(new THREE.RingGeometry(0.06, 0.085, 32), M.black); // recessed-fixture trim
+    trim.rotation.x = Math.PI / 2; trim.position.set(x, 2.867, 0.75); scene.add(trim);
+  }
+  // window vinyl: white lettering on the glass
   const vinylTex = canvasTex(1024, 380, (g) => {
-    g.fillStyle = '#ff541e'; g.beginPath(); g.arc(42, 66, 17, 0, Math.PI * 2); g.fill();
-    g.fillStyle = 'rgba(20,23,26,0.9)'; g.font = '800 88px "JetBrains Mono", monospace'; g.textBaseline = 'middle';
+    g.fillStyle = '#ff6a35'; g.beginPath(); g.arc(42, 66, 17, 0, Math.PI * 2); g.fill();
+    g.fillStyle = 'rgba(255,255,255,0.93)'; g.font = '800 88px "JetBrains Mono", monospace'; g.textBaseline = 'middle';
     g.fillText('50+ PROJECTS', 80, 68); g.fillText('IN FLIGHT', 80, 172);
-    g.font = '600 36px "JetBrains Mono", monospace'; g.fillStyle = 'rgba(20,23,26,0.72)';
+    g.font = '600 36px "JetBrains Mono", monospace'; g.fillStyle = 'rgba(255,255,255,0.78)';
     g.fillText('COMMERCIAL ENTRANCES · CANADA', 82, 278);
   });
-  plane(2.3, 2.3 * 380 / 1024, lit(vinylTex), -4.5, 2.1, -0.11);
+  plane(2.3, (2.3 * 380) / 1024, lit(vinylTex, { envMap: skyEnv }), -4.5, 2.1, -0.11);
   const hoursTex = canvasTex(1024, 430, (g) => {
-    g.fillStyle = 'rgba(20,23,26,0.9)'; g.font = '800 66px "JetBrains Mono", monospace';
+    g.fillStyle = 'rgba(255,255,255,0.93)'; g.font = '800 66px "JetBrains Mono", monospace';
     g.fillText('HOURS', 40, 86);
     g.font = '600 44px "JetBrains Mono", monospace';
     g.fillText('FIELD WORK ....... MON–FRI', 40, 190);
     g.fillText('AUTOMATIONS ......... 24/7', 40, 262);
-    g.fillStyle = '#e8471a'; g.font = '700 44px "JetBrains Mono", monospace';
+    g.fillStyle = '#ff8a5c'; g.font = '700 44px "JetBrains Mono", monospace';
     g.fillText('WALK-INS WELCOME', 40, 360);
   });
-  plane(2.3, 2.3 * 430 / 1024, lit(hoursTex), 4.5, 2.0, -0.11);
+  plane(2.3, (2.3 * 430) / 1024, lit(hoursTex, { envMap: skyEnv }), 4.5, 2.0, -0.11);
+  // concrete planters with clipped boxwood
+  {
+    const leafNor = TX.asphalt.normalMap ? TX.asphalt.normalMap.clone() : null;
+    if (leafNor) { leafNor.repeat.set(1.2, 0.6); leafNor.needsUpdate = true; }
+    const boxwood = std({ color: 0x40592c, roughness: 0.88, normalMap: leafNor, normalScale: new THREE.Vector2(2.4, 2.4) }, skyEnv, 0.35);
+    const soil = std({ color: 0x2a2119, roughness: 1 }, skyEnv, 0.2);
+    for (const sx of [-1, 1]) {
+      const x = sx * 3.55;
+      block(0.95, 0.55, 0.6, M.concrete, x, 0.275, 0.62);
+      block(0.85, 0.02, 0.5, soil, x, 0.545, 0.62, { cast: false });
+      const geo = new THREE.IcosahedronGeometry(0.34, 5);
+      const p = geo.attributes.position;
+      for (let i = 0; i < p.count; i++) {
+        const k = 1 + (Math.sin(p.getX(i) * 23 + p.getY(i) * 17) * Math.cos(p.getZ(i) * 19)) * 0.04;
+        p.setXYZ(i, p.getX(i) * k, p.getY(i) * k, p.getZ(i) * k);
+      }
+      geo.computeVertexNormals();
+      const b = add(new THREE.Mesh(geo, boxwood));
+      b.position.set(x, 0.82, 0.62); b.scale.set(1.25, 0.82, 0.78);
+      contact(1.5, 1.0, x, 0.62, 0.3);
+    }
+  }
+  // facade uplights wash the outer brick piers (desktop only; phones skip the extra lights)
+  if (!lite) {
+    for (const sx of [-1, 1]) {
+      const u = new THREE.SpotLight(0xffe0c0, 28, 6.5, 0.3, 0.9, 1.4);
+      u.position.set(sx * 6.25, 0.08, 0.5);
+      u.target.position.set(sx * 6.25, 4.6, 0.0);
+      scene.add(u, u.target);
+      block(0.18, 0.06, 0.12, M.steel, sx * 6.25, 0.03, 0.5, { cast: false });
+    }
+  }
 
   // header sensor + illustrative detection zone
-  rounded(0.34, 0.07, 0.09, 0.015, M.dark, 0, 2.19, -0.03);
+  rounded(0.34, 0.07, 0.09, 0.015, M.black, 0, 2.19, -0.03);
   const ledMat = new THREE.MeshBasicMaterial({ color: 0xffb020, toneMapped: false });
   const led = new THREE.Mesh(new THREE.SphereGeometry(0.017, 12, 8), ledMat);
   led.position.set(0.11, 2.19, 0.018); scene.add(led);
-  const zoneMat = new THREE.MeshBasicMaterial({ color: 0xff541e, transparent: true, opacity: 0.14, depthWrite: false });
-  const ringMat = new THREE.MeshBasicMaterial({ color: 0xff541e, transparent: true, opacity: 0.7, depthWrite: false });
+  const zoneMat = new THREE.MeshBasicMaterial({ color: 0xff541e, transparent: true, opacity: 0.1, depthWrite: false });
+  const ringMat = new THREE.MeshBasicMaterial({ color: 0xff541e, transparent: true, opacity: 0.5, depthWrite: false });
+  const CLEAN = new URLSearchParams(location.search).has('clean'); // share-image captures: no sensor-zone graphics
   const pulseMat = new THREE.MeshBasicMaterial({ color: 0xff541e, transparent: true, opacity: 0, depthWrite: false });
   const zoneGroup = new THREE.Group();
-  zoneGroup.position.set(0, 0.007, -0.02); zoneGroup.scale.set(1, 1, 0.78); scene.add(zoneGroup);
+  zoneGroup.position.set(0, 0.007, -0.02); zoneGroup.scale.set(1, 1, 0.78); scene.add(zoneGroup); zoneGroup.visible = !CLEAN;
   for (const [geo, m] of [
     [new THREE.CircleGeometry(2.3, 64, Math.PI, Math.PI), zoneMat],
     [new THREE.RingGeometry(2.19, 2.3, 64, 1, Math.PI, Math.PI), ringMat],
   ]) { const z = new THREE.Mesh(geo, m); z.rotation.x = -Math.PI / 2; zoneGroup.add(z); }
   const pulse = new THREE.Mesh(new THREE.RingGeometry(0.95, 1.0, 64, 1, Math.PI, Math.PI), pulseMat);
   pulse.rotation.x = -Math.PI / 2; zoneGroup.add(pulse);
-  glow(5.5, 3.6, 0, 1.9, 0.3);
-  plane(2.3, 0.234, basic(canvasTex(1024, 104, (g, w, h) => {
-    g.fillStyle = '#d9400e'; g.font = '800 58px "JetBrains Mono", monospace'; g.textAlign = 'center'; spacing(g, 6);
+  glow(5.5, 3.6, 0, 1.9, 0.28);
+  for (const sx of [-1, 1]) glow(4.2, 2.6, sx * 4.5, 1.3, 0.16); // warm spill from the side windows
+  plane(2.3, 0.234, basic(canvasTex(1024, 104, (g, w) => {
+    g.fillStyle = '#ff6a35'; g.font = '800 58px "JetBrains Mono", monospace'; g.textAlign = 'center'; spacing(g, 6);
     g.fillText('SENSOR ZONE · ILLUSTRATIVE', w / 2, 72);
-  }), { opacity: 0.85 }), 0, 0.01, 1.32, { rx: -Math.PI / 2 });
+  }), { opacity: 0.85 }), 0, 0.01, 1.32, { rx: -Math.PI / 2 }).visible = !CLEAN;
 
-  /* ---------- interior shell (no ceiling: the roof of the model is lifted off) ---------- */
-  block(13, 0.12, 14.6, M.floor, 0, -0.06, -7.3, { edges: false, cast: false });
-  block(T, H, 14.3, M.inWall, -6.35, H / 2, -7.45);
-  block(T, H, 14.3, M.inWall, 6.35, H / 2, -7.45);
-  block(W, H, T, M.inWall, 0, H / 2, -14.45);
+  /* ---------- interior shell: tiled floor, plaster walls, ceiling with downlights ---------- */
+  const CEIL = 3.9;
+  block(13, 0.12, 14.6, M.tiles, 0, -0.06, -7.3, { cast: false });
+  block(T, H, 14.3, M.wallIn, -6.35, H / 2, -7.45);
+  block(T, H, 14.3, M.wallIn, 6.35, H / 2, -7.45);
+  block(W, H, T, M.wallIn, 0, H / 2, -14.45);
+  block(12.4, 0.12, 14.3, M.ceiling, 0, CEIL + 0.06, -7.45);
+  block(12.4, 0.09, 0.02, M.black, 0, 0.045, -14.29, { cast: false });
+  for (const sx of [-1, 1]) block(0.02, 0.09, 14.0, M.black, sx * 6.19, 0.045, -7.3, { cast: false });
   {
-    const pts = [];
-    for (let x = -6.0; x <= 6.0; x += 1.2) pts.push(x, 0.003, -0.3, x, 0.003, -14.3);
-    for (let z = -1.5; z > -14.3; z -= 1.2) pts.push(-6.2, 0.003, z, 6.2, 0.003, z);
-    const g = new THREE.BufferGeometry();
-    g.setAttribute('position', new THREE.Float32BufferAttribute(pts, 3));
-    scene.add(new THREE.LineSegments(g, new THREE.LineBasicMaterial({ color: 0xd3cbbf, transparent: true, opacity: 0.5 })));
+    const spots = [];
+    for (const x of [-4.2, -1.4, 1.4, 4.2]) for (const z of [-1.5, -4.3, -7.1, -9.9, -12.7]) spots.push([x, z]);
+    const disc = new THREE.CircleGeometry(0.075, 20); disc.rotateX(Math.PI / 2);
+    const ring = new THREE.RingGeometry(0.075, 0.1, 24); ring.rotateX(Math.PI / 2);
+    const discs = new THREE.InstancedMesh(disc, M.lamp, spots.length);
+    const rings = new THREE.InstancedMesh(ring, std({ color: 0xcfd2d5, metalness: 0.6, roughness: 0.3 }), spots.length);
+    const m4 = new THREE.Matrix4();
+    spots.forEach(([x, z], i) => {
+      discs.setMatrixAt(i, m4.makeTranslation(x, CEIL - 0.002, z));
+      rings.setMatrixAt(i, m4.makeTranslation(x, CEIL - 0.001, z));
+    });
+    scene.add(discs, rings);
   }
   aoStrip(14.1, -5.85, -7.35, Math.PI / 2);
   aoStrip(14.1, 5.85, -7.35, -Math.PI / 2);
   aoStrip(12.4, 0, -13.95, 0);
-  glow(7, 7, 0, -2.8, 0.16); glow(7, 7, 0.5, -8.4, 0.15); glow(5.5, 5.5, -3.0, -12.0, 0.14);
+  glow(6, 6, 0, -2.6, 0.1); glow(6, 6, 0.5, -8.0, 0.09); glow(5, 5, -3.0, -12.0, 0.09);
 
   /* ---------- stop 1: featured display (door model on a turntable) ---------- */
   const FEAT_FACE = -0.688; // plinth front faces the featured camera stop
   const feat = new THREE.Group();
   feat.position.set(2.8, 0, -3.8); scene.add(feat);
-  add(new THREE.Mesh(new THREE.CylinderGeometry(1.12, 1.16, 0.42, 64), M.fixture), feat).position.y = 0.21;
+  add(new THREE.Mesh(new THREE.CylinderGeometry(1.12, 1.16, 0.42, 64), M.solid), feat).position.y = 0.21;
   const turn = new THREE.Group();
   turn.position.y = 0.42; feat.add(turn);
-  add(new THREE.Mesh(new THREE.CylinderGeometry(1.05, 1.05, 0.035, 64), mat(0xe6e0d5, 0.8)), turn).position.y = 0.0175;
+  add(new THREE.Mesh(new THREE.CylinderGeometry(1.05, 1.05, 0.035, 64), M.wood), turn).position.y = 0.0175;
+  plane(2.3, 0.55, basic(shadowTex, { opacity: 0.55, toneMapped: true }), 0, 0.037, 0, { parent: turn, rx: -Math.PI / 2 });
   contact(3.0, 3.0, 2.8, -3.8, 0.34);
   const labelTex = (a, b) => canvasTex(512, 300, (g, w, h) => {
     g.fillStyle = '#fbf8f3'; g.fillRect(0, 0, w, h);
@@ -410,7 +599,6 @@ async function init() {
     g.fillText(line.trim(), 36, y);
   });
   {
-    // label plate on the plinth's front, facing the featured camera stop
     const lbl = new THREE.Group();
     lbl.position.set(Math.sin(FEAT_FACE) * 1.19, 0.21, Math.cos(FEAT_FACE) * 1.19);
     lbl.rotation.y = FEAT_FACE; feat.add(lbl);
@@ -422,8 +610,8 @@ async function init() {
   kiosk.position.set(-3.9, 0, -4.6);
   kiosk.rotation.y = Math.atan2(2.5, 2.0);
   scene.add(kiosk);
-  rounded(0.72, 1.02, 0.52, 0.05, M.fixture, 0, 0.51, 0, { parent: kiosk });
-  rounded(0.16, 0.3, 0.16, 0.03, M.fixture, 0, 1.15, -0.05, { parent: kiosk });
+  rounded(0.72, 1.02, 0.52, 0.05, M.solid, 0, 0.51, 0, { parent: kiosk });
+  rounded(0.16, 0.3, 0.16, 0.03, M.black, 0, 1.15, -0.05, { parent: kiosk });
   const kioskTex = canvasTex(1024, 640, (g, w, h) => {
     g.fillStyle = '#15191d'; g.fillRect(0, 0, w, h);
     g.fillStyle = '#e9edf1'; g.font = '800 46px "JetBrains Mono", monospace'; spacing(g, 2);
@@ -445,8 +633,8 @@ async function init() {
   });
   const screen = new THREE.Group();
   screen.position.set(0, 1.42, 0); screen.rotation.x = -0.26; kiosk.add(screen);
-  rounded(1.02, 0.66, 0.07, 0.02, M.dark, 0, 0, 0, { parent: screen });
-  plane(0.94, 0.585, basic(kioskTex, { transparent: false, depthWrite: true }), 0, 0, 0.037, { parent: screen });
+  rounded(1.02, 0.66, 0.07, 0.02, M.black, 0, 0, 0, { parent: screen });
+  plane(0.94, 0.585, basic(kioskTex, { transparent: false, depthWrite: true, toneMapped: true, color: 0xd8d8d8 }), 0, 0, 0.037, { parent: screen });
   const tagTex = canvasTex(512, 300, (g, w, h) => {
     g.fillStyle = '#ff541e';
     g.beginPath(); g.moveTo(70, 0); g.lineTo(w - 16, 0); g.quadraticCurveTo(w, 0, w, 16); g.lineTo(w, h - 16); g.quadraticCurveTo(w, h, w - 16, h); g.lineTo(70, h); g.lineTo(0, h / 2); g.closePath(); g.fill();
@@ -455,27 +643,69 @@ async function init() {
     g.fillRect(100, 92, 250, 5);
     g.font = '800 64px "JetBrains Mono", monospace'; g.fillText('NOW 15 SEC', 100, 210);
   });
-  const tag = plane(0.4, 0.235, basic(tagTex, { side: THREE.DoubleSide }), 0.47, 0.8, 0.275, { parent: kiosk });
-  tag.rotation.z = -0.14;
+  const tag = plane(0.34, 0.2, lit(tagTex), 0.1, 0.74, 0.262, { parent: kiosk }); // promo sticker on the kiosk front
+  tag.rotation.z = -0.06;
   contact(1.5, 1.3, -3.9, -4.6, 0.32);
+  // framed print on the wall beside the kiosk, so the corner isn't a blank plane
+  {
+    const printTex = canvasTex(600, 800, (g) => {
+      g.fillStyle = '#f6f2ea'; g.fillRect(0, 0, 600, 800);
+      g.fillStyle = '#ff541e'; g.fillRect(56, 64, 72, 9);
+      g.fillStyle = '#14171a'; g.font = '800 66px "Plus Jakarta Sans", sans-serif';
+      g.fillText('One pass.', 56, 160); g.fillText('Every door.', 56, 236);
+      g.fillStyle = '#3d434a'; g.font = '700 25px "JetBrains Mono", monospace'; spacing(g, 2);
+      ['01  WALK THE STORE', '02  SCAN · MEASURE · PHOTO', '03  TAKE-OFF + PROPOSAL'].forEach((t, i) => g.fillText(t, 56, 318 + i * 50));
+      spacing(g, 0);
+      g.strokeStyle = '#14171a'; g.lineWidth = 5;
+      g.strokeRect(80, 500, 440, 230); g.strokeRect(80, 500, 440, 42);
+      g.lineWidth = 3; g.strokeStyle = 'rgba(20,23,26,0.45)';
+      g.strokeRect(110, 560, 180, 160); g.strokeRect(310, 560, 180, 160);
+      g.fillStyle = '#ff541e';
+      for (const [x, d] of [[250, -1], [350, 1]]) { g.beginPath(); g.moveTo(x + 26 * d, 640); g.lineTo(x, 622); g.lineTo(x, 658); g.closePath(); g.fill(); }
+    });
+    const fr = new THREE.Group();
+    fr.position.set(-6.18, 1.68, -8.6); fr.rotation.y = Math.PI / 2; scene.add(fr);
+    rounded(0.98, 1.28, 0.035, 0.006, M.black, 0, 0, 0, { parent: fr, cast: false });
+    plane(0.9, 1.2, lit(printTex, { transparent: false, depthWrite: true }), 0, 0, 0.019, { parent: fr });
+  }
 
   /* ---------- stop 3: key-accounts shelf + QBR screen ---------- */
   const shelf = new THREE.Group();
   shelf.position.set(5.78, 0, -7.6); shelf.rotation.y = -Math.PI / 2; scene.add(shelf);
-  rounded(3.2, 0.14, 0.62, 0.02, M.fixture, 0, 0.07, 0, { parent: shelf });
-  rounded(3.2, 1.6, 0.06, 0.015, M.fixture, 0, 0.8, -0.28, { parent: shelf });
-  for (const y of [0.42, 0.82, 1.22]) rounded(3.2, 0.035, 0.52, 0.01, M.fixture, 0, y, -0.02, { parent: shelf });
+  rounded(3.2, 0.12, 0.58, 0.01, M.black, 0, 0.06, 0, { parent: shelf });
+  rounded(3.2, 1.62, 0.04, 0.01, M.wood, 0, 0.81, -0.28, { parent: shelf });
+  for (const y of [0.42, 0.82, 1.22]) rounded(3.2, 0.035, 0.52, 0.008, M.wood, 0, y, -0.02, { parent: shelf });
+  for (const x of [-1.62, 1.62]) block(0.035, 1.66, 0.56, M.black, x, 0.83, -0.02, { parent: shelf });
   {
-    let seed = 11;
-    const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
-    for (const y0 of [0.14, 0.4375, 0.8375, 1.2375]) {
+    const looks = [
+      ['#f4f1ea', '#ff541e', '#14171a', 'SL500', 'RETROFIT KIT', 0xf4f1ea],
+      ['#1d2024', '#35d07f', '#f4f1ea', 'SENSOR', 'PRESENCE · 24 V', 0x1d2024],
+      ['#c7a57b', '#14171a', '#14171a', 'TAKE-OFF', 'FIELD PACK', 0xc7a57b],
+      ['#ffffff', '#2f6fde', '#14171a', 'QBR', '8 SLIDES · 7 s', 0xffffff],
+      ['#e9e2d4', '#14171a', '#14171a', 'ROLLERS', '4 × TRACK SET', 0xe9e2d4],
+      ['#2f3a45', '#ff8a5c', '#f4f1ea', 'PULLEY', 'DRIVE · SPARE', 0x2f3a45],
+    ].map(([bg, band, ink, a, b, side]) => {
+      const t = canvasTex(256, 256, (g, w, h) => {
+        g.fillStyle = bg; g.fillRect(0, 0, w, h);
+        g.fillStyle = band; g.fillRect(0, h * 0.6, w, h * 0.12);
+        g.fillStyle = ink; g.textAlign = 'center';
+        g.font = '800 50px "Plus Jakarta Sans", sans-serif'; g.fillText(a, w / 2, h * 0.43);
+        g.font = '700 21px "JetBrains Mono", monospace'; g.fillText(b, w / 2, h * 0.88);
+      });
+      const s = std({ color: side, roughness: 0.75 }, roomEnv, 0.2);
+      const f = std({ map: t, roughness: 0.6 }, roomEnv, 0.2);
+      return [s, s, s, s, f, s];
+    });
+    for (const y0 of [0.12, 0.4375, 0.8375, 1.2375]) {
       let x = -1.52;
       for (;;) {
-        const w = 0.14 + rnd() * 0.22, h = 0.14 + rnd() * 0.19, d = 0.22 + rnd() * 0.16;
+        const w = 0.16 + rnd() * 0.2, h = 0.15 + rnd() * 0.17, d = 0.22 + rnd() * 0.14;
         if (x + w > 1.55) break;
-        const r = rnd();
-        rounded(w, h, d, 0.012, r < 0.2 ? M.accent : r < 0.34 ? M.dark : M.fixture, x + w / 2, y0 + h / 2, -0.04, { parent: shelf, cast: false });
-        x += w + 0.04 + rnd() * 0.05;
+        const m = new THREE.Mesh(new RoundedBoxGeometry(w, h, d, 2, 0.006), looks[Math.floor(rnd() * looks.length)]);
+        m.position.set(x + w / 2, y0 + h / 2, -0.04 + (rnd() - 0.5) * 0.05);
+        m.rotation.y = (rnd() - 0.5) * 0.09;
+        add(m, shelf, false, true);
+        x += w + 0.035 + rnd() * 0.05;
       }
     }
   }
@@ -498,8 +728,8 @@ async function init() {
   {
     const q = new THREE.Group();
     q.position.set(6.16, 2.56, -7.6); q.rotation.y = -Math.PI / 2; scene.add(q);
-    rounded(2.0, 1.16, 0.06, 0.02, M.dark, 0, 0, 0, { parent: q });
-    plane(1.92, 1.08, basic(qbrTex, { transparent: false, depthWrite: true }), 0, 0, 0.032, { parent: q });
+    rounded(2.0, 1.16, 0.06, 0.02, M.black, 0, 0, 0, { parent: q });
+    plane(1.92, 1.08, basic(qbrTex, { transparent: false, depthWrite: true, toneMapped: true, color: 0xcfcfcf }), 0, 0, 0.032, { parent: q });
   }
   contact(1.6, 3.8, 5.6, -7.6, 0.28);
 
@@ -507,18 +737,28 @@ async function init() {
   {
     const mill = new THREE.Group();
     mill.position.set(0.8, 0, -11.0); mill.rotation.y = 0.35; scene.add(mill);
-    rounded(2.1, 0.86, 1.25, 0.04, M.fixture, 0, 0.43, 0, { parent: mill });
-    rounded(1.9, 0.04, 1.05, 0.01, mat(0xe4ded3), 0, 0.88, 0, { parent: mill });
-    const top = 0.9, mm = M.white;
+    rounded(2.1, 0.86, 1.25, 0.04, M.solid, 0, 0.43, 0, { parent: mill });
+    rounded(1.9, 0.04, 1.05, 0.01, M.wood, 0, 0.88, 0, { parent: mill });
+    const top = 0.9, mm = M.model;
     rounded(0.42, 0.98, 0.36, 0.01, mm, -0.45, top + 0.49, -0.12, { parent: mill });
     for (let i = 0; i < 3; i++) {
       add(new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 0.78, 28), mm), mill).position.set(0.12 + i * 0.23, top + 0.39, -0.28);
-      add(new THREE.Mesh(new THREE.ConeGeometry(0.1, 0.08, 28), mm), mill).position.set(0.12 + i * 0.23, top + 0.82, -0.28);
+      add(new THREE.Mesh(new THREE.ConeGeometry(0.1, 0.08, 28), M.model2), mill).position.set(0.12 + i * 0.23, top + 0.82, -0.28);
     }
     rounded(0.7, 0.32, 0.44, 0.01, mm, 0.38, top + 0.16, 0.24, { parent: mill });
-    rounded(0.62, 0.035, 0.07, 0.005, mm, -0.06, top + 0.7, -0.2, { parent: mill }).rotation.z = -0.35;
+    const conv = rounded(0.66, 0.05, 0.1, 0.008, M.model2, -0.04, top + 0.62, -0.2, { parent: mill });
+    conv.rotation.z = -0.38;
+    for (const lx of [-0.24, 0.12]) rounded(0.03, 0.62 - (lx + 0.04) * 0.4, 0.03, 0.005, mm, lx, top + (0.62 - (lx + 0.04) * 0.4) / 2, -0.2, { parent: mill });
+    for (let i = 0; i < 2; i++) {
+      const pipe = add(new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.018, 0.46, 12), M.model2), mill);
+      pipe.rotation.z = Math.PI / 2; pipe.position.set(-0.02 + i * 0.03, top + 0.74 - i * 0.12, -0.28);
+    }
     add(new THREE.Mesh(new RoundedBoxGeometry(2.0, 1.0, 1.15, 2, 0.01), M.vitrine), mill, false, false).position.set(0, top + 0.5, 0);
-    const p = rounded(0.6, 0.12, 0.02, 0.01, M.fixture, 0, 0.62, 0.635, { parent: mill });
+    for (const [w, h, d, x, y, z] of [ // slim black frame so the case reads as glass
+      [2.0, 0.018, 0.018, 0, 1.0, 0.575], [2.0, 0.018, 0.018, 0, 1.0, -0.575], [0.018, 0.018, 1.15, 1.0, 1.0, 0], [0.018, 0.018, 1.15, -1.0, 1.0, 0],
+      [0.018, 1.0, 0.018, 1.0, 0.5, 0.575], [0.018, 1.0, 0.018, -1.0, 0.5, 0.575], [0.018, 1.0, 0.018, 1.0, 0.5, -0.575], [0.018, 1.0, 0.018, -1.0, 0.5, -0.575],
+    ]) block(w, h, d, M.black, x, top + y, z, { parent: mill, cast: false });
+    const p = rounded(0.6, 0.12, 0.02, 0.01, M.black, 0, 0.62, 0.635, { parent: mill });
     plane(0.56, 0.1, lit(canvasTex(512, 92, (g, w, h) => {
       g.fillStyle = '#fbf8f3'; g.fillRect(0, 0, w, h);
       g.fillStyle = '#14171a'; g.font = '700 30px "JetBrains Mono", monospace'; spacing(g, 2);
@@ -531,13 +771,13 @@ async function init() {
   {
     const co = new THREE.Group();
     co.position.set(-2.9, 0, -11.4); co.rotation.y = 0.2; scene.add(co);
-    rounded(2.6, 1.0, 0.75, 0.04, M.fixture, 0, 0.5, 0, { parent: co });
-    rounded(2.75, 0.05, 0.85, 0.02, mat(0xe9e3d9), 0, 1.025, 0, { parent: co });
-    rounded(0.24, 0.13, 0.26, 0.02, M.dark, 0.85, 1.115, -0.05, { parent: co });
-    const paper = plane(0.09, 0.3, new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.9, side: THREE.DoubleSide }), 0.85, 1.3, 0.09, { parent: co });
+    rounded(2.6, 1.0, 0.75, 0.02, M.wood, 0, 0.5, 0, { parent: co });
+    rounded(2.75, 0.05, 0.85, 0.02, M.quartz, 0, 1.025, 0, { parent: co });
+    block(2.5, 0.08, 0.7, M.black, 0, 0.04, 0, { parent: co, cast: false });
+    rounded(0.24, 0.13, 0.26, 0.02, M.black, 0.85, 1.115, -0.05, { parent: co });
+    const paper = plane(0.09, 0.3, std({ color: 0xffffff, roughness: 0.9, side: THREE.DoubleSide }), 0.85, 1.3, 0.09, { parent: co });
     paper.rotation.x = -0.3;
     add(new THREE.Mesh(new THREE.SphereGeometry(0.07, 24, 12, 0, Math.PI * 2, 0, Math.PI / 2), M.chrome), co).position.set(-0.7, 1.05, 0.12);
-    figure(co, 0.1, -0.85);
     contact(3.4, 1.8, -2.9, -11.4, 0.3);
   }
   const degreeTex = (a, b, c) => canvasTex(640, 460, (g, w, h) => {
@@ -553,7 +793,7 @@ async function init() {
     [-4.75, degreeTex('MASTER OF ENGINEERING', 'Mechanical Engineering', 'University of Ottawa')],
     [-2.4, degreeTex('BACHELOR OF SCIENCE', 'Mechanical Engineering', 'UET Lahore')],
   ]) {
-    rounded(1.26, 0.94, 0.04, 0.008, M.dark, x, 1.9, -14.27);
+    rounded(1.26, 0.94, 0.04, 0.008, M.black, x, 1.9, -14.27);
     plane(1.16, 0.84, lit(tex, { transparent: false, depthWrite: true }), x, 1.9, -14.247);
   }
   plane(3.6, 0.6, lit(canvasTex(1440, 240, (g, w) => {
@@ -570,26 +810,23 @@ async function init() {
   {
     const ex = new THREE.Group();
     ex.position.set(-6.17, 2.62, -12.9); ex.rotation.y = Math.PI / 2; scene.add(ex);
-    rounded(0.66, 0.26, 0.06, 0.02, new THREE.MeshStandardMaterial({ color: 0x0f7a3a, emissive: 0x16a34f, emissiveIntensity: 0.9 }), 0, 0, 0, { parent: ex });
+    rounded(0.66, 0.26, 0.06, 0.02, std({ color: 0x0f7a3a, emissive: 0x16a34f, emissiveIntensity: 0.9 }), 0, 0, 0, { parent: ex });
     plane(0.6, 0.22, basic(canvasTex(512, 184, (g, w, h) => {
       g.fillStyle = '#ffffff'; g.font = '800 120px "JetBrains Mono", monospace'; g.textAlign = 'center'; spacing(g, 10);
       g.fillText('EXIT', w / 2 + 5, h / 2 + 42);
     })), 0, 0, 0.032, { parent: ex });
     const sd = new THREE.Group();
     sd.position.set(-6.19, 0, -12.9); sd.rotation.y = Math.PI / 2; scene.add(sd);
-    rounded(1.1, 2.2, 0.04, 0.01, mat(0xd9d3c8), 0, 1.1, 0, { parent: sd });
-    rounded(0.95, 2.08, 0.05, 0.01, mat(0xcdc6b9), 0, 1.04, 0.01, { parent: sd });
+    rounded(1.1, 2.2, 0.04, 0.01, M.steel, 0, 1.1, 0, { parent: sd });
+    rounded(0.95, 2.08, 0.05, 0.01, std({ color: 0x8d9196, metalness: 0.3, roughness: 0.5 }), 0, 1.04, 0.01, { parent: sd });
+    rounded(0.3, 0.035, 0.05, 0.01, M.chrome, 0.25, 1.05, 0.05, { parent: sd });
   }
 
-  /* ---------- the entrance: real sliding-door model ---------- */
+  /* ---------- the entrance: Usman's SL500 sliding-door model ---------- */
   const SLIDE_M = 1.13; // each leaf travels ~1.13 m (3.7 ft) behind its sidelight
   let leafL = null, leafR = null, slideLocal = 0, miniL = null, miniR = null, miniSlide = 0;
   const decals = [];
-  try {
-    const loader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder);
-    const gltf = await loader.loadAsync('assets/door.v1.glb', (e) => {
-      if (e.total) hudText.textContent = `Loading the entrance… ${Math.round((e.loaded / e.total) * 100)}%`;
-    });
+  if (gltf) {
     const door = gltf.scene;
     door.traverse((o) => {
       if (!o.isMesh) return;
@@ -619,18 +856,17 @@ async function init() {
     miniL = mini.getObjectByName('Door_LeafL');
     miniR = mini.getObjectByName('Door_LeafR');
     miniSlide = slideLocal;
-  } catch (err) {
-    console.warn('Door model failed to load; using a simple stand-in.', err);
+  } else {
     for (const sx of [-1, 1]) {
       const leaf = new THREE.Group();
       leaf.position.set(sx * 0.63, 0, -0.15); scene.add(leaf);
-      block(1.25, 2.14, 0.05, M.alu, 0, 1.07, 0, { parent: leaf, edges: false });
+      block(1.25, 2.14, 0.05, M.alu, 0, 1.07, 0, { parent: leaf });
       plane(1.1, 1.98, M.doorGlass, 0, 1.07, 0.03, { parent: leaf });
       leaf.userData.x0 = leaf.position.x;
       if (sx < 0) leafL = leaf; else leafR = leaf;
     }
     slideLocal = SLIDE_M;
-    block(4.88, 0.45, 0.25, M.header, 0, 2.3, -0.15, { edges: false });
+    block(4.88, 0.45, 0.25, M.header, 0, 2.3, -0.15);
   }
   // generic "automatic door" decals that ride on the leaves
   const decalTex = canvasTex(256, 256, (g, w, h) => {
@@ -640,11 +876,10 @@ async function init() {
     g.fillText('AUTOMATIC', w / 2, 118); g.fillText('DOOR', w / 2, 160);
   });
   for (const sx of [-1, 1]) {
-    const d = plane(0.22, 0.22, lit(decalTex), sx * 0.62, 1.45, -0.118);
+    const d = plane(0.22, 0.22, lit(decalTex, { envMap: skyEnv }), sx * 0.62, 1.45, -0.118);
     d.userData.x0 = d.position.x; d.userData.dir = sx;
     decals.push(d);
   }
-
   /* ---------- camera rail: one keyframe per stop ---------- */
   const KF = [
     { p: [0, 1.62, 9.6], t: [0, 2.05, 0] },          // street
@@ -655,6 +890,7 @@ async function init() {
     { p: [-0.6, 1.62, -7.7], t: [0.8, 1.0, -11.0] }, // plant model
     { p: [-1.9, 1.62, -9.6], t: [-3.4, 1.55, -13.0] }, // checkout
   ].slice(0, N);
+  if (isSmall()) { KF[1].p[2] = 3.3; KF[1].t[1] = 1.35; } // portrait: both leaves and the sensor in frame
   const v3 = (a) => new THREE.Vector3(...a);
   const posCurve = new THREE.CatmullRomCurve3(KF.map((k) => v3(k.p)), false, 'centripetal');
   const tgtCurve = new THREE.CatmullRomCurve3(KF.map((k) => v3(k.t)), false, 'centripetal');
@@ -738,13 +974,17 @@ async function init() {
     camera.aspect = w / h;
     const hfov = THREE.MathUtils.degToRad(isSmall() ? 64 : 72);
     camera.fov = clamp(THREE.MathUtils.radToDeg(2 * Math.atan(Math.tan(hfov / 2) / camera.aspect)), 42, 78);
-    // keep the subject clear of the cards: shift right on desktop, up on phones
+    // keep the subject clear of the cards: shift right on desktop, slightly up on phones
     if (w >= 900) camera.setViewOffset(w, h, -w * 0.17, 0, w, h);
-    else camera.setViewOffset(w, h, 0, h * 0.16, w, h);
+    else camera.setViewOffset(w, h, 0, h * 0.07, w, h); // compact phone cards leave more room
     camera.updateProjectionMatrix();
     S.dirty = true;
   };
   sizeRenderer();
+
+  // compile every shader off the main thread before the first frame, so scrolling never freezes
+  hudText.textContent = 'Preparing materials…';
+  try { await renderer.compileAsync(scene, camera); } catch { /* older browsers compile on the first render */ }
 
   /* ---------- loop: render only when something changes ---------- */
   let last = performance.now(), animT = 0, slow = 1 / 60;

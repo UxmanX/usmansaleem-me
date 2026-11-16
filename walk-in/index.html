@@ -8,20 +8,21 @@
   <link rel="canonical" href="https://usmansaleem.me/walk-in/">
   <meta property="og:type" content="website">
   <meta property="og:title" content="Walk in · Usman Saleem">
-  <meta property="og:description" content="A short walk through a scale-model shop: automatic-entrance projects, the automation tools behind them, and the résumé at checkout.">
+  <meta property="og:description" content="A short walk through a small shop at dusk: automatic-entrance projects, the automation tools behind them, and the résumé at checkout.">
   <meta property="og:url" content="https://usmansaleem.me/walk-in/">
-  <meta property="og:image" content="https://usmansaleem.me/walk-in/assets/og-walk-in.jpg">
+  <meta property="og:image" content="https://usmansaleem.me/walk-in/assets/og-walk-in.v2.jpg">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
   <meta name="twitter:card" content="summary_large_image">
-  <link rel="preload" as="image" href="assets/poster.v1.jpg">
+  <link rel="preload" as="image" href="assets/poster.v2.jpg">
   <meta name="theme-color" content="#14171a">
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='24' fill='%23ff541e'/><text x='50' y='66' font-family='Arial' font-weight='800' font-size='46' text-anchor='middle' fill='white'>US</text></svg>">
   <script>document.documentElement.classList.add('js');</script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="walk.css?v=1">
+  <!-- 3D: three.js (MIT, see vendor/three/LICENSE). Textures and sky: Poly Haven (polyhaven.com), CC0. -->
+  <link rel="stylesheet" href="walk.css?v=3">
   <script type="importmap">
     { "imports": { "three": "./vendor/three/build/three.module.js", "three/addons/": "./vendor/three/examples/jsm/" } }
   </script>
@@ -42,7 +43,7 @@
   </header>
 
   <div class="wk-stage" aria-hidden="true">
-    <img class="wk-poster" src="assets/poster.v1.jpg" alt="" onerror="this.remove()">
+    <img class="wk-poster" src="assets/poster.v2.jpg" alt="" onerror="this.remove()">
     <canvas id="wk-canvas"></canvas>
   </div>
 
@@ -65,8 +66,11 @@
       <div class="card card-intro">
         <p class="eyebrow">Mechanical Engineer (MEng) · Key Accounts Project Coordinator</p>
         <h1 id="h-street" tabindex="-1">Usman Saleem</h1>
-        <p class="lead">I coordinate <strong>50+ concurrent</strong> automatic-entrance replacement projects at ASSA ABLOY Entrance Systems in Mississauga, and I build the software that keeps that pace manageable, like a store audit that went from <strong>3 hours to 15 seconds</strong>.</p>
-        <p class="hint" aria-hidden="true">Scroll to walk in <span>↓</span></p>
+        <div class="card-body" id="more-street">
+          <p class="lead">I coordinate <strong>50+ concurrent</strong> automatic-entrance replacement projects at ASSA ABLOY Entrance Systems in Mississauga, and I build the software that keeps that pace manageable, like a store audit that went from <strong>3 hours to 15 seconds</strong>.</p>
+          <p class="hint" aria-hidden="true">Scroll to walk in <span>↓</span></p>
+        </div>
+        <button class="card-toggle" type="button" aria-expanded="false" aria-controls="more-street"><span data-label>More</span><svg viewBox="0 0 10 6" aria-hidden="true"><path d="M1 1l4 4 4-4"/></svg></button>
         <div class="card-actions">
           <a class="wk-btn wk-btn-dark" href="#stop-checkout" data-jump>Skip the walk</a>
           <a class="wk-btn" href="../assets/Usman_Saleem_MEng_Resume.pdf" target="_blank" rel="noopener">Résumé (PDF)</a>
@@ -78,8 +82,11 @@
       <div class="card">
         <p class="eyebrow">The entrance</p>
         <h2 id="h-door" tabindex="-1">It opens when it senses you.</h2>
-        <p>Automatic sliding entrances like this one are my day job: replacements and modernizations for national retail and commercial accounts, from technician take-offs and drawings to quotes, site readiness and change orders.</p>
-        <p class="fine">Linger in the doorway and it holds open. The sensor zone is illustrative, not a safety specification.</p>
+        <div class="card-body" id="more-door">
+          <p>Automatic sliding entrances like this one are my day job: replacements and modernizations for national retail and commercial accounts, from technician take-offs and drawings to quotes, site readiness and change orders.</p>
+          <p class="fine">Linger in the doorway and it holds open. The sensor zone is illustrative, not a safety specification.</p>
+        </div>
+        <button class="card-toggle" type="button" aria-expanded="false" aria-controls="more-door"><span data-label>More</span><svg viewBox="0 0 10 6" aria-hidden="true"><path d="M1 1l4 4 4-4"/></svg></button>
       </div>
     </section>
 
@@ -87,9 +94,12 @@
       <div class="card">
         <p class="eyebrow">Featured display · 3D visualization</p>
         <h2 id="h-featured" tabindex="-1">SL500 3D Component &amp; Retrofit Explorer</h2>
-        <p>An interactive three.js model of a commercial sliding-door system, built from installation documentation. Estimators and facility managers can open the header, explode 13 sub-assemblies, and see how a modular retrofit kit fits existing framing without a full tear-out.</p>
-        <ul class="tags"><li>Three.js &amp; WebGL</li><li>Exploded cutaway</li><li>Retrofit planning</li></ul>
-        <a class="card-link" href="../cad-modal.html" target="_blank" rel="noopener">Open the 3D model ↗</a>
+        <div class="card-body" id="more-featured">
+          <p>An interactive three.js model of a commercial sliding-door system, built from installation documentation. Estimators and facility managers can open the header, explode 13 sub-assemblies, and see how a modular retrofit kit fits existing framing without a full tear-out.</p>
+          <ul class="tags"><li>Three.js &amp; WebGL</li><li>Exploded cutaway</li><li>Retrofit planning</li></ul>
+          <a class="card-link" href="../cad-modal.html" target="_blank" rel="noopener">Open the 3D model ↗</a>
+        </div>
+        <button class="card-toggle" type="button" aria-expanded="false" aria-controls="more-featured"><span data-label>More</span><svg viewBox="0 0 10 6" aria-hidden="true"><path d="M1 1l4 4 4-4"/></svg></button>
       </div>
     </section>
 
@@ -98,8 +108,11 @@
         <p class="sale-tag"><s>Was 3 hrs</s> Now 15 sec</p>
         <p class="eyebrow">Kiosk · Facility audit &amp; estimating</p>
         <h2 id="h-kiosk" tabindex="-1">Installation &amp; Facility Insight Collector</h2>
-        <p>A multi-threaded desktop platform that replaces a 3-hour manual service-portal crawl for a 15-door store. It untangles invoice ledgers, separates emergency calls from planned maintenance, pulls door conditions and take-off dimensions from technician notes, calculates replacement ROI and drafts review-ready proposals.</p>
-        <ul class="tags"><li>Python 3.12 &amp; PySide6</li><li>PowerShell RunspacePool</li><li>SSRS &amp; OpenXML</li></ul>
+        <div class="card-body" id="more-kiosk">
+          <p>A multi-threaded desktop platform that replaces a 3-hour manual service-portal crawl for a 15-door store. It untangles invoice ledgers, separates emergency calls from planned maintenance, pulls door conditions and take-off dimensions from technician notes, calculates replacement ROI and drafts review-ready proposals.</p>
+          <ul class="tags"><li>Python 3.12 &amp; PySide6</li><li>PowerShell RunspacePool</li><li>SSRS &amp; OpenXML</li></ul>
+        </div>
+        <button class="card-toggle" type="button" aria-expanded="false" aria-controls="more-kiosk"><span data-label>More</span><svg viewBox="0 0 10 6" aria-hidden="true"><path d="M1 1l4 4 4-4"/></svg></button>
       </div>
     </section>
 
@@ -107,8 +120,11 @@
       <div class="card">
         <p class="eyebrow">Shelf · National key accounts</p>
         <h2 id="h-shelf" tabindex="-1">Take-Off Replacement Lead Assistant &amp; QBR Platform</h2>
-        <p>Used across 16+ national retail and commercial accounts. It assembles replacement-lead packages from reports, surveys and field photos in 20–30 seconds, and builds an 8-slide executive QBR deck in about 7 seconds, with Excel workbooks and repeat-callback analytics.</p>
-        <ul class="tags"><li>Dynamics 365</li><li>Baan IV ERP &amp; SQL</li><li>PowerPoint &amp; Outlook COM</li></ul>
+        <div class="card-body" id="more-shelf">
+          <p>Used across 16+ national retail and commercial accounts. It assembles replacement-lead packages from reports, surveys and field photos in 20–30 seconds, and builds an 8-slide executive QBR deck in about 7 seconds, with Excel workbooks and repeat-callback analytics.</p>
+          <ul class="tags"><li>Dynamics 365</li><li>Baan IV ERP &amp; SQL</li><li>PowerPoint &amp; Outlook COM</li></ul>
+        </div>
+        <button class="card-toggle" type="button" aria-expanded="false" aria-controls="more-shelf"><span data-label>More</span><svg viewBox="0 0 10 6" aria-hidden="true"><path d="M1 1l4 4 4-4"/></svg></button>
       </div>
     </section>
 
@@ -116,8 +132,11 @@
       <div class="card">
         <p class="eyebrow">Scale model · Plant commissioning</p>
         <h2 id="h-mill" tabindex="-1">Flour-milling &amp; pasta plant, Karachi</h2>
-        <p>With Bühler Group, I supported installation, erection and commissioning of a multi-line food-processing plant: coordinating about 60 workers and technicians, checking work against drawings and PFDs, leveling machinery and tracing faults to their root cause.</p>
-        <ul class="tags"><li>Plant commissioning</li><li>AutoCAD &amp; PFDs</li><li>Root-cause troubleshooting</li></ul>
+        <div class="card-body" id="more-mill">
+          <p>With Bühler Group, I supported installation, erection and commissioning of a multi-line food-processing plant: coordinating about 60 workers and technicians, checking work against drawings and PFDs, leveling machinery and tracing faults to their root cause.</p>
+          <ul class="tags"><li>Plant commissioning</li><li>AutoCAD &amp; PFDs</li><li>Root-cause troubleshooting</li></ul>
+        </div>
+        <button class="card-toggle" type="button" aria-expanded="false" aria-controls="more-mill"><span data-label>More</span><svg viewBox="0 0 10 6" aria-hidden="true"><path d="M1 1l4 4 4-4"/></svg></button>
       </div>
     </section>
 
@@ -156,6 +175,6 @@
   </main>
 
   <noscript><p class="wk-noscript">The 3D walk needs JavaScript. Everything above is still readable.</p></noscript>
-  <script type="module" src="walk.js?v=1"></script>
+  <script type="module" src="walk.js?v=3"></script>
 </body>
 </html>

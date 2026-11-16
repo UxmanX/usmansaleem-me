@@ -22,7 +22,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
   <!-- 3D: three.js (MIT, see vendor/three/LICENSE). Textures and sky: Poly Haven (polyhaven.com), CC0. -->
-  <link rel="stylesheet" href="walk.css?v=4">
+  <link rel="stylesheet" href="walk.css?v=5">
   <script type="importmap">
     { "imports": { "three": "./vendor/three/build/three.module.js", "three/addons/": "./vendor/three/examples/jsm/" } }
   </script>
@@ -48,6 +48,7 @@
   </div>
 
   <div class="wk-hud" id="wk-hud" aria-hidden="true"><span class="wk-hud-led"></span><span id="wk-hud-text">Building the shop…</span><em>illustrative</em></div>
+  <div class="wk-tags" aria-hidden="true"><div class="wk-detail"><p class="detail-title"><b>A</b>Detail · the drive · illustrative</p><ol class="detail-parts"><li><b>1</b>Control unit</li><li><b>2</b>Motor<span class="long"> + gearbox</span></li><li><b>3</b>Toothed belt</li><li><b>4</b>Carriage</li></ol></div><div class="wk-detail-mark"><b>A</b></div></div>
 
   <nav class="wk-stops" aria-label="Stops on the walk">
     <ol>
@@ -93,7 +94,7 @@
         <h2 id="h-door" tabindex="-1">It opens when it senses you.</h2>
         <div class="card-body" id="more-door">
           <p>Automatic sliding entrances like this one are my day job: replacements and modernizations for national retail and commercial accounts, from technician take-offs and drawings to quotes, site readiness and change orders.</p>
-          <p class="fine">Linger in the doorway and it holds open. The sensor zone is illustrative, not a safety specification.</p>
+          <p class="fine">Linger in the doorway and it holds open. The sensor zone and the header cutaway are illustrative: a generic drive, not a product drawing or a safety specification.</p>
         </div>
         <button class="card-toggle" type="button" aria-expanded="false" aria-controls="more-door"><span data-label>More</span><svg viewBox="0 0 10 6" aria-hidden="true"><path d="M1 1l4 4 4-4"/></svg></button>
       </div>
@@ -184,6 +185,6 @@
   </main>
 
   <noscript><p class="wk-noscript">The 3D walk needs JavaScript. Everything above is still readable.</p></noscript>
-  <script type="module" src="walk.js?v=4"></script>
+  <script type="module" src="walk.js?v=5"></script>
 </body>
 </html>

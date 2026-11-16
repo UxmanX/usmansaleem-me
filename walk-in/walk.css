@@ -319,3 +319,71 @@ main { position: relative; z-index: 10; }
   .dock-next { padding: 0 10px 0 14px; }
   .wk-motion { display: none; } /* the OS reduced-motion setting still applies */
 }
+
+/* Entrance cutaway call-outs: placed from the 3D scene each frame (decorative; the card carries the text) */
+.wk-tags { position: fixed; inset: 0; z-index: 5; pointer-events: none; overflow: hidden; }
+.wk-tag { position: absolute; left: 0; top: 0; opacity: 0; transition: opacity 0.4s ease; }
+.wk-tag.is-on { opacity: 1; }
+.tag-dot {
+  position: absolute; left: -4px; top: -4px; width: 8px; height: 8px; border-radius: 50%; background: #ff6a35;
+  box-shadow: 0 0 0 3px rgba(255, 106, 53, 0.3), 0 0 14px rgba(255, 106, 53, 0.85);
+}
+.tag-line { position: absolute; left: -0.5px; bottom: 5px; width: 1px; height: 20px; background: linear-gradient(rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.3)); }
+.tag-pill {
+  position: absolute; left: 0; bottom: 25px; transform: translateX(calc(-50% + var(--dx, 0px)));
+  white-space: nowrap; padding: 6px 10px; border-radius: 999px;
+  background: rgba(16, 19, 22, 0.86); border: 1px solid rgba(255, 255, 255, 0.14); color: #f4f1ea;
+  font: 700 12px/1 var(--mono); letter-spacing: 0.01em; box-shadow: 0 6px 18px rgba(0, 0, 0, 0.3);
+}
+.wk-tag[data-dir="down"] .tag-line { bottom: auto; top: 5px; background: linear-gradient(rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.9)); }
+.wk-tag[data-dir="down"] .tag-pill { bottom: auto; top: 25px; }
+@media (max-width: 899px) {
+  .tag-pill { font-size: 11px; padding: 5px 8px; bottom: 21px; }
+  .tag-line { height: 16px; }
+  .wk-tag[data-dir="down"] .tag-pill { top: 21px; }
+}
+
+/* "Detail A": framed close-up of the drive end (the 3D inset renders inside this frame) */
+.wk-detail {
+  position: absolute; right: 96px; bottom: calc(var(--parts-h, 31px) + 53px); width: min(560px, 38vw); aspect-ratio: 2.6;
+  border: 2px solid rgba(232, 244, 255, 0.9); box-shadow: 0 18px 50px rgba(0, 0, 0, 0.45), 0 0 0 5px rgba(13, 34, 54, 0.45);
+  opacity: 0; transition: opacity 0.45s ease;
+}
+.wk-detail.is-on, .wk-detail-mark.is-on { opacity: 1; }
+.wk-detail:not(.is-on), .wk-detail-mark:not(.is-on), .wk-tag.is-balloon:not(.is-on) { transition: none; }
+.detail-title, .detail-parts {
+  position: absolute; left: -2px; margin: 0; display: flex; align-items: center;
+  border-radius: 999px; background: rgba(16, 19, 22, 0.88); color: #f4f1ea; font: 700 11px/1 var(--mono);
+}
+.detail-title { bottom: 100%; margin-bottom: 8px; gap: 8px; padding: 5px 11px 5px 5px; letter-spacing: 0.06em; text-transform: uppercase; white-space: nowrap; }
+.detail-parts { top: 100%; margin-top: 8px; gap: 6px 14px; flex-wrap: wrap; padding: 6px 12px 6px 6px; list-style: none; letter-spacing: 0.01em; }
+.detail-parts li { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+.detail-title b, .wk-detail-mark b {
+  display: inline-grid; place-items: center; width: 19px; height: 19px; border-radius: 50%;
+  background: #ff6a35; color: #fff; font: 800 11px/1 var(--mono); letter-spacing: 0;
+}
+.detail-parts b, .wk-tag.is-balloon .tag-pill {
+  display: inline-grid; place-items: center; width: 19px; height: 19px; padding: 0; border-radius: 50%;
+  background: #f4f1ea; color: #101316; border: 1.5px solid #101316; font: 800 10.5px/1 var(--mono); letter-spacing: 0;
+}
+/* balloons: short leader from a dot on the part, drawing-style numbered circle */
+.wk-tag.is-balloon .tag-dot { left: -3px; top: -3px; width: 6px; height: 6px; background: #f4f1ea; box-shadow: 0 0 0 1.5px #101316; }
+.wk-tag.is-balloon .tag-line { height: 12px; bottom: 3px; background: #f4f1ea; }
+.wk-tag.is-balloon[data-dir="down"] .tag-line { top: 3px; bottom: auto; }
+.wk-tag.is-balloon .tag-pill { bottom: 15px; width: 22px; height: 22px; box-shadow: 0 0 0 2px rgba(244, 241, 234, 0.45), 0 4px 10px rgba(0, 0, 0, 0.4); }
+.wk-tag.is-balloon[data-dir="down"] .tag-pill { top: 15px; bottom: auto; }
+.wk-detail-mark { position: absolute; left: 0; top: 0; border: 1.5px dashed rgba(232, 244, 255, 0.9); border-radius: 4px; opacity: 0; transition: opacity 0.45s ease; }
+.wk-detail-mark b { position: absolute; right: -10px; top: -10px; }
+@media (max-width: 899px) {
+  .wk-detail { left: 12px; right: 12px; width: auto; bottom: calc(var(--col-bottom) + var(--dock-h) + var(--parts-h, 29px) + 26px); }
+  .detail-parts .long { display: none; }
+  .detail-parts { right: -2px; gap: 6px 10px; border-radius: 14px; }
+}
+@media (max-width: 899px) {
+  .wk-tag.is-balloon .tag-pill { bottom: 15px; }
+  .wk-tag.is-balloon[data-dir="down"] .tag-pill { top: 15px; bottom: auto; }
+  .wk-tag.is-balloon .tag-line { height: 12px; }
+}
+@media (max-width: 899px) {
+  .detail-parts { gap: 4px 8px; padding: 5px 10px 5px 5px; font-size: 10.5px; }
+}

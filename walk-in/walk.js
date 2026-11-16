@@ -3,6 +3,8 @@
  * Photoreal pass: CC0 PBR textures and sky from Poly Haven (polyhaven.com), physically based materials,
  * warm interior light against a cool dusk sky. The entrance is Usman's own SL500 sliding-door model;
  * it opens when the camera enters the (illustrative) sensor zone and holds open in the threshold.
+ * Hands-on exhibits: at the entrance the header turns X-ray and shows a generic drive (illustrative)
+ * that moves with the door.
  * All text lives in the HTML cards; the canvas is decoration (aria-hidden).
  */
 import * as THREE from 'three';
@@ -274,6 +276,7 @@ async function init() {
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFShadowMap;
   renderer.shadowMap.autoUpdate = false;
+  renderer.localClippingEnabled = true; // the entrance header cutaway
   const aniso = Math.min(lite ? 4 : 8, renderer.capabilities.getMaxAnisotropy());
 
   /* ---------- load fonts, textures, sky and the door in parallel ---------- */
@@ -656,13 +659,39 @@ async function init() {
   const CLEAN = new URLSearchParams(location.search).has('clean'); // share-image captures: no sensor-zone graphics
   const pulseMat = new THREE.MeshBasicMaterial({ color: 0xff541e, transparent: true, opacity: 0, depthWrite: false });
   const zoneGroup = new THREE.Group();
-  zoneGroup.position.set(0, 0.007, -0.02); zoneGroup.scale.set(1, 1, 0.78); scene.add(zoneGroup); zoneGroup.visible = !CLEAN;
+  zoneGroup.position.set(0, 0.007, -0.02); zoneGroup.scale.set(1, 1, 1.45); scene.add(zoneGroup); zoneGroup.visible = !CLEAN;
   for (const [geo, m] of [
     [new THREE.CircleGeometry(2.3, 64, Math.PI, Math.PI), zoneMat],
     [new THREE.RingGeometry(2.19, 2.3, 64, 1, Math.PI, Math.PI), ringMat],
   ]) { const z = new THREE.Mesh(geo, m); z.rotation.x = -Math.PI / 2; zoneGroup.add(z); }
   const pulse = new THREE.Mesh(new THREE.RingGeometry(0.95, 1.0, 64, 1, Math.PI, Math.PI), pulseMat);
   pulse.rotation.x = -Math.PI / 2; zoneGroup.add(pulse);
+  // the sensor's field as a faint light cone (illustrative), from the sensor down to the floor zone
+  const coneAlpha = canvasTex(4, 128, (g, w, h) => {
+    const gr = g.createLinearGradient(0, 0, 0, h);
+    gr.addColorStop(0, '#ffffff'); gr.addColorStop(0.45, '#5a5a5a'); gr.addColorStop(1, '#0d0d0d');
+    g.fillStyle = gr; g.fillRect(0, 0, w, h);
+  });
+  coneAlpha.colorSpace = THREE.NoColorSpace;
+  const coneMat = new THREE.MeshBasicMaterial({
+    color: 0xff7a3d, alphaMap: coneAlpha, transparent: true, opacity: 0, depthWrite: false,
+    side: THREE.DoubleSide, blending: THREE.AdditiveBlending, toneMapped: false,
+  });
+  {
+    const n = 40, R = 2.3, SZ = 1.45, top = 2.16, pos = [0, 0, 0], uv = [0.5, 1], idx = [];
+    for (let i = 0; i <= n; i++) {
+      const a = (Math.PI * i) / n;
+      pos.push(Math.cos(a) * R, -top, Math.sin(a) * R * SZ);
+      uv.push(i / n, 0);
+      if (i) idx.push(0, i, i + 1);
+    }
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+    geo.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+    geo.setIndex(idx);
+    const cone = new THREE.Mesh(geo, coneMat);
+    cone.position.set(0, top, 0); cone.renderOrder = 2; cone.visible = !CLEAN; scene.add(cone);
+  }
   glow(5.5, 3.6, 0, 1.9, 0.28);
   for (const sx of [-1, 1]) glow(4.2, 2.6, sx * 4.5, 1.3, 0.16); // warm spill from the side windows
   plane(2.3, 0.234, basic(canvasTex(1024, 104, (g, w) => {
@@ -948,12 +977,14 @@ async function init() {
   const SLIDE_M = 1.13; // each leaf travels ~1.13 m (3.7 ft) behind its sidelight
   let leafL = null, leafR = null, slideLocal = 0, miniL = null, miniR = null, miniSlide = 0;
   const decals = [];
+  const headerMeshes = [];
   if (gltf) {
     const door = gltf.scene;
     door.traverse((o) => {
       if (!o.isMesh) return;
       const n = o.material?.name || '';
       o.material = n.includes('Glass') ? M.doorGlass : n.includes('Header') ? M.header : M.alu;
+      if (o.material === M.header) headerMeshes.push(o);
       o.castShadow = !n.includes('Glass');
       o.receiveShadow = true;
     });
@@ -988,7 +1019,7 @@ async function init() {
       if (sx < 0) leafL = leaf; else leafR = leaf;
     }
     slideLocal = SLIDE_M;
-    block(4.88, 0.45, 0.25, M.header, 0, 2.3, -0.15);
+    headerMeshes.push(block(4.88, 0.45, 0.25, M.header, 0, 2.3, -0.15));
   }
   // generic "automatic door" decals that ride on the leaves
   const decalTex = canvasTex(256, 256, (g, w, h) => {
@@ -1002,17 +1033,269 @@ async function init() {
     d.userData.x0 = d.position.x; d.userData.dir = sx;
     decals.push(d);
   }
+  /* ---------- entrance cutaway: the header turns X-ray to show a generic drive (illustrative) ---------- */
+  // A textbook bi-parting operator, not the SL500's real internals: motor + gearbox and one toothed-belt
+  // loop. The right leaf grips the upper run and the left leaf the lower run, so one motor parts both.
+  // Every part moves from the same door state as the leaves.
+  scene.updateMatrixWorld(true);
+  const XR = { on: 0, tags: [] };
+  S.xr = XR;
+  const hb = new THREE.Box3();
+  for (const h of headerMeshes) hb.expandByObject(h);
+  if (hb.isEmpty() || hb.max.y - hb.min.y > 1 || hb.max.x - hb.min.x < 2) {
+    hb.set(new THREE.Vector3(-2.44, 2.08, -0.275), new THREE.Vector3(2.44, 2.52, -0.025));
+  }
+  const hx0 = hb.min.x, hx1 = hb.max.x, hy0 = hb.min.y, hy1 = hb.max.y;
+  const HW = hx1 - hx0, HX = (hx0 + hx1) / 2, zf = hb.max.z;
+  // The model's header is a thin cover (~3 cm). The drive lives in a generic operator housing behind it.
+  const DEPTH = 0.18, zFront = hb.min.z, zBack = zFront - DEPTH, zc = zFront - 0.07;
+  const sweepPlane = new THREE.Plane(new THREE.Vector3(1, 0, 0), 1e3);   // solid header: clipped where x < sweep
+  const ghostPlane = new THREE.Plane(new THREE.Vector3(-1, 0, 0), -1e3); // X-ray shell: kept where x < sweep
+  const headerMat = M.header.clone(); // the mini door on the turntable keeps the plain material
+  headerMat.clippingPlanes = [sweepPlane];
+  const ghostMat = new THREE.MeshBasicMaterial({
+    color: 0x8fd0ff, transparent: true, opacity: 0.06, depthWrite: false, side: THREE.FrontSide,
+    blending: THREE.AdditiveBlending, toneMapped: false, clippingPlanes: [ghostPlane],
+  });
+  const edgeMat = new THREE.LineBasicMaterial({ color: 0xeaf8ff, transparent: true, opacity: 1, toneMapped: false, clippingPlanes: [ghostPlane] });
+  const shellFor = (h) => {
+    const gh = new THREE.Mesh(h.geometry, ghostMat);
+    const ed = new THREE.LineSegments(new THREE.EdgesGeometry(h.geometry, 25), edgeMat);
+    gh.renderOrder = 3; ed.renderOrder = 3;
+    h.geometry.computeBoundingBox();
+    // nudged out in x/z (no flicker against the cover) but kept under the brick soffit in y
+    const c = h.geometry.boundingBox.getCenter(new THREE.Vector3()), k = 1.004, ky = 0.985;
+    for (const o of [gh, ed]) { o.scale.set(k, ky, k); o.position.set(c.x * (1 - k), c.y * (1 - ky), c.z * (1 - k)); }
+    h.add(gh, ed);
+  };
+  for (const h of headerMeshes) { h.material = headerMat; shellFor(h); }
+  const housing = new THREE.Mesh(new THREE.BoxGeometry(HW, hy1 - hy0 - 0.008, DEPTH), headerMat); // top kept off the soffit
+  housing.position.set(HX, (hy0 + hy1) / 2 - 0.004, zFront - DEPTH / 2);
+  housing.castShadow = housing.receiveShadow = true;
+  scene.add(housing);
+  shellFor(housing);
+  // closure strip between the cover's top and the brick soffit (wall opening top is 2.74; the model stops ~4 cm short)
+  const SOFFIT = 2.74;
+  // ...run forward to the wall face (z = 0) so it also trims the brick reveal above the recessed header
+  if (SOFFIT - hy1 > 0.002 && SOFFIT - hy1 < 0.2) block(HW + 0.06, SOFFIT - hy1, -zBack, M.header, HX, (hy1 + SOFFIT) / 2, zBack / 2);
+  const mech = new THREE.Group();
+  scene.add(mech);
+  const part = (geo, mat, x, y, z, parent = mech) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); parent.add(m); return m; };
+  // blueprint-grid backdrop inside the header (2.5 cm grid, 10 cm majors), so the parts read against it
+  const blueprint = canvasTex(256, 64, (g, w, h) => {
+    g.fillStyle = '#0d2236'; g.fillRect(0, 0, w, h);
+    g.fillStyle = 'rgba(120,180,240,0.1)';
+    for (let x = 0; x < w; x += 16) g.fillRect(x, 0, 1, h);
+    for (let y = 0; y < h; y += 16) g.fillRect(0, y, w, 1);
+    g.fillStyle = 'rgba(150,205,255,0.22)';
+    for (let x = 0; x < w; x += 64) g.fillRect(x, 0, 2, h);
+    g.fillRect(0, 0, w, 2);
+  });
+  blueprint.wrapS = blueprint.wrapT = THREE.RepeatWrapping;
+  blueprint.repeat.set(HW / 0.4, (hy1 - hy0) / 0.1);
+  const MM = {
+    move: std({ color: 0xe8541f, roughness: 0.6 }, roomEnv, 0.2), // the parts that travel
+    rail: std({ color: 0x8f98a1, metalness: 0.8, roughness: 0.4 }, roomEnv, 0.45),
+    dark: std({ color: 0x2b2e33, metalness: 0.45, roughness: 0.5 }, roomEnv, 0.5),
+    back: new THREE.MeshBasicMaterial({ map: blueprint, toneMapped: false, transparent: true, opacity: 0.82 }),
+    tyre: std({ color: 0x121417, roughness: 0.62 }, roomEnv, 0.3),
+    hub: std({ color: 0xb9c0c7, metalness: 0.85, roughness: 0.3 }, roomEnv, 0.5),
+  };
+  part(new THREE.PlaneGeometry(HW - 0.04, hy1 - hy0 - 0.03), MM.back, HX, (hy0 + hy1) / 2, zBack + 0.012); // mounting plate
+  const yTrack = hy0 + 0.085, R_WHEEL = 0.026;
+  part(new THREE.BoxGeometry(HW - 0.14, 0.022, 0.04), MM.rail, HX, yTrack, zc); // track
+  const rP = 0.042, yBelt = hy1 - 0.16, xIdle = hx0 + 0.22, xDrive = hx1 - 0.85, BL = xDrive - xIdle;
+  // toothed belt: two straight runs whose teeth scroll with the leaves, wrapped round two pulleys
+  const teeth = canvasTex(64, 8, (g, w, h) => {
+    g.fillStyle = '#23282e'; g.fillRect(0, 0, w, h);
+    g.fillStyle = '#6d7884'; for (let x = 0; x < w; x += 16) g.fillRect(x, 0, 6, h);
+  });
+  const run = (y) => {
+    const t = teeth.clone();
+    t.wrapS = THREE.RepeatWrapping; t.repeat.set(BL / 0.08, 1); t.needsUpdate = true;
+    part(new THREE.BoxGeometry(BL, 0.018, 0.024), std({ map: t, roughness: 0.7 }, roomEnv, 0.3), xIdle + BL / 2, y, zc); // drawn thicker than life so it reads
+    return t;
+  };
+  const beltTop = run(yBelt + rP), beltBot = run(yBelt - rP);
+  const beltArc = std({ color: 0x17191c, roughness: 0.7 }, roomEnv, 0.3);
+  const pulley = (x, rz) => {
+    const arc = part(new THREE.TorusGeometry(rP, 0.009, 6, 20, Math.PI), beltArc, x, yBelt, zc);
+    arc.rotation.z = rz; arc.scale.z = 1.3;
+    const g = new THREE.Group();
+    g.position.set(x, yBelt, zc); mech.add(g);
+    part(new THREE.CylinderGeometry(rP - 0.004, rP - 0.004, 0.03, 28), MM.hub, 0, 0, 0, g).rotation.x = Math.PI / 2;
+    const spoke = new THREE.BoxGeometry(rP * 1.6, 0.008, 0.034);
+    part(spoke, MM.dark, 0, 0, 0, g);
+    part(spoke, MM.dark, 0, 0, 0, g).rotation.z = Math.PI / 2;
+    return g;
+  };
+  const pIdle = pulley(xIdle, Math.PI / 2), pDrive = pulley(xDrive, -Math.PI / 2);
+  // motor + gearbox on the drive pulley; the motor's stripes show it spinning faster than the pulley
+  const zb = zBack + 0.045; // components mounted on the back plate
+  part(new RoundedBoxGeometry(0.13, 0.13, 0.07, 2, 0.012), std({ color: 0x5c6670, metalness: 0.55, roughness: 0.45 }, roomEnv, 0.45), xDrive + 0.03, yBelt, zc - 0.05);
+  const motorTex = canvasTex(128, 16, (g, w, h) => {
+    g.fillStyle = '#7b8792'; g.fillRect(0, 0, w, h);
+    g.fillStyle = '#46505a'; for (let x = 0; x < w; x += 16) g.fillRect(x, 0, 5, h);
+  });
+  const motorG = new THREE.Group();
+  motorG.position.set(xDrive + 0.215, yBelt, zc - 0.05); motorG.rotation.z = Math.PI / 2; mech.add(motorG);
+  const motorSpin = part(new THREE.CylinderGeometry(0.052, 0.052, 0.24, 28), std({ map: motorTex, metalness: 0.5, roughness: 0.5 }, roomEnv, 0.4), 0, 0, 0, motorG);
+  part(new THREE.CylinderGeometry(0.044, 0.044, 0.02, 24), MM.hub, 0, -0.13, 0, motorG);
+  // control unit, wired to the sensor and the motor (the wiring glows when the sensor fires)
+  const cuX = xDrive - 0.32, cuY = hy1 - 0.058;
+  const pcb = canvasTex(256, 56, (g, w, h) => {
+    g.fillStyle = '#1d5236'; g.fillRect(0, 0, w, h);
+    g.strokeStyle = 'rgba(214,190,120,0.6)'; g.lineWidth = 2;
+    for (let i = 0; i < 10; i++) { const x = 8 + i * 25; g.beginPath(); g.moveTo(x, 4); g.lineTo(x, 22); g.lineTo(x + 10, 32); g.lineTo(x + 10, h - 4); g.stroke(); }
+    g.fillStyle = '#111317'; g.fillRect(44, 12, 50, 30); g.fillRect(120, 16, 30, 22); g.fillRect(176, 10, 56, 34);
+  });
+  const cuBox = part(new THREE.BoxGeometry(0.34, 0.07, 0.06), std({ map: pcb, roughness: 0.7 }, roomEnv, 0.2), cuX, cuY, zb);
+  const cuLedMat = new THREE.MeshBasicMaterial({ color: 0xffb020, toneMapped: false });
+  part(new THREE.SphereGeometry(0.009, 10, 8), cuLedMat, cuX + 0.14, cuY + 0.012, zb + 0.032);
+  const cableMat = std({ color: 0xff6a35, emissive: 0xff541e, emissiveIntensity: 0.15, roughness: 0.55 }, roomEnv, 0.3);
+  const cable = (pts) => mech.add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts.map((p) => new THREE.Vector3(...p))), 40, 0.0055, 6), cableMat));
+  cable([[0.1, hy0 + 0.012, zFront - 0.01], [0.2, hy0 + 0.04, zc + 0.03], [0.42, cuY - 0.025, zc + 0.02], [cuX - 0.3, cuY, zc], [cuX - 0.17, cuY, zb]]);
+  cable([[cuX + 0.17, cuY, zb], [cuX + 0.3, cuY - 0.004, zc - 0.02], [xDrive + 0.215, yBelt + 0.075, zc - 0.03], [xDrive + 0.215, yBelt + 0.05, zc - 0.05]]);
+  // carriages: rollers on the track, a hanger plate down to the leaf, a clamp up to the belt
+  const leafX = (leaf, fb) => (leaf ? new THREE.Box3().setFromObject(leaf).getCenter(new THREE.Vector3()).x : fb);
+  const carriage = (x0, dir) => {
+    const g = new THREE.Group();
+    g.position.set(x0, 0, zc); mech.add(g);
+    const top = yTrack + 0.06, bot = hy0 + 0.005;
+    part(new RoundedBoxGeometry(0.46, top - bot, 0.012, 2, 0.004), MM.move, 0, (top + bot) / 2, -0.03, g);
+    const wheels = [];
+    for (const wx of [-0.16, 0.16]) {
+      const w = new THREE.Group();
+      w.position.set(wx, yTrack + 0.011 + R_WHEEL, 0.004); g.add(w);
+      part(new THREE.CylinderGeometry(R_WHEEL, R_WHEEL, 0.018, 22), MM.tyre, 0, 0, 0, w).rotation.x = Math.PI / 2;
+      part(new THREE.BoxGeometry(R_WHEEL * 1.5, 0.006, 0.02), MM.hub, 0, 0, 0, w);
+      wheels.push(w);
+    }
+    const yb = dir < 0 ? yBelt - rP : yBelt + rP;
+    part(new THREE.BoxGeometry(0.03, yb - top + 0.012, 0.012), MM.move, -0.12 * dir, (yb + top) / 2, 0.02, g);
+    g.userData = { x0, wheels };
+    return g;
+  };
+  const carL = carriage(leafX(leafL, -0.63), -1), carR = carriage(leafX(leafR, 0.63), 1);
+  // the scan line that sweeps across as the header turns X-ray
+  const scan = new THREE.Group();
+  scan.visible = false; scene.add(scan);
+  plane(0.012, hy1 - hy0 + 0.12, new THREE.MeshBasicMaterial({ color: 0xe2f4ff, toneMapped: false, transparent: true, depthWrite: false }), 0, (hy0 + hy1) / 2, zf + 0.014, { parent: scan });
+  plane(0.6, hy1 - hy0 + 0.6, basic(radial('rgba(150,215,255,0.9)', 'rgba(150,215,255,0)'), { blending: THREE.AdditiveBlending, opacity: 0.6 }), 0, (hy0 + hy1) / 2, zf + 0.016, { parent: scan });
+  // "Detail A": a magnified inset of the drive end, like a callout on a drawing. The main view keeps the
+  // whole entrance; the inset camera renders the drive end into a framed box (scissored second pass).
+  const detailEl = $('.wk-detail'), markEl = $('.wk-detail-mark');
+  const detailCam = new THREE.PerspectiveCamera(30, 2, 0.05, 30);
+  const DR = { x0: 0.3, x1: hx1 + 0.03, y0: hy0 - 0.04, y1: hy1 + 0.04 }; // right carriage's whole travel + drive
+  let detailRect = null, detailShown = false;
+  function placeDetailCam() {
+    if (!detailEl || CLEAN) return;
+    const partsEl = detailEl.querySelector('.detail-parts'); // the inset sits on its parts list, however many rows that wraps to
+    if (partsEl) document.documentElement.style.setProperty('--parts-h', `${Math.ceil(partsEl.getBoundingClientRect().height)}px`);
+    const r = detailEl.getBoundingClientRect();
+    detailRect = { x: r.left + 2, y: r.top + 2, w: Math.max(1, r.width - 4), h: Math.max(1, r.height - 4) };
+    const aspect = detailRect.w / detailRect.h, D = 1.35;
+    const halfV = Math.max((DR.y1 - DR.y0) / 2, (DR.x1 - DR.x0) / 2 / aspect) * 1.04;
+    const cx = (DR.x0 + DR.x1) / 2, cy = (DR.y0 + DR.y1) / 2;
+    detailCam.aspect = aspect;
+    detailCam.fov = THREE.MathUtils.radToDeg(2 * Math.atan(halfV / D));
+    detailCam.position.set(cx, cy - 0.04, zf + D);
+    detailCam.lookAt(cx, cy, zc);
+    detailCam.updateProjectionMatrix();
+  }
+  const cutawayShown = () => !CLEAN && XR.on >= 1 && S.u > 0.7 && S.u < 1.45;
+  function renderDetail() {
+    const want = !!detailEl && !!detailRect && cutawayShown();
+    if (want !== detailShown) {
+      detailShown = want;
+      detailEl.classList.toggle('is-on', want);
+      markEl?.classList.toggle('is-on', want);
+    }
+    if (!want) return;
+    const r = detailRect, y = innerHeight - r.y - r.h;
+    renderer.setScissorTest(true);
+    renderer.setScissor(r.x, y, r.w, r.h);
+    renderer.setViewport(r.x, y, r.w, r.h);
+    renderer.render(scene, detailCam);
+    renderer.setScissorTest(false);
+    renderer.setViewport(0, 0, innerWidth, innerHeight);
+  }
+  // call-outs (HTML, positioned from the scene; decorative, the card carries the text)
+  const tagLayer = $('.wk-tags');
+  if (tagLayer && !CLEAN) {
+    for (const [text, dir, x, y, z, view, follow] of [
+      ['Motion sensor', 'down', 0, 2.14, 0.02, 'main'],
+      ['1', 'up', cuX - 0.1, cuY + 0.012, zb + 0.032, 'detail'],
+      ['2', 'up', xDrive + 0.25, yBelt + 0.02, zc + 0.001, 'detail'],
+      ['3', 'up', xDrive - 0.75, yBelt + rP, zc + 0.013, 'detail'],
+      ['4', 'down', 0, yTrack + 0.038, zc - 0.022, 'detail', carR], // on the carriage plate, between its rollers
+    ]) {
+      const el = document.createElement('span');
+      el.className = view === 'detail' ? 'wk-tag is-balloon' : 'wk-tag'; el.dataset.dir = dir;
+      el.innerHTML = '<span class="tag-dot"></span><span class="tag-line"></span><span class="tag-pill"></span>';
+      el.lastChild.textContent = text;
+      tagLayer.append(el);
+      XR.tags.push({ el, pill: el.lastChild, at: new THREE.Vector3(x, y, z), fx: x, follow, view, on: false, hw: 0 });
+    }
+  }
+  XR.debug = { cam: detailCam, rect: () => detailRect, parts: { cu: cuBox, motor: motorSpin, carriage: carR, hb } }; // test hook
+  function updateXray(dt) {
+    const want = S.u > 0.45 && S.u < 1.7 ? 1 : 0;
+    XR.on = S.motion ? clamp(XR.on + Math.sign(want - XR.on) * (dt / 1.2), 0, 1) : want;
+    const sweep = XR.on <= 0 ? -1e3 : XR.on >= 1 ? 1e3 : hx0 - 0.08 + (HW + 0.16) * ease(XR.on);
+    sweepPlane.constant = -sweep;
+    ghostPlane.constant = sweep;
+    scan.visible = XR.on > 0 && XR.on < 1;
+    scan.position.x = sweep;
+  }
+  const tagV = new THREE.Vector3();
+  function updateTags() {
+    const show = cutawayShown();
+    const W = innerWidth, H = innerHeight;
+    if (markEl && show) { // dashed box on the header around the region the inset magnifies
+      let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
+      for (const [x, y] of [[DR.x0, DR.y0], [DR.x1, DR.y0], [DR.x0, DR.y1], [DR.x1, DR.y1]]) {
+        tagV.set(x, y, zf).project(camera);
+        const sx = ((tagV.x + 1) / 2) * W, sy = ((1 - tagV.y) / 2) * H;
+        x0 = Math.min(x0, sx); x1 = Math.max(x1, sx); y0 = Math.min(y0, sy); y1 = Math.max(y1, sy);
+      }
+      x0 = Math.max(x0, 8); y0 = Math.max(y0, 8); x1 = Math.min(x1, W - 18); y1 = Math.min(y1, H - 8); // badge stays on screen
+      markEl.style.transform = `translate3d(${x0.toFixed(1)}px, ${y0.toFixed(1)}px, 0)`;
+      markEl.style.width = `${(x1 - x0).toFixed(1)}px`;
+      markEl.style.height = `${(y1 - y0).toFixed(1)}px`;
+    }
+    for (const t of XR.tags) {
+      const inset = t.view === 'detail';
+      let on = show && (!inset || !!detailRect);
+      if (on) {
+        tagV.copy(t.at);
+        if (t.follow) tagV.x = t.follow.position.x + t.fx;
+        tagV.project(inset ? detailCam : camera);
+        const B = inset ? detailRect : { x: 0, y: 0, w: W, h: H };
+        const x = B.x + ((tagV.x + 1) / 2) * B.w, y = B.y + ((1 - tagV.y) / 2) * B.h;
+        const m = 64;
+        on = tagV.z < 1 && x > B.x + 10 && x < B.x + B.w - 10 && y > B.y + (inset ? 10 : m) && y < B.y + B.h - (inset ? 10 : m);
+        if (on) {
+          if (!t.hw) t.hw = t.pill.offsetWidth / 2 + 8;
+          t.el.style.transform = `translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, 0)`;
+          if (!inset) t.pill.style.setProperty('--dx', `${(clamp(x, B.x + t.hw, B.x + B.w - t.hw) - x).toFixed(1)}px`);
+        }
+      }
+      if (on !== t.on) { t.on = on; t.el.classList.toggle('is-on', on); }
+    }
+  }
+
   /* ---------- camera rail: one keyframe per stop ---------- */
   const KF = [
     { p: [0, 1.62, 9.6], t: [0, 2.05, 0] },          // street
-    { p: [0, 1.62, 2.4], t: [0, 1.5, -6] },          // entrance
+    { p: [1.3, 1.62, 3.75], t: [0.95, 1.8, -6] },    // entrance: just outside the sensor zone, door closed
     { p: [0.5, 1.62, -1.0], t: [2.8, 0.85, -3.8] },  // featured display
     { p: [-1.4, 1.62, -2.6], t: [-3.9, 1.15, -4.6] }, // kiosk
     { p: [1.9, 1.62, -6.4], t: [5.8, 1.75, -7.7] },  // shelf
     { p: [-0.6, 1.62, -7.7], t: [0.8, 1.0, -11.0] }, // plant model
     { p: [-1.9, 1.62, -9.6], t: [-3.4, 1.55, -13.0] }, // checkout
   ].slice(0, N);
-  if (isSmall()) { KF[1].p[2] = 3.3; KF[1].t[1] = 1.35; } // portrait: both leaves and the sensor in frame
+  if (isSmall()) { KF[1].p = [0, 1.62, 5.6]; KF[1].t = [0, 1.85, -6]; } // portrait: the whole header fits only from further back
   const v3 = (a) => new THREE.Vector3(...a);
   const posCurve = new THREE.CatmullRomCurve3(KF.map((k) => v3(k.p)), false, 'centripetal');
   const tgtCurve = new THREE.CatmullRomCurve3(KF.map((k) => v3(k.t)), false, 'centripetal');
@@ -1025,8 +1308,8 @@ async function init() {
     }
     return best;
   };
-  const ZONE_OUT = 3.6, ZONE_IN = -1.75;            // sensor sees you between these z values
-  const U_GATE_OUT = uForZ(0.8, 1, 2), U_GATE_IN = uForZ(-0.95, 1, 2); // wait here until the door is open
+  const ZONE_OUT = 3.45, ZONE_IN = -1.75;            // sensor sees you between these z values
+  const U_GATE_OUT = uForZ(3.25, 1, 2), U_GATE_IN = uForZ(-0.95, 1, 2); // wait here until the door is open
   const inZone = (z) => z < ZONE_OUT && z > ZONE_IN;
   const lookAt = new THREE.Vector3();
 
@@ -1070,6 +1353,20 @@ async function init() {
     ledMat.color.setHex(wanted ? 0x35d07f : 0xffb020);
     zoneMat.opacity = wanted ? 0.26 : 0.14;
     ringMat.opacity = wanted ? 0.95 : 0.7;
+    // the drive follows the leaves: carriages ride with them, the belt and pulleys turn, the motor spins
+    const d = e * SLIDE_M;
+    carL.position.x = carL.userData.x0 - d;
+    carR.position.x = carR.userData.x0 + d;
+    for (const w of carL.userData.wheels) w.rotation.z = d / R_WHEEL;
+    for (const w of carR.userData.wheels) w.rotation.z = -d / R_WHEEL;
+    beltTop.offset.x = -d / 0.08;
+    beltBot.offset.x = d / 0.08;
+    pIdle.rotation.z = pDrive.rotation.z = -d / rP;
+    motorSpin.rotation.y = (-d / rP) * 6;
+    cableMat.emissiveIntensity = wanted ? 1.6 : 0.15;
+    cuLedMat.color.setHex(wanted ? 0x35d07f : 0xffb020);
+    const near = ease((S.u - 0.35) / 0.45) * (1 - ease((S.u - 1.55) / 0.4));
+    coneMat.opacity = CLEAN ? 0 : near * (wanted ? 0.12 : 0.06);
   }
 
   function updateHud() {
@@ -1104,10 +1401,12 @@ async function init() {
     const hfov = THREE.MathUtils.degToRad(isSmall() ? 64 : 72);
     camera.fov = clamp(THREE.MathUtils.radToDeg(2 * Math.atan(Math.tan(hfov / 2) / camera.aspect)), 42, 78);
     applyView();
+    placeDetailCam();
     S.dirty = true;
   };
   S.viewYCur = S.viewY;
   sizeRenderer();
+  document.fonts?.ready?.then(() => { placeDetailCam(); S.dirty = true; }); // web fonts change the parts list's wrap
 
   // compile every shader off the main thread before the first frame, so scrolling never freezes
   hudText.textContent = 'Preparing materials…';
@@ -1131,9 +1430,11 @@ async function init() {
     }
     updateCamera(dt);
     updateDoor(dt, now);
+    const prevXr = XR.on;
+    updateXray(dt);
     const turning = S.motion && S.u > 1.5 && S.u < 3.5;
     const pulsing = S.motion && S.detect && S.u < 2.6;
-    const moving = Math.abs(S.u - prevU) > 1e-6 || S.door !== prevDoor || framing;
+    const moving = Math.abs(S.u - prevU) > 1e-6 || S.door !== prevDoor || framing || XR.on !== prevXr;
     if (!(moving || turning || pulsing || S.dirty)) { animT = 0; return; }
     S.dirty = false;
     if (turning) {
@@ -1151,8 +1452,10 @@ async function init() {
       pulseMat.opacity = 0.55 * (1 - k);
     } else pulseMat.opacity = 0;
     updateHud();
+    updateTags();
     if (S.door !== prevDoor || S.frames === 0) renderer.shadowMap.needsUpdate = true;
     renderer.render(scene, camera);
+    renderDetail();
     S.frames++;
     if (!S.ready) {
       S.ready = true;

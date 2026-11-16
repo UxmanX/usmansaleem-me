@@ -631,6 +631,18 @@ async function initPlushFace() {
       });
     }
 
+    // Mesh Toggle: show the 72x72 simulation grid the face is deformed on
+    const btnWireframe = document.getElementById("btn-wireframe");
+    if (btnWireframe) {
+      btnWireframe.addEventListener("click", () => {
+        if (!plushInstance || typeof plushInstance.set !== "function") return;
+        const on = btnWireframe.getAttribute("aria-pressed") !== "true";
+        plushInstance.set({ debug: on });
+        btnWireframe.setAttribute("aria-pressed", on ? "true" : "false");
+        setSpeech(on ? "MESH VIEW" : "SKIN VIEW", on ? "72x72 continuum mesh exposed. Drag any vertex!" : "Mesh hidden. Back to normal skin.", "var(--brand-orange)");
+      });
+    }
+
     // Sound Toggle Control
     const soundToggle = document.getElementById("sound-toggle");
     if (soundToggle) {
@@ -666,6 +678,27 @@ function initSL500Simulator() {
   const cyclesEl = document.getElementById("sim-cycles");
   const pwmEl = document.getElementById("sim-pwm");
   const beamEl = document.getElementById("sim-beam");
+  const apertureEl = document.getElementById("sim-aperture");
+  const bannerEl = document.getElementById("sim-stage-banner");
+  const tripBtn = document.getElementById("btn-trip-beam");
+  const leftLeaf = stage ? stage.querySelector(".door-leaf.left") : null;
+  const LEAF_TRAVEL = 0.82; // matches translateX(-82%) on .is-open .door-leaf.left in style.css
+  let apertureRaf = 0;
+  let tripTimer = null;
+
+  // Read the leaf's live position while the CSS transition runs
+  const trackAperture = () => {
+    if (!apertureEl || !leftLeaf) return;
+    cancelAnimationFrame(apertureRaf);
+    const t0 = performance.now();
+    const step = () => {
+      const m = new DOMMatrixReadOnly(getComputedStyle(leftLeaf).transform);
+      const full = leftLeaf.offsetWidth * LEAF_TRAVEL || 1;
+      apertureEl.textContent = Math.min(100, Math.round((Math.abs(m.m41) / full) * 100)) + "%";
+      if (performance.now() - t0 < 1600) apertureRaf = requestAnimationFrame(step);
+    };
+    step();
+  };
 
   if (!stage || !triggerBtn) return;
 
@@ -724,6 +757,7 @@ function initSL500Simulator() {
 
     isOpen = true;
     stage.classList.add("is-open");
+    trackAperture();
     soundSynth.playRadarChirp();
     soundSynth.playServoHum(0.7);
 
@@ -749,6 +783,7 @@ function initSL500Simulator() {
     if (currentMode === "HOLD") return; // Keep held
     isOpen = false;
     stage.classList.remove("is-open");
+    trackAperture();
     soundSynth.playServoHum(0.7);
 
     if (pwmEl) {
@@ -764,6 +799,35 @@ function initSL500Simulator() {
   triggerBtn.addEventListener("click", () => {
     openDoor();
   });
+
+  // Safety beam: an obstruction re-opens the door (auto-reverse) and holds it until the beam clears
+  if (tripBtn) {
+    tripBtn.addEventListener("click", () => {
+      stage.classList.add("is-tripped");
+      clearTimeout(tripTimer);
+      if (currentMode === "LOCK") {
+        soundSynth.playWarningBuzz();
+        if (bannerEl) bannerEl.textContent = "BEAM BLOCKED · DOOR LOCKED";
+      } else {
+        const wasClosing = !isOpen;
+        openDoor();
+        soundSynth.playWarningBuzz();
+        if (bannerEl) bannerEl.textContent = wasClosing ? "OBSTRUCTION · AUTO-REVERSE" : "OBSTRUCTION · HOLDING OPEN";
+        if (beamEl) {
+          beamEl.textContent = "BLOCKED";
+          beamEl.style.color = "#ef4444";
+        }
+      }
+      tripTimer = setTimeout(() => {
+        stage.classList.remove("is-tripped");
+        if (bannerEl) bannerEl.textContent = "IR SAFETY CURTAIN ACTIVE";
+        if (beamEl && currentMode !== "LOCK") {
+          beamEl.textContent = isOpen ? "TRANSIT (OPEN)" : "ARMED";
+          beamEl.style.color = isOpen ? "#ff7a4d" : "var(--accent-green)";
+        }
+      }, 1800);
+    });
+  }
 }
 
 /* ==========================================================================

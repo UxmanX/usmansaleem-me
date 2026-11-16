@@ -1736,3 +1736,8 @@ dialog#cad-dialog[open]::backdrop {
 .footer-link:hover {
   color: var(--brand-orange);
 }
+
+/* Anchor jumps: keep section headings clear of the sticky nav */
+section[id] {
+  scroll-margin-top: 92px;
+}

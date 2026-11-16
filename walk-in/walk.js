@@ -852,23 +852,27 @@ async function init() {
   const tag = plane(0.34, 0.2, lit(tagTex), 0.1, 0.74, 0.262, { parent: kiosk }); // promo sticker on the kiosk front
   tag.rotation.z = -0.06;
   contact(1.5, 1.3, -3.9, -4.6, 0.32);
-  // the kiosk's own button, placed under its screen from the scene
-  const runBtn = $('.wk-run'), runAt = new THREE.Vector3(), kioskCard = $('#stop-kiosk .card');
+  // one button for every hands-on exhibit, placed under the exhibit's screen from the scene
+  const exhibits = {}; // stop index -> { st, start, idle, anchor(v) }
+  exhibits[3] = { st: KS, start: () => startRace(), idle: 'Run the audit', anchor: (v) => screen.localToWorld(v.set(0, -0.42, 0.04)) };
+  const runBtn = $('.wk-run'), runAt = new THREE.Vector3();
   let runShown = false;
-  runBtn?.addEventListener('click', () => startRace());
+  runBtn?.addEventListener('click', () => exhibits[S.active]?.start());
   function updateRunBtn() {
     if (!runBtn) return;
-    const sheetOpen = isSmall() && !!kioskCard?.classList.contains('is-open'); // the phone sheet owns that space
-    const want = !CLEAN && S.ready && S.motion && !sheetOpen && S.active === 3 && Math.abs(S.u - 3) < 0.05;
+    const ex = exhibits[S.active];
+    const sheetOpen = isSmall() && !!document.querySelector('main .card.is-open'); // the phone sheet owns that space
+    const want = !!ex && !CLEAN && S.ready && S.motion && !sheetOpen && Math.abs(S.u - S.active) < 0.05;
     if (want !== runShown) { runShown = want; runBtn.hidden = !want; }
     if (!want) return;
-    screen.localToWorld(runAt.set(0, -0.42, 0.04)).project(camera);
+    ex.anchor(runAt).project(camera);
     runBtn.style.transform = `translate3d(${(((runAt.x + 1) / 2) * innerWidth).toFixed(1)}px, ${(((1 - runAt.y) / 2) * innerHeight).toFixed(1)}px, 0) translateX(-50%)`;
-    const st = KS.phase === 'run' || KS.delay > 0 ? 'run' : KS.phase;
-    if (runBtn.dataset.state !== st) {
-      runBtn.dataset.state = st;
+    const st = ex.st.phase === 'run' || ex.st.delay > 0 ? 'run' : ex.st.phase;
+    const key = `${S.active}:${st}`;
+    if (runBtn.dataset.key !== key) {
+      runBtn.dataset.key = key; runBtn.dataset.state = st;
       runBtn.innerHTML = st === 'run' ? '<span aria-hidden="true">●</span> Running · 3× speed'
-        : st === 'done' ? '<span aria-hidden="true">↻</span> Run it again' : '<span aria-hidden="true">▶</span> Run the audit';
+        : st === 'done' ? '<span aria-hidden="true">↻</span> Run it again' : `<span aria-hidden="true">▶</span> ${ex.idle}`;
       runBtn.disabled = st === 'run';
     }
   }
@@ -935,28 +939,125 @@ async function init() {
       }
     }
   }
-  const qbrTex = canvasTex(1024, 576, (g, w, h) => {
+  // The QBR screen runs the pipeline: field photos -> take-off -> lead package (~24 s), then an
+  // 8-slide QBR deck (~7 s). A simulation at 3x speed using the tool's typical times.
+  const PIPE = { SPEED: 3, END: 31, marks: [0, 6, 14, 24, 31] };
+  const PIPE_STEPS = ['PHOTOS', 'TAKE-OFF', 'LEAD', 'QBR DECK']; // short, so the chips can use big type
+  const PIPE_SAY = ['field photos', 'take-off', 'lead package', 'QBR deck'];
+  const QS = { phase: still ? 'done' : 'idle', t: still ? PIPE.END : 0, auto: false, delay: 0, acc: 0 };
+  S.qbr = QS; // test hook
+  const pipeStep = (t) => (t >= PIPE.END ? 4 : t >= 24 ? 3 : t >= 14 ? 2 : t >= 6 ? 1 : 0);
+  function drawQbr(g, w, h) {
+    const t = QS.t, step = pipeStep(t), INK = '#14171a', MUTED = '#5b6168', OR = '#ff541e', GR = '#1f9d5b';
+    g.textAlign = 'left'; spacing(g, 0);
     g.fillStyle = '#f7f4ee'; g.fillRect(0, 0, w, h);
-    g.fillStyle = '#14171a'; g.font = '800 40px "Plus Jakarta Sans", sans-serif'; g.fillText('Quarterly business review', 44, 72);
-    g.fillStyle = '#5b6168'; g.font = '600 26px "JetBrains Mono", monospace'; g.fillText('8 SLIDES · BUILT IN ~7 s', 44, 116);
-    for (let i = 0; i < 8; i++) {
-      const x = 44 + (i % 4) * 238, y = 160 + Math.floor(i / 4) * 196;
-      g.fillStyle = '#ffffff'; g.fillRect(x, y, 214, 170);
-      g.strokeStyle = 'rgba(20,23,26,0.14)'; g.lineWidth = 2; g.strokeRect(x, y, 214, 170);
-      g.fillStyle = '#14171a'; g.fillRect(x + 16, y + 18, 110, 10);
-      for (let b = 0; b < 5; b++) {
-        const bh = 18 + ((i * 7 + b * 13) % 70);
-        g.fillStyle = b === (i % 5) ? '#ff541e' : '#c9ced4';
-        g.fillRect(x + 20 + b * 36, y + 150 - bh, 24, bh);
-      }
+    spacing(g, 1); g.fillStyle = INK; g.font = `800 32px ${MONO}`; g.fillText('REPLACEMENT LEAD → QBR', 40, 62);
+    g.font = `800 22px ${MONO}`;
+    const pw = g.measureText('SIMULATION').width + 34;
+    g.fillStyle = OR; pillPath(g, w - 40 - pw, 34, pw, 40); g.fill();
+    g.fillStyle = '#ffffff'; g.fillText('SIMULATION', w - 40 - pw + 17, 62);
+    // pipeline chips
+    for (let i = 0; i < 4; i++) {
+      const x = 40 + i * 246, y = 92, cw = 206, ch = 54, done = step > i, active = step === i && t > 0;
+      g.fillStyle = done ? GR : active ? INK : '#ffffff'; pillPath(g, x, y, cw, ch); g.fill();
+      if (!done && !active) { g.strokeStyle = '#9aa2ab'; g.lineWidth = 3; pillPath(g, x + 1.5, y + 1.5, cw - 3, ch - 3); g.stroke(); }
+      g.font = `800 28px ${MONO}`; g.textAlign = 'center';
+      g.fillStyle = done || active ? '#ffffff' : '#4a525b'; g.fillText((done ? '✓ ' : '') + PIPE_STEPS[i], x + cw / 2, y + 37);
+      if (active) { const k = (t - PIPE.marks[i]) / (PIPE.marks[i + 1] - PIPE.marks[i]); g.fillStyle = OR; g.fillRect(x + 24, y + ch - 10, (cw - 48) * k, 4); }
+      if (i < 3) { g.fillStyle = step > i ? GR : '#b8bec6'; g.font = `800 26px ${MONO}`; g.fillText('→', x + cw + 20, y + 37); }
+      g.textAlign = 'left';
     }
-  });
-  {
-    const q = new THREE.Group();
-    q.position.set(6.16, 2.56, -7.6); q.rotation.y = -Math.PI / 2; scene.add(q);
-    rounded(2.0, 1.16, 0.06, 0.02, M.black, 0, 0, 0, { parent: q });
-    plane(1.92, 1.08, basic(qbrTex, { transparent: false, depthWrite: true, toneMapped: true, color: 0xcfcfcf }), 0, 0, 0.032, { parent: q });
+    // artifact panel
+    const P = { x: 40, y: 172, w: 560, h: 348 };
+    g.fillStyle = '#ffffff'; g.fillRect(P.x, P.y, P.w, P.h);
+    g.strokeStyle = 'rgba(20,23,26,0.12)'; g.lineWidth = 2; g.strokeRect(P.x, P.y, P.w, P.h);
+    g.font = `700 20px ${MONO}`;
+    if (t <= 0) {
+      g.fillStyle = '#8a9098'; g.textAlign = 'center'; g.font = `800 26px ${MONO}`; g.fillText('READY TO RUN', P.x + P.w / 2, P.y + P.h / 2 + 9); g.textAlign = 'left';
+    } else if (step === 0) {
+      for (let k = 0; k < 3; k++) {
+        if (t < 1 + 2 * k) break;
+        const x = P.x + 34 + k * 172, y = P.y + 34 + (k % 2) * 16;
+        g.fillStyle = '#ffffff'; g.fillRect(x, y, 150, 196); g.strokeStyle = '#d4d9de'; g.lineWidth = 3; g.strokeRect(x, y, 150, 196);
+        g.fillStyle = '#c9d3dc'; g.fillRect(x + 10, y + 10, 130, 140);
+        g.strokeStyle = '#4a525b'; g.lineWidth = 4; g.strokeRect(x + 28, y + 36, 94, 114);
+        g.lineWidth = 2; g.strokeRect(x + 33, y + 41, 41, 109); g.strokeRect(x + 76, y + 41, 41, 109);
+        g.fillStyle = MUTED; g.font = `700 16px ${MONO}`; g.fillText(`SITE PHOTO ${k + 1}`, x + 14, y + 178);
+      }
+      g.fillStyle = MUTED; g.font = `700 24px ${MONO}`; g.fillText('PHOTOS · REPORTS · SURVEYS IN', P.x + 34, P.y + P.h - 22);
+    } else if (step === 1) {
+      const ex = P.x + 50, ey = P.y + 36;
+      g.strokeStyle = INK; g.lineWidth = 5; g.strokeRect(ex, ey, 230, 232);
+      g.strokeStyle = MUTED; g.lineWidth = 2; g.strokeRect(ex + 8, ey + 30, 105, 200); g.strokeRect(ex + 117, ey + 30, 105, 200);
+      g.fillStyle = '#d9dde2'; g.fillRect(ex + 2, ey + 2, 226, 26);
+      g.strokeStyle = OR; g.fillStyle = OR; g.lineWidth = 3;
+      if (t >= 8) { g.beginPath(); g.moveTo(ex, ey + 262); g.lineTo(ex + 230, ey + 262); g.moveTo(ex, ey + 252); g.lineTo(ex, ey + 272); g.moveTo(ex + 230, ey + 252); g.lineTo(ex + 230, ey + 272); g.stroke(); }
+      if (t >= 11) { g.beginPath(); g.moveTo(ex + 256, ey); g.lineTo(ex + 256, ey + 232); g.moveTo(ex + 246, ey); g.lineTo(ex + 266, ey); g.moveTo(ex + 246, ey + 232); g.lineTo(ex + 266, ey + 232); g.stroke(); }
+      g.font = `800 22px ${MONO}`; g.fillStyle = INK;
+      const rows = [[8, 'W 1830 mm'], [11, 'H 2134 mm'], [13, 'QTY 2 LEAVES']];
+      rows.forEach(([at, s], i) => { if (t >= at) g.fillText(s, P.x + 360, P.y + 80 + i * 56); });
+    } else if (step === 2) {
+      const fx = P.x + 40, fy = P.y + 70;
+      g.fillStyle = OR; g.fillRect(fx, fy, 92, 26);
+      g.fillStyle = '#ffd9c7'; g.fillRect(fx, fy + 22, 210, 156); g.strokeStyle = OR; g.lineWidth = 3; g.strokeRect(fx, fy + 22, 210, 156);
+      g.fillStyle = INK; g.font = `800 34px ${MONO}`; g.fillText('LEAD', fx + 62, fy + 112);
+      g.font = `700 21px ${MONO}`;
+      ['FIELD PHOTOS', 'TAKE-OFF', 'SERVICE REPORT', 'SURVEY NOTES'].forEach((s, i) => {
+        const y = P.y + 64 + i * 52, ok = t >= 15 + 2 * i;
+        g.strokeStyle = ok ? GR : '#c9ced4'; g.lineWidth = 3; g.strokeRect(P.x + 290, y - 20, 26, 26);
+        if (ok) { g.strokeStyle = GR; g.lineWidth = 4; g.beginPath(); g.moveTo(P.x + 295, y - 7); g.lineTo(P.x + 302, y); g.lineTo(P.x + 312, y - 15); g.stroke(); }
+        g.fillStyle = ok ? INK : '#8a9098'; g.fillText(s, P.x + 328, y);
+      });
+      if (t >= 23) { g.fillStyle = GR; g.font = `800 24px ${MONO}`; g.fillText('PACKAGE READY ✓', P.x + 290, P.y + 300); }
+    } else {
+      const shown = step >= 4 ? 8 : Math.min(8, Math.floor((t - 24) / (7 / 8)));
+      for (let i = 0; i < 8; i++) {
+        const x = P.x + 22 + (i % 4) * 134, y = P.y + 22 + Math.floor(i / 4) * 128;
+        if (i >= shown) { g.strokeStyle = '#e3e6ea'; g.lineWidth = 2; g.setLineDash([6, 6]); g.strokeRect(x, y, 120, 110); g.setLineDash([]); continue; }
+        g.fillStyle = '#ffffff'; g.fillRect(x, y, 120, 110); g.strokeStyle = 'rgba(20,23,26,0.22)'; g.lineWidth = 2; g.strokeRect(x, y, 120, 110);
+        g.fillStyle = INK; g.fillRect(x + 10, y + 12, 62, 8);
+        for (let k = 0; k < 4; k++) {
+          const bh = 14 + ((i * 7 + k * 13) % 50);
+          g.fillStyle = k === i % 4 ? OR : '#c9ced4'; g.fillRect(x + 12 + k * 26, y + 98 - bh, 18, bh);
+        }
+      }
+      g.font = `800 26px ${MONO}`;
+      if (step >= 4) { g.fillStyle = GR; g.fillText('8-SLIDE DECK READY ✓', P.x + 22, P.y + P.h - 22); }
+      else { g.fillStyle = MUTED; g.fillText(`BUILDING SLIDE ${Math.min(8, shown + 1)} / 8`, P.x + 22, P.y + P.h - 22); }
+    }
+    // timers
+    const tl = Math.min(24, t), td = Math.max(0, Math.min(7, t - 24));
+    g.fillStyle = MUTED; g.font = `700 22px ${MONO}`; g.fillText('LEAD PACKAGE', 650, 206);
+    g.fillStyle = OR; g.font = `800 92px ${MONO}`; g.fillText(`0:${String(Math.floor(tl)).padStart(2, '0')}`, 646, 294);
+    g.fillStyle = MUTED; g.font = `600 18px ${MONO}`; g.fillText('TYPICAL 20–30 s', 650, 326);
+    g.fillStyle = MUTED; g.font = `700 22px ${MONO}`; g.fillText('QBR DECK · 8 SLIDES', 650, 386);
+    g.fillStyle = GR; g.font = `800 92px ${MONO}`; g.fillText(`0:${String(Math.floor(td)).padStart(2, '0')}`, 646, 474);
+    g.fillStyle = MUTED; g.font = `600 18px ${MONO}`; g.fillText('ABOUT 7 s', 650, 506);
+    g.fillStyle = MUTED; g.font = `600 18px ${MONO}`; g.fillText('Typical times from the tool · shown at 3× speed', 40, 556);
   }
+  const qbrTex = canvasTex(1024, 576, drawQbr);
+  const redrawQbr = () => { drawQbr(qbrTex.image.getContext('2d'), 1024, 576); qbrTex.needsUpdate = true; };
+  function startPipeline() {
+    QS.delay = 0;
+    if (S.motion && !CLEAN) { QS.phase = 'run'; QS.t = 0; QS.acc = 0; } else { QS.phase = 'done'; QS.t = PIPE.END; }
+    redrawQbr(); S.dirty = true;
+  }
+  function updatePipeline(dt) {
+    if (S.active === 4 && Math.abs(S.u - 4) < 0.03 && !QS.auto && QS.phase === 'idle') { QS.auto = true; QS.delay = 0.45; } // first visit runs by itself
+    if (QS.delay > 0) { QS.delay -= dt; if (QS.delay <= 0) startPipeline(); return true; }
+    if (QS.phase !== 'run') return false;
+    if (!S.motion) { QS.t = PIPE.END; QS.phase = 'done'; redrawQbr(); return true; }
+    QS.t = Math.min(PIPE.END, QS.t + dt * PIPE.SPEED);
+    QS.acc += dt;
+    if (QS.t >= PIPE.END) { QS.phase = 'done'; redrawQbr(); }
+    else if (QS.acc >= 1 / 30) { QS.acc = 0; redrawQbr(); }
+    return true;
+  }
+  const qbrScreen = new THREE.Group();
+  qbrScreen.position.set(6.16, 2.56, -7.6); qbrScreen.rotation.y = -Math.PI / 2; scene.add(qbrScreen);
+  rounded(2.0, 1.16, 0.06, 0.02, M.black, 0, 0, 0, { parent: qbrScreen });
+  plane(1.92, 1.08, basic(qbrTex, { transparent: false, depthWrite: true, toneMapped: true, color: 0xcfcfcf }), 0, 0, 0.032, { parent: qbrScreen });
+  exhibits[4] = { st: QS, start: startPipeline, idle: 'Run the pipeline', anchor: (v) => qbrScreen.localToWorld(v.set(0, -0.66, 0.05)) };
   contact(1.6, 3.8, 5.6, -7.6, 0.28);
 
   /* ---------- stop 4: plant scale model in a vitrine ---------- */
@@ -1366,12 +1467,13 @@ async function init() {
     { p: [1.3, 1.62, 3.75], t: [0.95, 1.8, -6] },    // entrance: just outside the sensor zone, door closed
     { p: [0.5, 1.62, -1.0], t: [2.8, 0.85, -3.8] },  // featured display
     { p: [-1.87, 1.62, -2.98], t: [-3.9, 1.12, -4.6] }, // kiosk: close enough to read the race, base still in frame
-    { p: [1.9, 1.62, -6.4], t: [5.8, 1.75, -7.7] },  // shelf
+    { p: [1.33, 1.62, -6.21], t: [5.8, 1.6, -7.7] }, // shelf: screen and the whole shelf in frame
     { p: [-0.6, 1.62, -7.7], t: [0.8, 1.0, -11.0] }, // plant model
     { p: [-1.9, 1.62, -9.6], t: [-3.4, 1.55, -13.0] }, // checkout
   ].slice(0, N);
   if (isSmall()) { KF[1].p = [0, 1.62, 5.6]; KF[1].t = [0, 1.85, -6]; } // portrait: the whole header fits only from further back
   if (isSmall()) { KF[3].p = [-2.35, 1.62, -3.35]; KF[3].t = [-3.9, 1.32, -4.6]; } // portrait: step up to the kiosk screen
+  if (isSmall()) { KF[4].p = [3.0, 1.62, -7.25]; KF[4].t = [6.1, 2.15, -7.6]; }     // portrait: close enough to read the QBR screen
   const v3 = (a) => new THREE.Vector3(...a);
   const posCurve = new THREE.CatmullRomCurve3(KF.map((k) => v3(k.p)), false, 'centripetal');
   const tgtCurve = new THREE.CatmullRomCurve3(KF.map((k) => v3(k.t)), false, 'centripetal');
@@ -1446,8 +1548,8 @@ async function init() {
   }
 
   function updateHud() {
-    const atKiosk = !CLEAN && Math.abs(S.u - 3) < 0.45;
-    const show = S.ready && (S.u < 2.6 || atKiosk);
+    const atKiosk = !CLEAN && Math.abs(S.u - 3) < 0.45, atShelf = !CLEAN && Math.abs(S.u - 4) < 0.45;
+    const show = S.ready && (S.u < 2.6 || atKiosk || atShelf);
     hud.classList.toggle('is-visible', show);
     if (!show) return;
     const inDoorway = Math.abs(camera.position.z + 0.15) < 1.0;
@@ -1456,6 +1558,11 @@ async function init() {
       if (KS.phase === 'run') { txt = `Simulating · ${Math.floor(KS.t)} s of 15 · 3× speed`; st = 'opening'; }
       else if (KS.phase === 'done') { txt = '15 s vs ~3 h · manual still on door 1'; st = 'hold'; }
       else { txt = 'Audit race · simulation'; st = 'idle'; }
+    }
+    else if (atShelf) {
+      if (QS.phase === 'run') { txt = `Simulating · ${PIPE_SAY[Math.min(3, pipeStep(QS.t))]} · 3× speed`; st = 'opening'; }
+      else if (QS.phase === 'done') { txt = 'Lead package ~24 s · QBR deck ~7 s'; st = 'hold'; }
+      else { txt = 'Lead → QBR pipeline · simulation'; st = 'idle'; }
     }
     else if (S.door <= 0 && !S.detect) { txt = 'Door closed · sensor watching'; st = 'idle'; }
     else if (S.detect && S.door < 1) { txt = 'Motion detected · opening'; st = 'opening'; }
@@ -1514,7 +1621,7 @@ async function init() {
     updateDoor(dt, now);
     const prevXr = XR.on;
     updateXray(dt);
-    const racing = updateKiosk(dt);
+    const racing = updateKiosk(dt) + updatePipeline(dt) > 0; // both always tick
     const turning = S.motion && S.u > 1.5 && S.u < 3.5;
     const pulsing = S.motion && S.detect && S.u < 2.6;
     const moving = Math.abs(S.u - prevU) > 1e-6 || S.door !== prevDoor || framing || XR.on !== prevXr;

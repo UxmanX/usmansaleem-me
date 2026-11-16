@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Walk in · Usman Saleem</title>
+  <meta name="description" content="Walk into Usman Saleem's portfolio: a mechanical engineer who coordinates 50+ concurrent automatic-entrance projects and builds the automation tools behind them.">
+  <link rel="canonical" href="https://usmansaleem.me/walk-in/">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Walk in · Usman Saleem">
+  <meta property="og:description" content="A short walk through a scale-model shop: automatic-entrance projects, the automation tools behind them, and the résumé at checkout.">
+  <meta property="og:url" content="https://usmansaleem.me/walk-in/">
+  <meta property="og:image" content="https://usmansaleem.me/walk-in/assets/og-walk-in.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="preload" as="image" href="assets/poster.v1.jpg">
+  <meta name="theme-color" content="#14171a">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='24' fill='%23ff541e'/><text x='50' y='66' font-family='Arial' font-weight='800' font-size='46' text-anchor='middle' fill='white'>US</text></svg>">
+  <script>document.documentElement.classList.add('js');</script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="walk.css?v=1">
+  <script type="importmap">
+    { "imports": { "three": "./vendor/three/build/three.module.js", "three/addons/": "./vendor/three/examples/jsm/" } }
+  </script>
+  <link rel="modulepreload" href="vendor/three/build/three.core.js">
+  <link rel="modulepreload" href="vendor/three/build/three.module.js">
+</head>
+<body>
+  <a class="wk-skiplink" href="#stop-checkout" data-jump>Skip to the summary</a>
+
+  <header class="wk-bar">
+    <a class="wk-mark" href="#stop-street" data-jump><span class="wk-mark-dot" aria-hidden="true"></span>Usman Saleem <span class="wk-mark-sub">walk-in edition</span></a>
+    <div class="wk-actions">
+      <button id="motion-toggle" class="wk-btn wk-motion" type="button" aria-pressed="true" aria-label="Camera motion"><span class="wk-ico" aria-hidden="true">◐</span><span class="wk-lbl" aria-hidden="true">Motion <span data-state>on</span></span></button>
+      <a class="wk-btn" href="#stop-checkout" data-jump>Skip the walk</a>
+      <a class="wk-btn wk-hide-sm" href="../assets/Usman_Saleem_MEng_Resume.pdf" target="_blank" rel="noopener">Résumé</a>
+      <a class="wk-btn wk-exit" href="../" aria-label="Exit to the classic site"><b>EXIT</b><span class="wk-exit-label">Classic site</span></a>
+    </div>
+  </header>
+
+  <div class="wk-stage" aria-hidden="true">
+    <img class="wk-poster" src="assets/poster.v1.jpg" alt="" onerror="this.remove()">
+    <canvas id="wk-canvas"></canvas>
+  </div>
+
+  <div class="wk-hud" id="wk-hud" aria-hidden="true"><span class="wk-hud-led"></span><span id="wk-hud-text">Building the shop…</span><em>illustrative</em></div>
+
+  <nav class="wk-stops" aria-label="Stops on the walk">
+    <ol>
+      <li><a href="#stop-street"><span>Street</span></a></li>
+      <li><a href="#stop-door"><span>Entrance</span></a></li>
+      <li><a href="#stop-featured"><span>Featured display</span></a></li>
+      <li><a href="#stop-kiosk"><span>Audit kiosk</span></a></li>
+      <li><a href="#stop-shelf"><span>Key-accounts shelf</span></a></li>
+      <li><a href="#stop-mill"><span>Plant model</span></a></li>
+      <li><a href="#stop-checkout"><span>Checkout</span></a></li>
+    </ol>
+  </nav>
+
+  <main>
+    <section class="stop" id="stop-street" aria-labelledby="h-street">
+      <div class="card card-intro">
+        <p class="eyebrow">Mechanical Engineer (MEng) · Key Accounts Project Coordinator</p>
+        <h1 id="h-street" tabindex="-1">Usman Saleem</h1>
+        <p class="lead">I coordinate <strong>50+ concurrent</strong> automatic-entrance replacement projects at ASSA ABLOY Entrance Systems in Mississauga, and I build the software that keeps that pace manageable, like a store audit that went from <strong>3 hours to 15 seconds</strong>.</p>
+        <p class="hint" aria-hidden="true">Scroll to walk in <span>↓</span></p>
+        <div class="card-actions">
+          <a class="wk-btn wk-btn-dark" href="#stop-checkout" data-jump>Skip the walk</a>
+          <a class="wk-btn" href="../assets/Usman_Saleem_MEng_Resume.pdf" target="_blank" rel="noopener">Résumé (PDF)</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="stop" id="stop-door" aria-labelledby="h-door">
+      <div class="card">
+        <p class="eyebrow">The entrance</p>
+        <h2 id="h-door" tabindex="-1">It opens when it senses you.</h2>
+        <p>Automatic sliding entrances like this one are my day job: replacements and modernizations for national retail and commercial accounts, from technician take-offs and drawings to quotes, site readiness and change orders.</p>
+        <p class="fine">Linger in the doorway and it holds open. The sensor zone is illustrative, not a safety specification.</p>
+      </div>
+    </section>
+
+    <section class="stop" id="stop-featured" aria-labelledby="h-featured">
+      <div class="card">
+        <p class="eyebrow">Featured display · 3D visualization</p>
+        <h2 id="h-featured" tabindex="-1">SL500 3D Component &amp; Retrofit Explorer</h2>
+        <p>An interactive three.js model of a commercial sliding-door system, built from installation documentation. Estimators and facility managers can open the header, explode 13 sub-assemblies, and see how a modular retrofit kit fits existing framing without a full tear-out.</p>
+        <ul class="tags"><li>Three.js &amp; WebGL</li><li>Exploded cutaway</li><li>Retrofit planning</li></ul>
+        <a class="card-link" href="../cad-modal.html" target="_blank" rel="noopener">Open the 3D model ↗</a>
+      </div>
+    </section>
+
+    <section class="stop" id="stop-kiosk" aria-labelledby="h-kiosk">
+      <div class="card">
+        <p class="sale-tag"><s>Was 3 hrs</s> Now 15 sec</p>
+        <p class="eyebrow">Kiosk · Facility audit &amp; estimating</p>
+        <h2 id="h-kiosk" tabindex="-1">Installation &amp; Facility Insight Collector</h2>
+        <p>A multi-threaded desktop platform that replaces a 3-hour manual service-portal crawl for a 15-door store. It untangles invoice ledgers, separates emergency calls from planned maintenance, pulls door conditions and take-off dimensions from technician notes, calculates replacement ROI and drafts review-ready proposals.</p>
+        <ul class="tags"><li>Python 3.12 &amp; PySide6</li><li>PowerShell RunspacePool</li><li>SSRS &amp; OpenXML</li></ul>
+      </div>
+    </section>
+
+    <section class="stop" id="stop-shelf" aria-labelledby="h-shelf">
+      <div class="card">
+        <p class="eyebrow">Shelf · National key accounts</p>
+        <h2 id="h-shelf" tabindex="-1">Take-Off Replacement Lead Assistant &amp; QBR Platform</h2>
+        <p>Used across 16+ national retail and commercial accounts. It assembles replacement-lead packages from reports, surveys and field photos in 20–30 seconds, and builds an 8-slide executive QBR deck in about 7 seconds, with Excel workbooks and repeat-callback analytics.</p>
+        <ul class="tags"><li>Dynamics 365</li><li>Baan IV ERP &amp; SQL</li><li>PowerPoint &amp; Outlook COM</li></ul>
+      </div>
+    </section>
+
+    <section class="stop" id="stop-mill" aria-labelledby="h-mill">
+      <div class="card">
+        <p class="eyebrow">Scale model · Plant commissioning</p>
+        <h2 id="h-mill" tabindex="-1">Flour-milling &amp; pasta plant, Karachi</h2>
+        <p>With Bühler Group, I supported installation, erection and commissioning of a multi-line food-processing plant: coordinating about 60 workers and technicians, checking work against drawings and PFDs, leveling machinery and tracing faults to their root cause.</p>
+        <ul class="tags"><li>Plant commissioning</li><li>AutoCAD &amp; PFDs</li><li>Root-cause troubleshooting</li></ul>
+      </div>
+    </section>
+
+    <section class="stop stop-checkout" id="stop-checkout" aria-labelledby="h-checkout">
+      <div class="card card-receipt">
+        <h2 id="h-checkout" class="visually-hidden" tabindex="-1">Checkout: summary and contact</h2>
+        <div class="receipt">
+          <p class="r-center r-title">USMAN SALEEM</p>
+          <p class="r-center">Mechanical Engineer (MEng)<br>Key Accounts Project Coordinator<br>Mississauga, Ontario</p>
+          <hr>
+          <dl class="r-lines">
+            <div><dt>Projects in flight</dt><dd>50+</dd></div>
+            <div><dt>Store audit</dt><dd>3 h → 15 s</dd></div>
+            <div><dt>QBR deck, 8 slides</dt><dd>~7 s</dd></div>
+            <div><dt>Accounts on QBR tool</dt><dd>16+</dd></div>
+            <div><dt>Site crew coordinated</dt><dd>~60</dd></div>
+          </dl>
+          <hr>
+          <p>MEng Mechanical · University of Ottawa<br>B.Sc. Mechanical · UET Lahore</p>
+          <p class="r-route"><abbr title="Lahore, Ottawa, Mississauga">LHE → YOW → YYZ</abbr></p>
+          <hr>
+          <dl class="r-lines r-total">
+            <div><dt>Time saved per audit</dt><dd>2:59:45</dd></div>
+          </dl>
+          <p class="r-center r-thanks">THANK YOU FOR VISITING</p>
+          <div class="r-barcode" aria-hidden="true"></div>
+        </div>
+        <div class="card-actions receipt-actions">
+          <a class="wk-btn wk-btn-dark" href="../assets/Usman_Saleem_MEng_Resume.pdf" target="_blank" rel="noopener">Take the receipt · Résumé PDF</a>
+          <a class="wk-btn" href="mailto:usman.saleem@uottawa.ca">Ring the bell · Email</a>
+          <a class="wk-btn" href="https://www.linkedin.com/in/usmansal" target="_blank" rel="noopener">LinkedIn</a>
+          <a class="wk-btn wk-exit" href="../" aria-label="Exit to the classic site"><b>EXIT</b><span class="wk-exit-label">Classic site</span></a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <noscript><p class="wk-noscript">The 3D walk needs JavaScript. Everything above is still readable.</p></noscript>
+  <script type="module" src="walk.js?v=1"></script>
+</body>
+</html>

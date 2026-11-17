@@ -1517,7 +1517,6 @@ async function init() {
 
   /* ---------- stop 5: checkout, credentials wall, exit ---------- */
   const lateTex = []; // [url, apply]: textures fetched after the first frame
-  let me = null; // Usman behind the counter: a photo cut-out that turns to face you
   let updatePrint = () => false;
   {
     const co = new THREE.Group();
@@ -1565,21 +1564,6 @@ async function init() {
       return true;
     };
     add(new THREE.Mesh(new THREE.SphereGeometry(0.07, 24, 12, 0, Math.PI * 2, 0, Math.PI / 2), M.chrome), co).position.set(-0.7, 1.05, 0.12);
-    // Usman behind the counter, from his professional headshot. The photo stops at mid-chest, so he sits close
-    // behind the quartz (chest 5 cm off its back edge, crown at 1.495 m): from anywhere in front the counter's edge
-    // hides everything below the lapels (photo end 1.5-2 cm under the sight line), the one view the photo honestly gives. He turns to face you about the
-    // vertical only. An empty stand-in holds the place until the photo arrives after the first frame.
-    {
-      const blank = canvasTex(4, 4, () => {});
-      const mat = new THREE.MeshStandardMaterial({ map: blank, emissiveMap: blank, color: 0xfff3e6, emissive: 0xffe2c4, emissiveIntensity: 0.3,
-        roughness: 0.9, metalness: 0, envMapIntensity: 0.25, alphaToCoverage: true });
-      const geo = new THREE.PlaneGeometry(0.496, 0.506); geo.translate(-0.012, 0, 0); // his head on the turning axis
-      me = new THREE.Mesh(geo, mat);
-      co.updateMatrixWorld(true);
-      co.localToWorld(me.position.set(0.12, 1.495 + 0.007 - 0.253, -0.475));
-      scene.add(me);
-      lateTex.push(['assets/usman-counter.v2.webp', (t) => { blank.dispose(); mat.map = t; mat.emissiveMap = t; }]);
-    }
     contact(3.4, 1.8, -2.9, -11.4, 0.3);
   }
   // the real diplomas, in the order of the route above them: UET Lahore (B.Sc.), then uOttawa (MEng).
@@ -2350,7 +2334,7 @@ async function init() {
   addEventListener('keyup', (e) => { if (e.key === 'Shift') F.run = false; const k = KEYMAP[e.code]; if (k) F.keys.delete(k); });
   addEventListener('blur', () => { F.keys.clear(); F.run = false; });
 
-  if (window.__walk) Object.assign(S, { cam: camera, F, pick, me: () => me }); // test hooks, ?debug only
+  if (window.__walk) Object.assign(S, { cam: camera, F, pick }); // test hooks, ?debug only
   // switching modes
   const freeEl = $('.wk-free'), freeBtns = $$('[data-free-toggle]');
   function syncFreeUi() {
@@ -2510,13 +2494,12 @@ async function init() {
     updateTags();
     updateRunBtn();
     if (S.door !== prevDoor || S.frames === 0) renderer.shadowMap.needsUpdate = true;
-    if (me) me.rotation.y = Math.atan2(camera.position.x - me.position.x, camera.position.z - me.position.z);
     renderer.render(scene, camera);
     renderDetail();
     S.frames++;
     if (!S.ready) {
       performance.mark('wk:frame1');
-      // the diplomas and the cut-out are not needed for the first frame: fetch them now
+      // the diplomas are not needed for the first frame: fetch them now
       for (const [url, apply] of lateTex) {
         texLoader.load(url, (t) => { t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = aniso; apply(t); S.dirty = true; });
       }

@@ -12,6 +12,7 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
+import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js'; // already loaded by GLTFLoader
 
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
@@ -28,6 +29,8 @@ const S = {
   viewY: 0, viewYCur: 0, announce: false,
 };
 if (/[?&]debug\b/.test(location.search)) window.__walk = S; // test hook: only with ?debug in the URL
+// Free walk: an optional mode where you look and walk around yourself; the guided tour stays the default
+const EX = { on: false, near: -1, enter: null, exit: null, goStop: null };
 
 /* ------------------------------------------------------------------ DOM: stops, cards, controls */
 const sections = $$('main > .stop');
@@ -86,6 +89,7 @@ const nextBtn = $('.dock-next');
 const infoBtn = $('.dock-info');
 const live = $('#wk-live');
 const NAMES = navLinks.map((a) => a.textContent.trim());
+const STOP_NAMES = NAMES; // init() has its own NAMES (texture files)
 const TITLES = sections.map((s) => s.querySelector('h1, h2')?.textContent.trim() || '');
 const coarse = matchMedia('(pointer: coarse)');
 let walked = localStorage.getItem('walkin-walked') === '1';
@@ -171,6 +175,7 @@ $('main').addEventListener('click', (e) => {
   if (open) setOpen(open, false);
 });
 addEventListener('keydown', (e) => {
+  if (EX.on) return; // free walk has its own keys
   if (e.key === 'Escape') {
     const open = $('.card.is-open');
     if (open) { setOpen(open, false); if (isSmall()) infoBtn.focus(); }
@@ -261,6 +266,10 @@ $$('a[data-jump], .wk-stops a').forEach((a) => a.addEventListener('click', (e) =
   const i = sections.findIndex((s) => '#' + s.id === a.getAttribute('href'));
   if (i < 0) return;
   e.preventDefault();
+  if (EX.on) { // free walk: the stop list takes you there on foot; anything else goes back to the tour at that stop
+    if (a.closest('.wk-stops')) EX.goStop?.(i); else EX.exit?.(i);
+    return;
+  }
   jumpTo(i);
 }));
 // Keyboard users tabbing into a hidden card: bring its stop into view.
@@ -369,7 +378,7 @@ async function init() {
   } else scene.background = new THREE.Color(0x4f5670);
   pmrem.dispose();
   scene.environment = skyEnv;
-  scene.fog = new THREE.Fog(0x6f6577, 36, 120); // matches the dusk horizon at this background intensity
+  scene.fog = new THREE.Fog(0x6f6577, 26, 100); // matches the dusk horizon at this background intensity; hazes the street's far ends
 
   /* ---------- helpers ---------- */
   function canvasTex(w, h, draw) {
@@ -549,18 +558,90 @@ async function init() {
   scene.add(canopyLight);
 
   /* ---------- street ---------- */
-  block(40, 0.15, 6.4, M.pave, 0, -0.075, 3.2, { cast: false });
-  block(40, 0.16, 0.3, M.concrete, 0, -0.07, 6.55, { cast: false });
-  block(40, 0.1, 22, M.asphalt, 0, -0.2, 17.7, { cast: false });
-  for (let x = -18; x <= 18; x += 4.5) block(2.2, 0.01, 0.13, M.paint, x, -0.146, 13.4, { cast: false });
-  block(40, 0.01, 0.1, M.paint, 0, -0.146, 7.5, { cast: false });
+  block(160, 0.15, 6.4, M.pave, 0, -0.075, 3.2, { cast: false });
+  block(160, 0.16, 0.3, M.concrete, 0, -0.07, 6.55, { cast: false });
+  block(160, 0.1, 22, M.asphalt, 0, -0.2, 17.7, { cast: false });
+  {
+    const dashes = new THREE.InstancedMesh(new THREE.BoxGeometry(2.2, 0.01, 0.13), M.paint, 33);
+    for (let k = 0; k < 33; k++) dashes.setMatrixAt(k, new THREE.Matrix4().makeTranslation(-72 + k * 4.5, -0.146, 13.4));
+    dashes.receiveShadow = true; scene.add(dashes);
+  }
+  block(160, 0.01, 0.1, M.paint, 0, -0.146, 7.5, { cast: false });
+  block(160, 0.01, 0.1, M.paint, 0, -0.146, 19.3, { cast: false });
+  block(160, 0.16, 0.3, M.concrete, 0, -0.07, 20.25, { cast: false });
+  block(160, 0.15, 4.6, M.pave, 0, -0.075, 22.7, { cast: false });
 
   // neighbouring buildings: brick on the left, painted render on the right, real windows
+  // lit glass on the neighbours and down the street shows a room behind it, not a flat glowing panel: a shop with
+  // shelving, a counter and pendant lights, and flats with curtains and a window bar (drawn without rnd(), so the
+  // scene's random choices stay as they were)
+  M.shopLit.emissiveMap = canvasTex(512, 256, (g, w, h) => {
+    const bg = g.createLinearGradient(0, 0, 0, h);
+    bg.addColorStop(0, '#fff4e2'); bg.addColorStop(0.5, '#efcfa4'); bg.addColorStop(1, '#94683f');
+    g.fillStyle = bg; g.fillRect(0, 0, w, h);
+    for (let s = 0; s < 3; s++) {
+      const y = 78 + s * 40;
+      for (let x = 22, k = 0; x < w - 30; k++) {
+        const bw = 7 + ((k * 5) % 6), bh = 12 + ((k * 7) % 9);
+        g.fillStyle = `hsla(${(k * 47 + s * 90) % 360}, 32%, ${38 + ((k * 13) % 22)}%, 0.6)`;
+        g.fillRect(x, y - bh, bw, bh); x += bw + 3 + ((k * 3) % 4);
+      }
+      g.fillStyle = 'rgba(64, 40, 24, 0.6)'; g.fillRect(14, y, w - 28, 5);
+    }
+    g.fillStyle = 'rgba(46, 30, 18, 0.82)'; g.fillRect(w * 0.56, h * 0.7, w * 0.34, h * 0.3);
+    g.fillStyle = 'rgba(60, 40, 25, 0.3)'; g.fillRect(0, h * 0.88, w, h * 0.12);
+    g.fillStyle = '#fffdf2';
+    for (let x = 46; x < w; x += 104) { g.beginPath(); g.ellipse(x, 16, 20, 5, 0, 0, Math.PI * 2); g.fill(); }
+  });
+  M.shopLit.emissiveIntensity = 0.42;
+  M.winLit.emissiveMap = canvasTex(128, 160, (g, w, h) => {
+    const bg = g.createRadialGradient(w / 2, h * 0.18, 4, w / 2, h * 0.3, h * 0.9);
+    bg.addColorStop(0, '#ffffff'); bg.addColorStop(1, '#a87a50');
+    g.fillStyle = bg; g.fillRect(0, 0, w, h);
+    g.fillStyle = 'rgba(110, 62, 34, 0.6)'; g.fillRect(0, 0, 24, h); g.fillRect(w - 24, 0, 24, h);
+    g.fillStyle = '#17130f'; g.fillRect(w / 2 - 3, 0, 6, h); g.fillRect(0, h * 0.34 - 3, w, 6);
+  });
+  M.winLit.emissiveIntensity = 0.55;
+  // second looks, so a street of them doesn't repeat: a cafe (pendants, chalkboard, counter, tables) and flats with blinds
+  const cafeInside = canvasTex(512, 256, (g, w, h) => {
+    const bg = g.createLinearGradient(0, 0, 0, h);
+    bg.addColorStop(0, '#ffe4bc'); bg.addColorStop(0.55, '#dba66c'); bg.addColorStop(1, '#6c4427');
+    g.fillStyle = bg; g.fillRect(0, 0, w, h);
+    g.fillStyle = 'rgba(28, 30, 28, 0.85)'; g.fillRect(28, 34, 128, 70);                       // chalkboard menu
+    g.fillStyle = 'rgba(240, 236, 220, 0.7)';
+    for (let r = 0; r < 4; r++) g.fillRect(40, 46 + r * 14, 60 + ((r * 29) % 40), 4);
+    g.strokeStyle = 'rgba(30, 20, 12, 0.7)'; g.lineWidth = 2;
+    for (let x = 230; x < w; x += 86) {                                                         // pendants
+      g.beginPath(); g.moveTo(x, 0); g.lineTo(x, 56); g.stroke();
+      g.fillStyle = '#fffbe8'; g.beginPath(); g.ellipse(x, 62, 15, 8, 0, 0, Math.PI * 2); g.fill();
+    }
+    g.fillStyle = 'rgba(44, 28, 16, 0.88)'; g.fillRect(0, h * 0.6, 168, h * 0.4);               // counter + machine
+    g.fillStyle = 'rgba(120, 120, 118, 0.85)'; g.fillRect(24, h * 0.6 - 26, 52, 26);
+    g.fillStyle = 'rgba(40, 26, 15, 0.85)';
+    for (let k = 0; k < 3; k++) {                                                               // tables and chairs
+      const x = 236 + k * 96, y = h * 0.74;
+      g.beginPath(); g.ellipse(x, y, 30, 6, 0, 0, Math.PI * 2); g.fill();
+      g.fillRect(x - 2, y, 4, h - y - 12);
+      g.fillRect(x - 46, y - 14, 5, h - y + 2); g.fillRect(x - 46, y + 8, 18, 4);
+      g.fillRect(x + 41, y - 14, 5, h - y + 2); g.fillRect(x + 28, y + 8, 18, 4);
+    }
+    g.fillStyle = 'rgba(50, 32, 20, 0.35)'; g.fillRect(0, h * 0.9, w, h * 0.1);
+  });
+  const blindsLit = canvasTex(128, 160, (g, w, h) => {
+    const bg = g.createLinearGradient(0, 0, 0, h);
+    bg.addColorStop(0, '#fff6e6'); bg.addColorStop(1, '#b8875a');
+    g.fillStyle = bg; g.fillRect(0, 0, w, h);
+    g.fillStyle = 'rgba(90, 60, 36, 0.4)';
+    for (let y = 4; y < h * 0.62; y += 8) g.fillRect(0, y, w, 3);
+    g.fillStyle = 'rgba(70, 46, 28, 0.55)'; g.fillRect(0, h * 0.62, w, 5);
+    g.fillStyle = '#17130f'; g.fillRect(w / 2 - 3, 0, 6, h);
+  });
+  const shopLitCafe = M.shopLit.clone(); shopLitCafe.emissiveMap = cafeInside;
   function neighbour(cx, w, h, front, wallMat, sign) {
     block(w, h, 10, wallMat, cx, h / 2, front - 5);
     block(w + 0.2, 0.14, 0.4, M.concrete, cx, h + 0.07, front - 0.1);
     block(w - 1.3, 2.62, 0.04, M.steel, cx, 1.4, front + 0.005, { cast: false });
-    block(w - 1.4, 2.5, 0.05, sign ? M.shopLit : M.winGlass, cx, 1.4, front + 0.015, { cast: false });
+    block(w - 1.4, 2.5, 0.05, sign ? shopLitCafe : M.shopLit, cx, 1.4, front + 0.015, { cast: false });
     if (sign) {
       block(w - 1.2, 0.5, 0.1, M.panel, cx, 2.95, front + 0.05);
       plane(Math.min(3.4, w - 2), 0.3, new THREE.MeshStandardMaterial({
@@ -583,6 +664,104 @@ async function init() {
   });
   neighbour(-10.9, 8.2, 7.4, -0.7, M.brickN, cafeSign);
   neighbour(10.8, 8.0, 5.8, -0.2, M.renderN, null);
+
+  // the rest of the street, so a free walk never reaches the edge of the world: buildings across the road and down
+  // the block both ways, closed off at each end. Walls merge into one mesh per finish; windows, shopfronts and lamps
+  // are instanced, so the whole backdrop costs about a dozen draw calls and casts no shadows. Own seed: the shop's
+  // random choices stay exactly as they were.
+  {
+    let s2 = 11;
+    const r2 = () => (s2 = (s2 * 16807) % 2147483647) / 2147483647, R = (a, b) => a + (b - a) * r2();
+    const walls = { brick: [], render: [] }, P = { trim: [], frame: [], glass: [], lit: [], litB: [], shopLit: [], shopLitB: [], band: [], awn: [] };
+    const tint = { lit: [], litB: [], shopLit: [], shopLitB: [], awn: [] }, col = new THREE.Color();
+    const LIT = [0xfff1d6, 0xffd9a8, 0xffc98a, 0xd8e4ff, 0x9a8a78, 0xfff6e8], AWN = [0x7a2e2a, 0x2f4a3a, 0x2b3a55, 0x8a6a3a, 0x3b3b3e];
+    const q = new THREE.Quaternion(), upV = new THREE.Vector3(0, 1, 0), pv = new THREE.Vector3(), sv = new THREE.Vector3();
+    // a box on a facade: u along the front, y up, out in front of it; the facade's front centre is (fx, fz), facing (nx, nz)
+    const tilt = new THREE.Quaternion(), xV = new THREE.Vector3(1, 0, 0);
+    const put = (list, fx, fz, nx, nz, u, y, out, w, h, d, lean = 0) => {
+      pv.set(fx + nz * u + nx * out, y, fz - nx * u + nz * out);
+      q.setFromAxisAngle(upV, Math.atan2(nx, nz));
+      if (lean) q.multiply(tilt.setFromAxisAngle(xV, lean));
+      list.push(new THREE.Matrix4().compose(pv, q, sv.set(w, h, d)));
+    };
+    function bldg(cx, cz, w, d, h, nx, nz, finish) {
+      const bx = cx - (nx * d) / 2, bz = cz - (nz * d) / 2;
+      const geo = new THREE.BoxGeometry(nx ? d : w, h, nx ? w : d);
+      boxUV(geo, (finish === 'brick' ? M.brickN : M.renderN).userData.tile, bx, h / 2, bz);
+      walls[finish].push(geo.translate(bx, h / 2, bz));
+      put(P.trim, cx, cz, nx, nz, 0, h + 0.14, 0.12, w + 0.3, 0.28, 0.5);                  // parapet coping
+      put(P.frame, cx, cz, nx, nz, 0, 1.45, 0.02, w - 1.44, 2.76, 0.05);                   // shopfront
+      if (r2() < 0.75) { const k = r2() < 0.4 ? 'shopLitB' : 'shopLit'; put(P[k], cx, cz, nx, nz, 0, 1.45, 0.05, w - 1.6, 2.6, 0.04); tint[k].push(LIT[Math.floor(r2() * 4)]); }
+      else put(P.glass, cx, cz, nx, nz, 0, 1.45, 0.05, w - 1.6, 2.6, 0.04);
+      const bays = Math.max(2, Math.round((w - 1.6) / 1.8));                               // mullions
+      for (let b = 1; b < bays; b++) put(P.frame, cx, cz, nx, nz, -(w - 1.6) / 2 + (b * (w - 1.6)) / bays, 1.45, 0.08, 0.07, 2.6, 0.05);
+      put(P.band, cx, cz, nx, nz, 0, 3.15, 0.08, w - 1.1, 0.55, 0.14);                     // fascia
+      if (r2() < 0.45) { put(P.awn, cx, cz, nx, nz, 0, 2.62, 0.5, w - 1.4, 0.05, 1.05, 0.36); tint.awn.push(AWN[Math.floor(r2() * AWN.length)]); }
+      for (let y = 3.6; y < h - 1.4; y += 3.1) put(P.trim, cx, cz, nx, nz, 0, y, 0.05, w, 0.12, 0.1); // floor bands
+      const cols = Math.max(1, Math.floor((w - 0.8) / 2.6));
+      for (let y = 4.75; y + 1 < h - 0.5; y += 3.1) {
+        for (let j = 0; j < cols; j++) {
+          const u = -w / 2 + ((j + 0.5) * w) / cols;
+          put(P.frame, cx, cz, nx, nz, u, y, 0.01, 1.42, 1.82, 0.05);
+          if (r2() < 0.36) { const k = r2() < 0.45 ? 'litB' : 'lit'; put(P[k], cx, cz, nx, nz, u, y, 0.035, 1.26, 1.66, 0.04); tint[k].push(LIT[Math.floor(r2() * LIT.length)]); }
+          else put(P.glass, cx, cz, nx, nz, u, y, 0.035, 1.26, 1.66, 0.04);
+          put(P.trim, cx, cz, nx, nz, u, y - 0.96, 0.08, 1.56, 0.08, 0.22);                // sill
+        }
+      }
+    }
+    const row = (x0, x1, fz, nz, hMin, hMax) => {
+      for (let x = x0; x1 - x > 4;) {
+        let w = R(6.5, 12);
+        if (x1 - x - w < 5) w = x1 - x; // no slivers at the end of a row
+        bldg(x + w / 2, fz, w, 10, R(hMin, hMax), 0, nz, r2() < 0.5 ? 'brick' : 'render');
+        x += w;
+      }
+    };
+    row(-70.6, -15, 0, 1, 6, 12);       // our side, beyond the cafe
+    row(14.8, 70.6, 0, 1, 6, 12);       // our side, beyond the neighbour on the right
+    row(-70.6, 70.6, 25, -1, 7, 16);    // across the road
+    bldg(-71, 7.5, 36, 10, 17, 1, 0, 'brick');   // the street's two ends
+    bldg(71, 7.5, 36, 10, 15, -1, 0, 'render');
+    // the backdrop is lit by the sky and the moon only. The shop's spots and point lights can't reach 20-70 m down the
+    // street, so the backdrop's own copies of its materials leave them out of the per-pixel lighting (that work was
+    // most of what looking down the street cost on a phone). Shared materials on the shop and neighbours are untouched.
+    const skyOnly = (prm) => { prm.numPointLights = 0; prm.numSpotLights = 0; };
+    const farMat = (m, key) => { const f = m.clone(); f.onBeforeCompile = skyOnly; f.customProgramCacheKey = () => 'far-' + key; return f; };
+    for (const [k, mat] of [['brick', M.brickN], ['render', M.renderN]]) {
+      const mesh = new THREE.Mesh(mergeGeometries(walls[k]), farMat(mat, k));
+      mesh.matrixAutoUpdate = false; mesh.userData.backdrop = true; scene.add(mesh);
+    }
+    const unit = new THREE.BoxGeometry(1, 1, 1), trimMat = std({ color: 0x8f8a83, roughness: 0.85 }, skyEnv, 0.1);
+    const inst = (geo, list, mat, colors) => {
+      const im = new THREE.InstancedMesh(geo, mat, list.length);
+      list.forEach((m, i) => { im.setMatrixAt(i, m); if (colors) im.setColorAt(i, col.setHex(colors[i])); });
+      im.matrixAutoUpdate = false; im.userData.backdrop = true; scene.add(im);
+    };
+    // lit glass takes its per-window tint on the glow too, so no two rooms look quite the same
+    const tinted = (m, key, map) => {
+      const t = m.clone();
+      if (map) t.emissiveMap = map;
+      t.onBeforeCompile = (sh) => { skyOnly(sh); sh.fragmentShader = sh.fragmentShader.replace('#include <emissivemap_fragment>', '#include <emissivemap_fragment>\n\ttotalEmissiveRadiance *= vColor.rgb;'); };
+      t.customProgramCacheKey = () => key;
+      return t;
+    };
+    const steelFar = farMat(M.steel, 'steel');
+    inst(unit, P.trim, farMat(trimMat, 'trim')); inst(unit, P.frame, steelFar); inst(unit, P.glass, farMat(M.winGlass, 'glass')); inst(unit, P.band, farMat(M.panel, 'band'));
+    inst(unit, P.lit, tinted(M.winLit, 'litTint'), tint.lit); inst(unit, P.shopLit, tinted(M.shopLit, 'shopTint'), tint.shopLit);
+    inst(unit, P.litB, tinted(M.winLit, 'litTintB', blindsLit), tint.litB); inst(unit, P.shopLitB, tinted(M.shopLit, 'shopTintB', cafeInside), tint.shopLitB);
+    inst(unit, P.awn, farMat(std({ color: 0xffffff, roughness: 0.9 }, skyEnv, 0.1), 'awn'), tint.awn);
+    // more street lamps down both pavements (lit heads, no extra lights)
+    const poles = [], arms = [], heads = [];
+    for (const [x, z] of [[-58, 5.8], [-42, 5.8], [-26, 5.8], [22, 5.8], [38, 5.8], [54, 5.8],
+      [-60, 21], [-44, 21], [-28, 21], [-12, 21], [4, 21], [20, 21], [36, 21], [52, 21]]) {
+      poles.push(new THREE.Matrix4().makeTranslation(x, 2.2, z));
+      arms.push(new THREE.Matrix4().compose(pv.set(x - 0.44, 4.36, z), q.identity(), sv.set(0.95, 0.06, 0.08)));
+      heads.push(new THREE.Matrix4().compose(pv.set(x - 0.86, 4.3, z), q.identity(), sv.set(0.48, 0.1, 0.26)));
+    }
+    inst(new THREE.CylinderGeometry(0.05, 0.075, 4.4, 10), poles, steelFar);
+    inst(unit, arms, steelFar);
+    inst(unit, heads, farMat(std({ color: 0x2a2118, emissive: 0xffd3a3, emissiveIntensity: 2.2, roughness: 0.4 }, skyEnv, 0.2), 'head'));
+  }
 
   // street lamp with a warm pool of light
   {
@@ -898,18 +1077,21 @@ async function init() {
   exhibits[3] = { st: KS, start: () => startRace(), idle: 'Run the audit', anchor: (v) => screen.localToWorld(v.set(0, -0.42, 0.04)) };
   const runBtn = $('.wk-run'), runAt = new THREE.Vector3();
   let runShown = false;
-  runBtn?.addEventListener('click', () => exhibits[S.active]?.start());
+  runBtn?.addEventListener('click', () => exhibits[EX.on ? EX.near : S.active]?.start());
   function updateRunBtn() {
     if (!runBtn) return;
-    const ex = exhibits[S.active];
-    const sheetOpen = isSmall() && !!document.querySelector('main .card.is-open'); // the phone sheet owns that space
-    const want = !!ex && !CLEAN && S.ready && S.motion && !sheetOpen && Math.abs(S.u - S.active) < 0.05;
+    const idx = EX.on ? EX.near : S.active, ex = exhibits[idx];
+    const sheetOpen = !EX.on && isSmall() && !!document.querySelector('main .card.is-open'); // the phone sheet owns that space
+    let want = !!ex && !CLEAN && S.ready && S.motion && !sheetOpen && (EX.on || Math.abs(S.u - S.active) < 0.05);
+    if (want) {
+      ex.anchor(runAt).project(camera);
+      if (EX.on) want = runAt.z < 1 && Math.abs(runAt.x) < 0.88 && runAt.y > -0.6 && runAt.y < 0.85; // free walk: only while it's in view
+    }
     if (want !== runShown) { runShown = want; runBtn.hidden = !want; }
     if (!want) return;
-    ex.anchor(runAt).project(camera);
     runBtn.style.transform = `translate3d(${(((runAt.x + 1) / 2) * innerWidth).toFixed(1)}px, ${(((1 - runAt.y) / 2) * innerHeight).toFixed(1)}px, 0) translateX(-50%)`;
     const st = ex.st.phase === 'run' || ex.st.delay > 0 ? 'run' : ex.st.phase;
-    const key = `${S.active}:${st}`;
+    const key = `${idx}:${st}`;
     if (runBtn.dataset.key !== key) {
       runBtn.dataset.key = key; runBtn.dataset.state = st;
       runBtn.innerHTML = st === 'run' ? `<span aria-hidden="true">●</span> ${ex.running || 'Running · 3× speed'}`
@@ -1182,7 +1364,7 @@ async function init() {
       paint(performance.now()); S.dirty = true;
     };
     updatePlant = (dt, now) => {
-      const here = Math.abs(S.u - 5) < 0.6;
+      const here = EX.on ? EX.near === 5 : Math.abs(S.u - 5) < 0.6;
       if (S.active === 5 && Math.abs(S.u - 5) < 0.03 && !PS.auto && PS.phase === 'idle') { PS.auto = true; PS.delay = 0.45; } // first visit runs by itself
       if (PS.delay > 0) { PS.delay -= dt; if (PS.delay <= 0) startPlant(); return true; }
       if (PS.phase === 'run') {
@@ -1524,7 +1706,7 @@ async function init() {
     detailCam.lookAt(cx, cy, zc);
     detailCam.updateProjectionMatrix();
   }
-  const cutawayShown = () => !CLEAN && XR.on >= 1 && S.u > 0.7 && S.u < 1.45;
+  const cutawayShown = () => !CLEAN && !EX.on && XR.on >= 1 && S.u > 0.7 && S.u < 1.45; // free walk: no inset while you roam
   function renderDetail() {
     const want = !!detailEl && !!detailRect && cutawayShown();
     if (want !== detailShown) {
@@ -1560,7 +1742,8 @@ async function init() {
     }
   }
   function updateXray(dt) {
-    const want = S.u > 0.45 && S.u < 1.7 ? 1 : 0;
+    const cp = camera.position; // free walk: the header turns X-ray as you walk up to the door from the street
+    const want = (EX.on ? cp.z > 0.8 && cp.z < 7.5 && Math.abs(cp.x) < 3.6 : S.u > 0.45 && S.u < 1.7) ? 1 : 0;
     XR.on = S.motion ? clamp(XR.on + Math.sign(want - XR.on) * (dt / 1.2), 0, 1) : want;
     const sweep = XR.on <= 0 ? -1e3 : XR.on >= 1 ? 1e3 : hx0 - 0.08 + (HW + 0.16) * ease(XR.on);
     sweepPlane.constant = -sweep;
@@ -1657,10 +1840,18 @@ async function init() {
     posCurve.getPoint(t, camera.position);
     tgtCurve.getPoint(t, lookAt);
     camera.lookAt(lookAt);
+    if (F.blend > 0) { // back from a free walk: glide from where you stood onto the tour's camera
+      F.blend = Math.max(0, F.blend - dt / 0.8);
+      const k = ease(1 - F.blend);
+      qRail.copy(camera.quaternion);
+      camera.position.lerpVectors(F.fromPos, camera.position, k);
+      camera.quaternion.slerpQuaternions(F.fromQ, qRail, k);
+    }
   }
 
   function updateDoor(dt, now) {
-    const wanted = inZone(camera.position.z) || S.gate;
+    const cp = camera.position; // free walk: the sensor also checks you're in front of the door, not just at its depth
+    const wanted = (EX.on ? inZoneXZ(cp.x, cp.z) : inZone(cp.z)) || S.gate;
     if (wanted) S.lastSeen = now;
     S.detect = wanted;
     const open = wanted || now - S.lastSeen < 800;
@@ -1687,13 +1878,15 @@ async function init() {
     motorSpin.rotation.y = (-d / rP) * 6;
     cableMat.emissiveIntensity = wanted ? 1.6 : 0.15;
     cuLedMat.color.setHex(wanted ? 0x35d07f : 0xffb020);
-    const near = ease((S.u - 0.35) / 0.45) * (1 - ease((S.u - 1.55) / 0.4));
+    const near = EX.on ? (cp.z > -0.3 && cp.z < 7 && Math.abs(cp.x) < 4.5 ? 1 : 0) : ease((S.u - 0.35) / 0.45) * (1 - ease((S.u - 1.55) / 0.4));
     coneMat.opacity = CLEAN ? 0 : near * (wanted ? 0.12 : 0.06);
   }
 
   function updateHud() {
-    const atKiosk = !CLEAN && Math.abs(S.u - 3) < 0.45, atShelf = !CLEAN && Math.abs(S.u - 4) < 0.45, atPlant = !CLEAN && Math.abs(S.u - 5) < 0.45;
-    const show = S.ready && (S.u < 2.6 || atKiosk || atShelf || atPlant);
+    const at = (i) => !CLEAN && (EX.on ? EX.near === i : Math.abs(S.u - i) < 0.45);
+    const atKiosk = at(3), atShelf = at(4), atPlant = at(5), cp = camera.position;
+    const doorish = EX.on ? Math.abs(cp.x) < 4.5 && cp.z > -3 && cp.z < 7 : S.u < 2.6;
+    const show = S.ready && (doorish || atKiosk || atShelf || atPlant);
     hud.classList.toggle('is-visible', show);
     if (!show) return;
     const inDoorway = Math.abs(camera.position.z + 0.15) < 1.0;
@@ -1723,11 +1916,347 @@ async function init() {
     hud.dataset.state = st;
   }
 
+
+  /* ---------- free walk: look and walk around yourself (optional; the guided tour stays the default) ---------- */
+  // Drag to look (the view follows your finger, like a street-view photo), click or tap the floor to walk there,
+  // click a display to step up to it, or use W A S D / arrow keys. The door's sensor sees you like anyone else.
+  const EYE = 1.62, PR = 0.28;                                        // eye height, body radius (m)
+  const DOOR_X = SLIDE_M - PR - 0.04;                                 // half the clear opening, less your shoulders
+  const ZOUT = { x0: -19.5, x1: 19.5, z0: 0.3 + PR, z1: 12.5 };       // pavement and street
+  const ZIN = { x0: -6.2 + PR, x1: 6.2 - PR, z0: -14.3 + PR, z1: -0.3 - PR }; // inside the shop
+  const ZMID = (ZOUT.z0 + ZIN.z1) / 2;
+  const SUBJ = KF.map((k, i) => (i === 1 ? new THREE.Vector3(0, 1.4, 0) : v3(k.t))); // what each stop shows
+  const NEAR_R = KF.map((k, i) => Math.max(i === 1 ? 4 : 3.6, Math.hypot(k.p[0] - SUBJ[i].x, k.p[2] - SUBJ[i].z) + 0.8)); // its own viewpoint counts
+  const F = {
+    pos: new THREE.Vector3(), vel: new THREE.Vector3(), yaw: 0, pitch: 0, keys: new Set(), run: false, walk: null,
+    look: false, hover: null, viewK: 1, blend: 0, fromPos: new THREE.Vector3(), fromQ: new THREE.Quaternion(), nearT: 0,
+  };
+  S.free = F; S.scene = scene; // test hooks (reachable only with ?debug)
+  const fwd = new THREE.Vector3(), sideV = new THREE.Vector3(), wantV = new THREE.Vector3(), prevP = new THREE.Vector3();
+  const dirV = new THREE.Vector3(), qRail = new THREE.Quaternion(), ndc = new THREE.Vector2(), rayc = new THREE.Raycaster();
+  const angDiff = (a, b) => Math.atan2(Math.sin(a - b), Math.cos(a - b));
+  const faceFor = (x, z, t) => ({ yaw: Math.atan2(-(t.x - x), -(t.z - z)), pitch: Math.atan2(t.y - EYE, Math.hypot(t.x - x, t.z - z)) });
+  const inZoneXZ = (x, z) => Math.abs(x) < 2.6 && inZone(z);
+  const hfovNow = () => 2 * Math.atan(Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2) * camera.aspect);
+
+  // where you're headed: a ring on the floor (white under the mouse, orange once you're walking there)
+  const walkSpotMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.8, depthWrite: false, toneMapped: false });
+  const walkSpot = new THREE.Mesh(new THREE.RingGeometry(0.16, 0.21, 48).rotateX(-Math.PI / 2), walkSpotMat);
+  walkSpot.renderOrder = 4; walkSpot.visible = false; scene.add(walkSpot);
+  function showSpot(t, hover) {
+    walkSpot.position.set(t.x, t.z > 6.7 ? -0.138 : 0.012, t.z); // the road is a kerb lower than the pavement
+    walkSpotMat.color.setHex(hover ? 0xffffff : 0xff6a35); walkSpotMat.opacity = hover ? 0.75 : 0.95;
+    walkSpot.visible = true; S.dirty = true;
+  }
+  const hideSpot = () => { if (walkSpot.visible) { walkSpot.visible = false; S.dirty = true; } };
+
+  // the floor plan: obstacle boxes taken from the scene itself (anything between ankle and head height), plus zones
+  let COL = null, PICK = null;
+  function buildColliders() {
+    COL = []; PICK = [];
+    const b = new THREE.Box3();
+    scene.updateMatrixWorld(true);
+    scene.traverseVisible((o) => {
+      if (!o.isMesh || o.isInstancedMesh || o === walkSpot) return;
+      const mats = Array.isArray(o.material) ? o.material : [o.material];
+      if (mats.every((m) => m.transparent && !m.depthWrite)) return; // glows, zones, signs, glass
+      PICK.push(o);
+      if (!o.geometry.boundingBox) o.geometry.computeBoundingBox();
+      b.copy(o.geometry.boundingBox).applyMatrix4(o.matrixWorld);
+      if (b.max.y < 0.12 || b.min.y > 1.85) return;                       // floor graphics, ceiling fixtures
+      if (Math.max(b.max.x - b.min.x, b.max.z - b.min.z) > 5.5) return;    // walls, floors, buildings: the zones cover those
+      if (b.max.z > -0.5 && b.min.z < 0.3 && b.max.x > -6.6 && b.min.x < 6.6) return; // shopfront and door: the doorway rule
+      COL.push({ x0: b.min.x, x1: b.max.x, z0: b.min.z, z1: b.max.z });
+    });
+  }
+  // keep a body-sized circle out of the boxes, on the pavement or in the shop, and through the shopfront only by the open door
+  function collide(p, prev, doorOpen = S.door > 0.75) {
+    for (let it = 0; it < 2; it++) {
+      for (const c of COL) {
+        const dx = p.x - clamp(p.x, c.x0, c.x1), dz = p.z - clamp(p.z, c.z0, c.z1), d2 = dx * dx + dz * dz;
+        if (d2 >= PR * PR) continue;
+        if (d2 > 1e-8) { const d = Math.sqrt(d2), k = (PR - d) / d; p.x += dx * k; p.z += dz * k; continue; }
+        const l = p.x - c.x0, r = c.x1 - p.x, bk = p.z - c.z0, f = c.z1 - p.z, m = Math.min(l, r, bk, f); // inside: nearest side
+        if (m === l) p.x = c.x0 - PR; else if (m === r) p.x = c.x1 + PR; else if (m === bk) p.z = c.z0 - PR; else p.z = c.z1 + PR;
+      }
+    }
+    if (p.z >= ZOUT.z0) { p.x = clamp(p.x, ZOUT.x0, ZOUT.x1); p.z = Math.min(p.z, ZOUT.z1); }
+    else if (p.z <= ZIN.z1) { p.x = clamp(p.x, ZIN.x0, ZIN.x1); p.z = Math.max(p.z, ZIN.z0); }
+    else if (doorOpen && prev.z < ZOUT.z0 && prev.z > ZIN.z1 && Math.abs(prev.x) <= DOOR_X + 1e-6) p.x = clamp(p.x, -DOOR_X, DOOR_X);
+    else if (!doorOpen || Math.abs(p.x) > DOOR_X) p.z = prev.z >= ZMID ? ZOUT.z0 : ZIN.z1; // wall, window, or a door not open yet
+    return p;
+  }
+  function blocked(x, z) {
+    if (z < ZOUT.z0 && z > ZIN.z1) { if (Math.abs(x) > DOOR_X) return true; }
+    else if (z >= ZOUT.z0 ? x < ZOUT.x0 || x > ZOUT.x1 || z > ZOUT.z1 : x < ZIN.x0 || x > ZIN.x1 || z < ZIN.z0) return true;
+    for (const c of COL) { const dx = x - clamp(x, c.x0, c.x1), dz = z - clamp(z, c.z0, c.z1); if (dx * dx + dz * dz < PR * PR * 0.9) return true; }
+    return false;
+  }
+  function clearLine(ax, az, bx, bz) {
+    const n = Math.max(1, Math.ceil(Math.hypot(bx - ax, bz - az) / 0.12));
+    for (let i = 1; i <= n; i++) if (blocked(ax + ((bx - ax) * i) / n, az + ((bz - az) * i) / n)) return false;
+    return true;
+  }
+  const lenOf = (path) => { let d = 0, x = F.pos.x, z = F.pos.z; for (const q of path) { d += Math.hypot(q.x - x, q.z - z); x = q.x; z = q.z; } return d; };
+  // straight there if nothing's in the way; across the shopfront, by way of the doorway
+  function route(x, z) {
+    const a = F.pos, end = new THREE.Vector3(x, 0, z);
+    if (clearLine(a.x, a.z, x, z)) return [end];
+    if ((a.z > ZMID) !== (z > ZMID)) {
+      const dx = clamp((a.x + x) / 2, -DOOR_X * 0.5, DOOR_X * 0.5), out = a.z > ZMID;
+      const p1 = new THREE.Vector3(dx, 0, out ? ZOUT.z0 + 0.6 : ZIN.z1 - 0.6), p2 = new THREE.Vector3(dx, 0, out ? ZIN.z1 - 0.6 : ZOUT.z0 + 0.6);
+      if (clearLine(a.x, a.z, p1.x, p1.z) && clearLine(p2.x, p2.z, x, z)) return [p1, p2, end];
+    }
+    return null;
+  }
+  const fadeEl = $('.wk-fade');
+  let fadeT = 0;
+  function place(x, z, face) {
+    F.pos.set(x, EYE, z); F.vel.set(0, 0, 0); F.walk = null; hideSpot();
+    if (face) { F.yaw = face.yaw; F.pitch = face.pitch; }
+    if (inZoneXZ(x, z)) S.door = 1; // arriving at the door: it has already opened for you
+    F.look = true; S.dirty = true;
+  }
+  function teleport(x, z, face) { // a long way, or no clear route: a quick dip to black rather than walking through things
+    if (!S.motion || !fadeEl) { place(x, z, face); return; }
+    clearTimeout(fadeT);
+    fadeEl.classList.add('is-on');
+    fadeT = setTimeout(() => { place(x, z, face); fadeEl.classList.remove('is-on'); }, 200);
+  }
+  function walkTo(x, z, face = null, opt = {}) {
+    const t = collide(new THREE.Vector3(x, 0, z), new THREE.Vector3(x, 0, z), true);
+    const path = route(t.x, t.z);
+    if (!path) { if (!opt.dolly) teleport(t.x, t.z, face); return; }
+    if (!S.motion) { place(t.x, t.z, face); return; }
+    const total = lenOf(path);
+    if (opt.far && total > opt.far) { teleport(t.x, t.z, face); return; }
+    F.walk = { path, total: Math.max(0.05, total), yaw0: F.yaw, pitch0: F.pitch, face, dYaw: face ? angDiff(face.yaw, F.yaw) : 0, stuck: 0, dolly: !!opt.dolly };
+    if (!opt.dolly) showSpot(t, false);
+    S.dirty = true;
+  }
+  function goStop(i, far) { const k = KF[i]; walkTo(k.p[0], k.p[2], faceFor(k.p[0], k.p[2], v3(k.t)), { far }); }
+
+  // what's under the pointer: the door, a display (its stop), the floor, or something else
+  function pick(cx, cy) {
+    if (!PICK) return null;
+    ndc.set((cx / innerWidth) * 2 - 1, -(cy / innerHeight) * 2 + 1);
+    rayc.setFromCamera(ndc, camera);
+    const hit = rayc.intersectObjects(PICK, false)[0];
+    if (!hit || hit.distance > 32) return null;
+    const p = hit.point;
+    if (p.y <= 0.05) return { floor: true, p };
+    if (Math.abs(p.x) < 1.5 && p.z > -0.45 && p.z < 0.35 && p.y < 2.5) return { door: true, p };
+    let stop = -1, best = 2.3;
+    for (let i = 2; i < N; i++) { const d = Math.hypot(SUBJ[i].x - p.x, SUBJ[i].z - p.z); if (d < best) { best = d; stop = i; } }
+    return stop >= 0 ? { stop, p } : { thing: true, p };
+  }
+  function tapAt(cx, cy) {
+    const h = pick(cx, cy);
+    if (!h) return;
+    if (h.door) { walkTo(clamp(F.pos.x, -0.3, 0.3), F.pos.z > ZMID ? -2.4 : 2.4); return; } // through it
+    if (h.stop !== undefined) { goStop(h.stop); return; }
+    const t = h.p.clone(); t.y = 0;
+    if (h.thing) { dirV.set(t.x - F.pos.x, 0, t.z - F.pos.z); const d = dirV.length(); if (d > 0.01) t.addScaledVector(dirV, -Math.min(0.75, d) / d); }
+    walkTo(t.x, t.z);
+  }
+  function resolveHover() {
+    if (!F.hover) return;
+    const [cx, cy] = F.hover; F.hover = null;
+    const h = pick(cx, cy);
+    root.classList.toggle('free-point', !!h && (!!h.door || h.stop !== undefined));
+    if (F.walk) return; // the orange ring marks where you're going
+    if (h && h.floor) {
+      const t = collide(h.p.clone().setY(0), h.p.clone().setY(0), true);
+      if (Math.hypot(t.x - h.p.x, t.z - h.p.z) < 0.3) { showSpot(t, true); return; }
+    }
+    hideSpot();
+  }
+
+  // nearest stop in front of you: names the bar's chip, aims the exhibit's run button, ticks the receipt
+  const nearEl = $('.free-near'), nearName = $('[data-free-near]');
+  function syncNear() {
+    if (!nearEl) return;
+    const on = EX.on && EX.near >= 1;
+    nearEl.hidden = !on;
+    if (on) nearName.textContent = STOP_NAMES[EX.near];
+  }
+  function updateNear(dt) {
+    let best = -1, bd = 1e9;
+    for (let i = 1; i < N; i++) {
+      const s = SUBJ[i], dx = s.x - F.pos.x, dz = s.z - F.pos.z, d = Math.hypot(dx, dz);
+      if (d > NEAR_R[i] || (d > 1.3 && (dx * fwd.x + dz * fwd.z) / d < 0.3)) continue; // too far, or behind you
+      if (d < bd) { bd = d; best = i; }
+    }
+    if (best !== EX.near) { EX.near = best; F.nearT = 0; syncNear(); }
+    else if (best >= 0 && !VISIT.seen.has(best) && (F.nearT += dt) > 0.7) VISIT.seen.add(best);
+  }
+
+  function updateFree(dt) {
+    let moved = F.look; F.look = false;
+    const turn = (F.keys.has('tl') ? 1 : 0) - (F.keys.has('tr') ? 1 : 0);
+    if (turn) { F.yaw += turn * 1.8 * dt; moved = true; }
+    fwd.set(-Math.sin(F.yaw), 0, -Math.cos(F.yaw)); sideV.set(-fwd.z, 0, fwd.x);
+    const f = (F.keys.has('f') ? 1 : 0) - (F.keys.has('b') ? 1 : 0), s = (F.keys.has('r') ? 1 : 0) - (F.keys.has('l') ? 1 : 0);
+    wantV.set(0, 0, 0);
+    if (f || s) {
+      if (F.walk) { F.walk = null; hideSpot(); }
+      wantV.addScaledVector(fwd, f).addScaledVector(sideV, s).setLength(F.run ? 3.0 : 1.6);
+    } else if (F.walk) {
+      const w = F.walk, q = w.path[0], dx = q.x - F.pos.x, dz = q.z - F.pos.z, d = Math.hypot(dx, dz), last = w.path.length === 1;
+      if (d < (last ? 0.04 : 0.3)) {
+        w.path.shift();
+        if (!w.path.length) { if (w.face) { F.yaw = w.yaw0 + w.dYaw; F.pitch = w.face.pitch; } F.walk = null; hideSpot(); moved = true; }
+      } else {
+        const sp = last ? Math.min(w.dolly ? 2.4 : 2.0, 0.3 + d * 2.4) : 2.0;
+        wantV.set((dx / d) * sp, 0, (dz / d) * sp);
+      }
+      if (F.walk && w.face) { // turn toward the display on the way there
+        const k = ease(1 - lenOf(w.path) / w.total);
+        F.yaw = w.yaw0 + w.dYaw * k; F.pitch = w.pitch0 + (w.face.pitch - w.pitch0) * k; moved = true;
+      }
+    }
+    F.vel.lerp(wantV, 1 - Math.exp(-(wantV.lengthSq() ? 9 : 14) * dt));
+    if (!wantV.lengthSq() && F.vel.lengthSq() < 1e-5) F.vel.set(0, 0, 0);
+    if (F.vel.lengthSq()) {
+      prevP.copy(F.pos);
+      F.pos.addScaledVector(F.vel, dt);
+      collide(F.pos, prevP);
+      const got = Math.hypot(F.pos.x - prevP.x, F.pos.z - prevP.z), meant = F.vel.length() * dt;
+      if (F.walk) { F.walk.stuck = got < meant * 0.25 ? F.walk.stuck + dt : 0; if (F.walk.stuck > 1.6) { F.walk = null; hideSpot(); } }
+      if (got > 1e-5) moved = true;
+    }
+    camera.position.set(F.pos.x, EYE, F.pos.z);
+    camera.rotation.set(F.pitch, F.yaw, 0, 'YXZ');
+    updateNear(dt);
+    return moved;
+  }
+
+  // input (free walk only): drag to look, tap to walk, keys, wheel
+  const ptrs = new Map();
+  canvas.addEventListener('pointerdown', (e) => {
+    if (!EX.on || (e.pointerType === 'mouse' && e.button !== 0)) return;
+    canvas.setPointerCapture?.(e.pointerId);
+    ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY, x0: e.clientX, y0: e.clientY, t0: performance.now(), drag: false });
+  });
+  canvas.addEventListener('pointermove', (e) => {
+    if (!EX.on) return;
+    const p = ptrs.get(e.pointerId);
+    if (!p) { if (e.pointerType === 'mouse') { F.hover = [e.clientX, e.clientY]; S.dirty = true; } return; }
+    const dx = e.clientX - p.x, dy = e.clientY - p.y;
+    p.x = e.clientX; p.y = e.clientY;
+    if (!p.drag && Math.hypot(p.x - p.x0, p.y - p.y0) > (e.pointerType === 'mouse' ? 4 : 9)) {
+      p.drag = true; root.classList.add('free-drag');
+      if (F.walk) F.walk.face = null; // you're steering the view now
+      else hideSpot();
+    }
+    if (!p.drag || ptrs.size > 1) return;
+    const k = (1.3 * hfovNow()) / innerWidth;
+    F.yaw += dx * k; F.pitch = clamp(F.pitch + dy * k, -1.1, 1.1);
+    F.look = true;
+  });
+  const endPtr = (e) => {
+    const p = ptrs.get(e.pointerId);
+    if (!p) return;
+    ptrs.delete(e.pointerId);
+    if (!ptrs.size) root.classList.remove('free-drag');
+    if (e.type === 'pointerup' && !p.drag && performance.now() - p.t0 < 700) tapAt(e.clientX, e.clientY);
+  };
+  canvas.addEventListener('pointerup', endPtr);
+  canvas.addEventListener('pointercancel', endPtr);
+  canvas.addEventListener('pointerleave', (e) => {
+    if (e.pointerType !== 'mouse' || ptrs.size) return;
+    F.hover = null; root.classList.remove('free-point');
+    if (!F.walk) hideSpot();
+  });
+  canvas.addEventListener('contextmenu', (e) => { if (EX.on) e.preventDefault(); });
+  canvas.addEventListener('wheel', (e) => { // wheel or trackpad: step forward and back
+    if (!EX.on || e.ctrlKey) return;
+    e.preventDefault();
+    const step = clamp(-(e.deltaMode === 1 ? e.deltaY * 33 : e.deltaY) * 0.006, -1.2, 1.2);
+    const base = F.walk?.dolly ? F.walk.path[F.walk.path.length - 1] : F.pos;
+    fwd.set(-Math.sin(F.yaw), 0, -Math.cos(F.yaw));
+    walkTo(base.x + fwd.x * step, base.z + fwd.z * step, null, { dolly: true });
+  }, { passive: false });
+  const KEYMAP = { KeyW: 'f', ArrowUp: 'f', KeyS: 'b', ArrowDown: 'b', KeyA: 'l', KeyD: 'r', ArrowLeft: 'tl', ArrowRight: 'tr', KeyQ: 'tl', KeyE: 'tr' };
+  addEventListener('keydown', (e) => {
+    if (!EX.on) return;
+    if (e.key === 'Escape') { e.preventDefault(); exitFree(); return; }
+    if (e.key === 'Shift') F.run = true;
+    const k = KEYMAP[e.code];
+    if (!k || e.altKey || e.ctrlKey || e.metaKey || e.target.closest?.('input, textarea, select, [contenteditable]')) return;
+    e.preventDefault();
+    F.keys.add(k); S.dirty = true;
+  });
+  addEventListener('keyup', (e) => { if (e.key === 'Shift') F.run = false; const k = KEYMAP[e.code]; if (k) F.keys.delete(k); });
+  addEventListener('blur', () => { F.keys.clear(); F.run = false; });
+
+  // switching modes
+  const freeEl = $('.wk-free'), freeBtns = $$('[data-free-toggle]');
+  function syncFreeUi() {
+    for (const b of freeBtns) b.setAttribute('aria-pressed', String(EX.on));
+    if (freeEl) freeEl.hidden = !EX.on;
+    const touch = coarse.matches, help = $('[data-free-help]'), keys = $('[data-free-keys]');
+    if (help) help.textContent = touch ? 'Drag to look · tap to walk' : 'Drag to look around · click the floor to walk';
+    if (keys) keys.textContent = touch ? 'Tap a display to step up to it' : 'W A S D or arrow keys · Shift to hurry · Esc to leave';
+    syncNear();
+  }
+  function enterFree() {
+    if (EX.on || !S.ready) return;
+    if (!COL) buildColliders();
+    const open = $('main .card.is-open');
+    if (open) setOpen(open, false);
+    camera.getWorldDirection(dirV);
+    F.yaw = Math.atan2(-dirV.x, -dirV.z); F.pitch = clamp(Math.asin(clamp(dirV.y, -1, 1)), -1.1, 1.1);
+    F.pos.set(camera.position.x, EYE, camera.position.z);
+    collide(F.pos, F.pos.clone());
+    F.vel.set(0, 0, 0); F.walk = null; F.blend = 0; F.keys.clear(); EX.near = -1;
+    EX.on = true;
+    root.classList.add('free');
+    syncFreeUi();
+    live.textContent = coarse.matches
+      ? 'Free walk. Drag to look around and tap the floor to walk there. Guided tour returns to the stops.'
+      : 'Free walk. Drag to look around, click the floor to walk there, or use W A S D or the arrow keys. Escape returns to the guided tour.';
+    S.dirty = true;
+  }
+  function exitFree(stop) {
+    if (!EX.on) return;
+    let i = stop ?? EX.near;
+    if (!(i >= 0)) { // the stop whose viewpoint is nearest
+      let bd = 1e9;
+      KF.forEach((k, j) => { const d = Math.hypot(k.p[0] - F.pos.x, k.p[2] - F.pos.z); if (d < bd) { bd = d; i = j; } });
+    }
+    EX.on = false;
+    F.keys.clear(); F.walk = null; F.hover = null; ptrs.clear(); hideSpot();
+    clearTimeout(fadeT); fadeEl?.classList.remove('is-on');
+    root.classList.remove('free', 'free-drag', 'free-point');
+    syncFreeUi();
+    F.fromPos.copy(camera.position); F.fromQ.copy(camera.quaternion);
+    jumpTo(i);          // the tour picks up at that stop
+    S.u = S.uTarget;    // exactly on it; the camera glides there from where you stood if that's close
+    posCurve.getPoint(S.u / (N - 1), dirV);
+    F.blend = S.motion && (dirV.z > ZMID) === (F.fromPos.z > ZMID) && dirV.distanceTo(F.fromPos) < 7 ? 1 : 0;
+    live.textContent = `Guided tour: ${STOP_NAMES[i]}, stop ${i + 1} of ${N}`;
+    S.dirty = true;
+  }
+  EX.enter = enterFree; EX.exit = exitFree; EX.goStop = (i) => goStop(i, 8);
+  S.freeApi = { ex: EX, enterFree, exitFree, walkTo, goStop, pick, tapAt, cols: () => COL, picks: () => PICK && PICK.length }; // test hook
+  freeBtns.forEach((b) => b.addEventListener('click', () => (EX.on ? exitFree() : enterFree())));
+  $('.free-back')?.addEventListener('click', () => exitFree());
+  $('.free-read')?.addEventListener('click', () => {
+    const i = EX.near;
+    if (i < 0) return;
+    exitFree(i);
+    const c = sections[i]?.querySelector('.card');
+    if (isSmall() && c && i > 0 && i < N - 1 && !c.classList.contains('is-open')) { setOpen(c, true); c.querySelector('h1, h2')?.focus({ preventScroll: true }); }
+  });
+  coarse.addEventListener?.('change', () => EX.on && syncFreeUi());
+
   // keep the subject clear of the cards: shift right on desktop; on phones centre it above the dock or sheet
   const applyView = () => {
-    const w = innerWidth, h = innerHeight;
-    if (w >= 900) camera.setViewOffset(w, h, -w * 0.17, 0, w, h);
-    else camera.setViewOffset(w, h, 0, S.viewYCur, w, h);
+    const w = innerWidth, h = innerHeight, k = F.viewK; // 1: tour framing (clear of the cards), 0: centred (free walk)
+    if (k < 0.001) camera.clearViewOffset();
+    else if (w >= 900) camera.setViewOffset(w, h, -w * 0.17 * k, 0, w, h);
+    else camera.setViewOffset(w, h, 0, S.viewYCur * k, w, h);
     camera.updateProjectionMatrix();
   };
   sizeRenderer = () => {
@@ -1767,14 +2296,21 @@ async function init() {
       if (Math.abs(S.viewY - S.viewYCur) <= 0.5) S.viewYCur = S.viewY;
       applyView();
     }
-    updateCamera(dt);
+    const vk = EX.on ? 0 : 1, viewing = F.viewK !== vk, blending = F.blend > 0;
+    if (viewing) {
+      F.viewK = !S.motion || Math.abs(vk - F.viewK) < 0.01 ? vk : F.viewK + (vk - F.viewK) * (1 - Math.exp(-7 * dt));
+      applyView();
+    }
+    let freeMoved = false;
+    if (EX.on) { freeMoved = updateFree(dt); resolveHover(); } else updateCamera(dt);
     updateDoor(dt, now);
     const prevXr = XR.on;
     updateXray(dt);
     const racing = updateKiosk(dt) + updatePipeline(dt) + updatePlant(dt, now) + updatePrint(now) > 0; // all always tick
-    const turning = S.motion && S.u > 1.5 && S.u < 3.5;
-    const pulsing = S.motion && S.detect && S.u < 2.6;
-    const moving = Math.abs(S.u - prevU) > 1e-6 || S.door !== prevDoor || framing || XR.on !== prevXr;
+    const cp = camera.position;
+    const turning = S.motion && (EX.on ? cp.z < 0 && Math.hypot(cp.x - 2.8, cp.z + 3.8) < 7 : S.u > 1.5 && S.u < 3.5);
+    const pulsing = S.motion && S.detect && (EX.on ? Math.abs(cp.z) < 7 : S.u < 2.6);
+    const moving = Math.abs(S.u - prevU) > 1e-6 || S.door !== prevDoor || framing || XR.on !== prevXr || freeMoved || viewing || blending;
     if (!(moving || turning || pulsing || racing || S.dirty)) { animT = 0; return; }
     S.dirty = false;
     if (turning) {

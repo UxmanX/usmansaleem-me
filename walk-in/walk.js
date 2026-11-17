@@ -1565,21 +1565,21 @@ async function init() {
     add(new THREE.Mesh(new THREE.SphereGeometry(0.07, 24, 12, 0, Math.PI * 2, 0, Math.PI / 2), M.chrome), co).position.set(-0.7, 1.05, 0.12);
     contact(3.4, 1.8, -2.9, -11.4, 0.3);
   }
-  const degreeTex = (a, b, c) => canvasTex(640, 460, (g, w, h) => {
-    g.fillStyle = '#fbf7ee'; g.fillRect(0, 0, w, h);
-    g.strokeStyle = '#c9b98f'; g.lineWidth = 6; g.strokeRect(22, 22, w - 44, h - 44);
-    g.textAlign = 'center';
-    g.fillStyle = '#3d434a'; g.font = '800 32px "JetBrains Mono", monospace'; spacing(g, 3); g.fillText(a, w / 2, 120);
-    g.fillStyle = '#14171a'; g.font = 'italic 700 45px Georgia, serif'; spacing(g, 0); g.fillText(b, w / 2, 222, w - 90);
-    g.font = '700 42px Georgia, serif'; g.fillText(c, w / 2, 298, w - 90);
-    g.fillStyle = '#ff541e'; g.beginPath(); g.arc(w / 2, 380, 20, 0, Math.PI * 2); g.fill();
-  });
-  for (const [x, tex] of [
-    [-4.75, degreeTex('MASTER OF ENGINEERING', 'Mechanical Engineering', 'University of Ottawa')],
-    [-2.4, degreeTex('BACHELOR OF SCIENCE', 'Mechanical Engineering', 'UET Lahore')],
-  ]) {
-    rounded(1.26, 0.94, 0.04, 0.008, M.black, x, 1.9, -14.27);
-    plane(1.16, 0.84, lit(tex, { transparent: false, depthWrite: true }), x, 1.9, -14.247);
+  // the real diplomas, in the order of the route above them: UET Lahore (B.Sc.), then uOttawa (MEng).
+  // A plain mat-and-paper stand-in shows until the scans arrive; they are fetched after the first frame,
+  // so they never hold up the start. ID numbers are removed from the published scans.
+  const lateTex = [];
+  for (const [name, x, w, h] of [['uet', -4.615, 0.669, 0.884], ['uottawa', -2.75, 1.1, 0.884]]) {
+    rounded(w + 0.08, h + 0.08, 0.04, 0.008, M.black, x, 1.9, -14.27);
+    const stand = canvasTex(64, Math.round((64 * h) / w), (g, cw, ch) => {
+      const m = Math.round((cw * 0.075) / w);
+      g.fillStyle = '#24272c'; g.fillRect(0, 0, cw, ch);
+      g.fillStyle = '#bf9b5b'; g.fillRect(m - 1, m - 1, cw - 2 * m + 2, ch - 2 * m + 2);
+      g.fillStyle = '#f5f2ea'; g.fillRect(m, m, cw - 2 * m, ch - 2 * m);
+    });
+    const mat = lit(stand, { transparent: false, depthWrite: true });
+    plane(w, h, mat, x, 1.9, -14.247);
+    lateTex.push([`assets/diploma-${name}-${lite ? 512 : 1024}.v1.webp`, mat]);
   }
   plane(3.6, 0.6, lit(canvasTex(1440, 240, (g, w) => {
     g.strokeStyle = '#14171a'; g.lineWidth = 5; g.setLineDash([18, 14]);
@@ -2486,6 +2486,10 @@ async function init() {
     S.frames++;
     if (!S.ready) {
       performance.mark('wk:frame1');
+      // the diplomas are not needed for the first frame: fetch them now
+      for (const [url, m] of lateTex) {
+        texLoader.load(url, (t) => { t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = aniso; m.map.dispose(); m.map = t; S.dirty = true; });
+      }
       S.ready = true;
       root.classList.add('is-3d');
       S.dirty = true;

@@ -1284,8 +1284,9 @@ async function init() {
   contact(1.6, 3.8, 5.6, -7.6, 0.28);
 
   /* ---------- stop 4: plant scale model in a vitrine ---------- */
-  // Hands-on: "Start the line" commissions the model section by section (intake, milling, conveying,
-  // pasta line): lamps go amber then green, the rollers turn and flour flows. Illustrative, not the PFD.
+  // Hands-on: "Start the line" commissions the model section by section (01 intake, 02 mill, 03 conveying,
+  // 04 pasta line): beacons go amber then green, the rolls turn and the sifters shake, packets flow, the dryer's
+  // bays light up and cartons stack. A 1:100 illustration of a flour-milling and pasta plant, not its PFD.
   const PLANT = { END: 12, STEP: 3 };
   const PLANT_SAY = ['intake', 'milling', 'conveying', 'pasta line'];
   const PS = { phase: still ? 'done' : 'idle', t: still ? PLANT.END : 0, auto: false, delay: 0, flow: 0 };
@@ -1296,67 +1297,182 @@ async function init() {
     mill.position.set(0.8, 0, -11.0); mill.rotation.y = 0.35; scene.add(mill);
     rounded(2.1, 0.86, 1.25, 0.04, M.solid, 0, 0.43, 0, { parent: mill });
     rounded(1.9, 0.04, 1.05, 0.01, M.wood, 0, 0.88, 0, { parent: mill });
-    const top = 0.9, mm = M.model;
-    rounded(0.42, 0.98, 0.36, 0.01, mm, -0.45, top + 0.49, -0.12, { parent: mill });
-    for (let i = 0; i < 3; i++) {
-      add(new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 0.78, 28), mm), mill).position.set(0.12 + i * 0.23, top + 0.39, -0.28);
-      add(new THREE.Mesh(new THREE.ConeGeometry(0.1, 0.08, 28), M.model2), mill).position.set(0.12 + i * 0.23, top + 0.82, -0.28);
+    const top = 0.9;
+    // The model reads left to right as the tour sees it: 01 intake, 02 silos + mill, 03 conveying, 04 pasta line.
+    // Static parts are merged per material (one draw each); heights below are above the deck.
+    const G = { white: [], grey: [], mach: [], black: [], galv: [], roof: [], truck: [], pallet: [] };
+    const gm = new THREE.Matrix4(), gq = new THREE.Quaternion(), ge = new THREE.Euler(), gs = new THREE.Vector3(1, 1, 1), gp = new THREE.Vector3();
+    const put = (k, geo, x, y, z, rx = 0, ry = 0, rz = 0) => { G[k].push(geo.applyMatrix4(gm.compose(gp.set(x, top + y, z), gq.setFromEuler(ge.set(rx, ry, rz)), gs))); };
+    const box = (k, w, h, d, x, y, z, ry = 0, rx = 0) => put(k, new THREE.BoxGeometry(w, h, d), x, y, z, rx, ry, 0);
+    const cyl = (k, r, h, x, y, z, rx = 0, rz = 0, seg = 20) => put(k, new THREE.CylinderGeometry(r, r, h, seg), x, y, z, rx, 0, rz);
+    const cone = (k, r, h, x, y, z, down = false) => put(k, new THREE.ConeGeometry(r, h, 20), x, y, z, down ? Math.PI : 0);
+    const trough = (x0, x1, z0, z1, y) => { // open-topped conveyor (floor + two side walls), so the flow inside shows
+      const alongX = Math.abs(x1 - x0) > Math.abs(z1 - z0), L = Math.abs(alongX ? x1 - x0 : z1 - z0), cx = (x0 + x1) / 2, cz = (z0 + z1) / 2;
+      if (alongX) { box('grey', L, 0.006, 0.034, cx, y + 0.003, cz); for (const o of [-0.017, 0.017]) box('grey', L, 0.018, 0.004, cx, y + 0.009, cz + o); }
+      else { box('grey', 0.034, 0.006, L, cx, y + 0.003, cz); for (const o of [-0.017, 0.017]) box('grey', 0.004, 0.018, L, cx + o, y + 0.009, cz); }
+    };
+    // 01 intake: a tipper truck emptying into the pit under a canopy; the pit conveyor feeds the bucket elevator
+    box('black', 0.08, 0.003, 0.06, -0.75, 0.0015, 0.16);
+    box('white', 0.24, 0.008, 0.18, -0.75, 0.11, 0.17);
+    for (const [x, z] of [[-0.865, 0.085], [-0.635, 0.085], [-0.865, 0.255], [-0.635, 0.255]]) box('grey', 0.008, 0.106, 0.008, x, 0.053, z);
+    box('black', 0.022, 0.008, 0.2, -0.75, 0.016, 0.27);                                                    // chassis
+    { const a = -0.35, c = Math.cos(a), sn = Math.sin(a); // the tipper body, hinged at its rear over the pit, front raised
+      box('galv', 0.03, 0.026, 0.12, -0.75, 0.02 + 0.013 * c - 0.06 * sn, 0.17 + 0.013 * sn + 0.06 * c, 0, a); }
+    box('truck', 0.03, 0.032, 0.032, -0.75, 0.034, 0.357); box('black', 0.024, 0.012, 0.002, -0.75, 0.04, 0.3735);   // cab + windscreen
+    for (const z of [0.2, 0.232, 0.35]) for (const o of [-0.015, 0.015]) cyl('black', 0.009, 0.007, -0.75 + o, 0.009, z, 0, Math.PI / 2, 12);
+    trough(-0.75, -0.75, 0.16, -0.245, 0);
+    box('galv', 0.06, 0.04, 0.06, -0.75, 0.02, -0.27); box('galv', 0.05, 0.74, 0.05, -0.75, 0.37, -0.27); box('galv', 0.07, 0.05, 0.065, -0.745, 0.765, -0.27);
+    // 02 storage and milling: galvanized silos carry the gallery on their roofs into the mill, cut away at the corner
+    for (const x of [-0.64, -0.5, -0.36]) { cyl('grey', 0.07, 0.02, x, 0.01, -0.27); cyl('galv', 0.062, 0.58, x, 0.31, -0.27); cone('roof', 0.062, 0.07, x, 0.635, -0.27); cyl('galv', 0.012, 0.022, x, 0.66, -0.27); } // + inlet collar under the gallery
+    trough(-0.725, 0.232, -0.27, -0.27, 0.67);
+    box('white', 0.4, 0.732, 0.012, 0.05, 0.366, -0.444); box('white', 0.012, 0.732, 0.564, 0.244, 0.366, -0.162);
+    for (const y of [0.24, 0.48, 0.72]) {
+      box('white', 0.4, 0.012, 0.564, 0.05, y + 0.006, -0.162);
+      box('black', 0.404, 0.014, 0.004, 0.05, y + 0.006, 0.121); box('black', 0.004, 0.014, 0.568, -0.151, y + 0.006, -0.162); // section-cut edges
     }
-    rounded(0.7, 0.32, 0.44, 0.01, mm, 0.38, top + 0.16, 0.24, { parent: mill });
-    const conv = rounded(0.66, 0.05, 0.1, 0.008, M.model2, -0.04, top + 0.62, -0.2, { parent: mill });
-    conv.rotation.z = -0.38;
-    for (const lx of [-0.24, 0.12]) rounded(0.03, 0.62 - (lx + 0.04) * 0.4, 0.03, 0.005, mm, lx, top + (0.62 - (lx + 0.04) * 0.4) / 2, -0.2, { parent: mill });
-    for (let i = 0; i < 2; i++) {
-      const pipe = add(new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.018, 0.46, 12), M.model2), mill);
-      pipe.rotation.z = Math.PI / 2; pipe.position.set(-0.02 + i * 0.03, top + 0.74 - i * 0.12, -0.28);
-    }
-    add(new THREE.Mesh(new RoundedBoxGeometry(2.0, 1.0, 1.15, 2, 0.01), M.vitrine), mill, false, false).position.set(0, top + 0.5, 0);
-    for (const [w, h, d, x, y, z] of [ // slim black frame so the case reads as glass
-      [2.0, 0.018, 0.018, 0, 1.0, 0.575], [2.0, 0.018, 0.018, 0, 1.0, -0.575], [0.018, 0.018, 1.15, 1.0, 1.0, 0], [0.018, 0.018, 1.15, -1.0, 1.0, 0],
-      [0.018, 1.0, 0.018, 1.0, 0.5, 0.575], [0.018, 1.0, 0.018, -1.0, 0.5, 0.575], [0.018, 1.0, 0.018, 1.0, 0.5, -0.575], [0.018, 1.0, 0.018, -1.0, 0.5, -0.575],
-    ]) block(w, h, d, M.black, x, top + y, z, { parent: mill, cast: false });
-    const p = rounded(0.6, 0.12, 0.02, 0.01, M.black, 0, 0.62, 0.635, { parent: mill });
-    plane(0.56, 0.1, lit(canvasTex(512, 92, (g, w, h) => {
-      g.fillStyle = '#fbf8f3'; g.fillRect(0, 0, w, h);
-      g.fillStyle = '#14171a'; g.font = '700 30px "JetBrains Mono", monospace'; spacing(g, 2);
-      g.fillText('PLANT COMMISSIONING · 1:100', 18, 58);
-    }), { transparent: false, depthWrite: true }), 0, 0, 0.011, { parent: p });
-    // --- the working line: flour path (silo -> pipe -> mill -> conveyor -> pasta line), rollers, lamps
-    const flowPath = new THREE.CatmullRomCurve3([
-      [0.58, 0.8, -0.28], [0.5, 0.75, -0.28], [0.21, 0.745, -0.28], [-0.1, 0.745, -0.28], [-0.3, 0.745, -0.26],
-      [-0.4, 0.74, -0.2], [-0.24, 0.735, -0.2], [0.0, 0.644, -0.2], [0.26, 0.54, -0.2], [0.33, 0.46, -0.12],
-      [0.38, 0.37, 0.02], [0.5, 0.345, 0.16], [0.66, 0.345, 0.32],
-    ].map(([x, y, z]) => new THREE.Vector3(x, top + y, z)), false, 'centripetal');
-    const NP = 72;
-    const flour = new THREE.InstancedMesh(new THREE.SphereGeometry(0.018, 10, 8), // wheat gold: reads against the white model
+    box('white', 0.01, 0.732, 0.01, -0.145, 0.366, 0.115); box('black', 0.004, 0.732, 0.014, -0.151, 0.366, -0.444); box('black', 0.014, 0.732, 0.004, 0.244, 0.366, 0.121);
+    box('mach', 0.1, 0.08, 0.08, -0.06, 0.04, -0.33);                                                       // clean: separator,
+    box('grey', 0.13, 0.016, 0.05, 0.09, 0.008, -0.33); cyl('mach', 0.026, 0.12, 0.09, 0.044, -0.33, 0, Math.PI / 2); // scourer,
+    box('mach', 0.085, 0.11, 0.07, 0.15, 0.055, -0.12); box('black', 0.065, 0.022, 0.003, 0.15, 0.075, -0.0835);       // optical sorter
+    for (const x of [-0.08, 0.14]) { box('white', 0.085, 0.1, 0.07, x, 0.302, -0.27); box('mach', 0.065, 0.04, 0.003, x, 0.31, -0.2335); }  // roller mills
+    box('white', 0.085, 0.1, 0.006, 0.03, 0.302, -0.302); box('white', 0.085, 0.006, 0.07, 0.03, 0.349, -0.27);  // the open one: back, lid
+    for (const o of [-0.0395, 0.0395]) box('white', 0.006, 0.1, 0.07, 0.03 + o, 0.302, -0.27);                   // and sides
+    for (const x of [-0.08, 0.03, 0.14]) { cyl('galv', 0.011, 0.07, x, 0.387, -0.27); cone('galv', 0.02, 0.025, x, 0.364, -0.27, true); } // feed inlets
+    for (const x of [-0.05, 0.12]) for (const dx of [-0.04, 0.04]) box('mach', 0.004, 0.065, 0.004, x + dx, 0.6875, -0.25); // sifter rods
+    trough(0.215, 0.215, -0.287, 0.017, 0.67); cyl('galv', 0.008, 0.29, 0.215, 0.525, 0.0);                // turns forward, spout down
+    // 03 conveying: transfer gallery out of the mill's right wall to the semolina bins, then a supported pipe to the
+    // press. Kept forward of the mill: from the tour's viewpoint anything behind the mill is hidden by it.
+    trough(0.215, 0.59, 0.0, 0.0, 0.37); box('black', 0.016, 0.04, 0.05, 0.244, 0.39, 0.0);                  // + its wall opening
+    for (const x of [0.44, 0.55]) { cyl('grey', 0.052, 0.02, x, 0.01, 0.0); cyl('galv', 0.045, 0.3, x, 0.17, 0.0); cone('roof', 0.045, 0.05, x, 0.345, 0.0); cyl('galv', 0.011, 0.022, x, 0.36, 0.0); }
+    cyl('galv', 0.012, 0.012, 0.44, 0.2, 0.049, Math.PI / 2);                                              // bin outlet flange
+    cyl('galv', 0.007, 0.135, 0.44, 0.2, 0.1125, Math.PI / 2); cyl('galv', 0.007, 0.05, 0.44, 0.175, 0.18);
+    box('mach', 0.004, 0.2, 0.004, 0.44, 0.1, 0.1); box('mach', 0.02, 0.003, 0.02, 0.44, 0.0015, 0.1);        // pipe support + foot
+    // finished-goods warehouse in the back corner (out of the tour's sight line, there for free-walk views)
+    box('white', 0.32, 0.12, 0.28, 0.76, 0.06, -0.31); box('grey', 0.33, 0.008, 0.29, 0.76, 0.124, -0.31);
+    for (const x of [0.68, 0.76, 0.84]) box('mach', 0.05, 0.06, 0.002, x, 0.03, -0.1695);
+    box('mach', 0.002, 0.06, 0.05, 0.9205, 0.03, -0.31); box('black', 0.28, 0.01, 0.002, 0.76, 0.09, -0.4505);
+    for (const y of [0.12, 0.36, 0.6]) { box('black', 0.34, 0.014, 0.002, 0.05, y, -0.4505); box('black', 0.002, 0.014, 0.5, 0.2505, y, -0.17); } // mill ribbon windows
+    // 04 pasta line (the hall's roof is off): press, long dryer, packer, pallet of cartons
+    box('white', 0.64, 0.004, 0.44, 0.63, 0.002, 0.28); box('white', 0.64, 0.035, 0.008, 0.63, 0.0175, 0.056); box('white', 0.008, 0.035, 0.44, 0.946, 0.0175, 0.28);
+    box('mach', 0.16, 0.06, 0.08, 0.42, 0.03, 0.18); cyl('white', 0.022, 0.14, 0.43, 0.082, 0.18, 0, Math.PI / 2);
+    cone('grey', 0.032, 0.046, 0.44, 0.127, 0.18, true); cyl('black', 0.02, 0.008, 0.504, 0.082, 0.18, 0, Math.PI / 2);
+    box('grey', 0.04, 0.006, 0.036, 0.53, 0.047, 0.18); box('black', 0.04, 0.002, 0.03, 0.53, 0.051, 0.18);     // transfer belt
+    for (const x of [0.515, 0.545]) box('grey', 0.004, 0.044, 0.004, x, 0.022, 0.18);
+    box('white', 0.31, 0.095, 0.12, 0.705, 0.0475, 0.18); box('black', 0.002, 0.046, 0.07, 0.549, 0.058, 0.18);  // dryer + its inlet
+    for (let i = 0; i <= 8; i++) box('mach', 0.003, 0.09, 0.003, 0.55 + i * 0.03875, 0.0475, 0.2405);
+    box('grey', 0.05, 0.075, 0.08, 0.9, 0.0375, 0.18); box('black', 0.03, 0.02, 0.002, 0.9, 0.05, 0.2205);       // packer + panel
+    cyl('white', 0.012, 0.03, 0.892, 0.087, 0.16, 0, Math.PI / 2);                                               // film reel
+    box('grey', 0.03, 0.005, 0.06, 0.9, 0.06, 0.25); for (const z of [0.228, 0.272]) box('grey', 0.004, 0.058, 0.004, 0.885, 0.029, z); // outfeed
+    for (const o of [-0.026, 0, 0.026]) box('pallet', 0.07, 0.004, 0.018, 0.9, 0.01, 0.31 + o);               // pallet boards
+    for (const o of [-0.029, 0, 0.029]) box('pallet', 0.012, 0.008, 0.07, 0.9 + o, 0.004, 0.31);              // and runners
+    // status: one signal tower per section, and labelled tags turned toward the visitor
+    const lampAt = [[-0.645, 0.114, 0.245], [0.225, 0.732, 0.1], [0.66, 0.458, 0.017], [0.915, 0.075, 0.205]]; // convey's sits on its sign
+    for (const [x, y, z] of lampAt) { box('black', 0.007, 0.012, 0.007, x, y + 0.006, z); cyl('black', 0.0105, 0.005, x, y + 0.0385, z, 0, 0, 12); }
+    // the convey sign stands just past bin 2 on a tall post: any further left and the mill's corner hides its first letter
+    const TAG_YAW = -0.55, TW = 0.2, TH = 0.05, TAGS = [[-0.55, 0.07, 0.45], [0.06, 0.07, 0.34], [0.66, 0.43, 0.017], [0.68, 0.065, 0.42]];
+    const tagGeos = TAGS.map(([x, y, z, base = 0], r) => {
+      box('black', TW + 0.006, TH + 0.006, 0.005, x, y, z, TAG_YAW);
+      const stem = y - TH / 2 - 0.003 - base; box('black', 0.008, stem, 0.008, x, base + stem / 2, z);
+      if (!base) box('black', 0.03, 0.003, 0.018, x, 0.0015, z, TAG_YAW);                                     // foot plate on the deck
+      const geo = new THREE.PlaneGeometry(TW, TH), uv = geo.attributes.uv;
+      for (let i = 0; i < uv.count; i++) uv.setY(i, 1 - (r + 1) / 4 + uv.getY(i) / 4);
+      return geo.applyMatrix4(gm.compose(gp.set(x + Math.sin(TAG_YAW) * 0.0028, top + y, z + Math.cos(TAG_YAW) * 0.0028), gq.setFromEuler(ge.set(0, TAG_YAW, 0)), gs));
+    });
+    const tagTex = canvasTex(1024, 1024, (g, w) => {
+      ['01 INTAKE', '02 MILL', '03 CONVEY', '04 PASTA'].forEach((t, r) => {
+        g.fillStyle = '#16181b'; g.fillRect(0, r * 256, w, 256); g.fillStyle = '#f0662c'; g.fillRect(0, r * 256, 30, 256);
+        g.fillStyle = '#f6f2ea'; g.font = '700 150px "JetBrains Mono", monospace'; g.fillText(t, 74, r * 256 + 180, w - 110);
+      });
+    });
+    add(new THREE.Mesh(mergeGeometries(tagGeos), lit(tagTex, { transparent: false, depthWrite: true })), mill, false);
+    // galvanized steel: fine horizontal corrugation and a few stiffeners (vertical ribs read as pleated paper at this size)
+    const galvTex = canvasTex(64, 64, (g, w, h) => {
+      g.fillStyle = '#b9bfc5'; g.fillRect(0, 0, w, h);
+      g.fillStyle = '#9ea5ac'; for (let y = 0; y < h; y += 4) g.fillRect(0, y, w, 2);
+      g.fillStyle = '#868d95'; for (let x = 0; x < w; x += 16) g.fillRect(x, 0, 2, h);
+    });
+    galvTex.wrapS = galvTex.wrapT = THREE.RepeatWrapping; galvTex.repeat.set(2, 6);
+    const cardTex = canvasTex(64, 64, (g, w, h) => {
+      g.fillStyle = '#b27a3c'; g.fillRect(0, 0, w, h); g.fillStyle = '#f1e8d6'; g.fillRect(0, 26, w, 12);
+      g.strokeStyle = '#5e3f1d'; g.lineWidth = 6; g.strokeRect(3, 3, w - 6, h - 6);
+    });
+    const MATS = { white: M.model, grey: M.model2, black: M.black,
+      mach: std({ color: 0x6f7c8a, roughness: 0.5, metalness: 0.3 }, roomEnv, 0.45),
+      galv: std({ map: galvTex, color: 0xffffff, roughness: 0.32, metalness: 0.65 }, roomEnv, 0.9),
+      roof: std({ map: galvTex, color: 0xa4abb2, roughness: 0.4, metalness: 0.6 }, roomEnv, 0.6),
+      truck: std({ color: 0x24456a, roughness: 0.4, metalness: 0.25 }, roomEnv, 0.5),
+      pallet: std({ color: 0xb8925e, roughness: 0.85 }, roomEnv, 0.2) };
+    for (const k of Object.keys(G)) add(new THREE.Mesh(mergeGeometries(G[k]), MATS[k]), mill);
+    // moving parts: the roll pair in the open roller mill, the plansifters (they shake), the die cutter, dryer bays, cartons
+    const fluted = canvasTex(64, 16, (g, w, h) => { g.fillStyle = '#c9ccd0'; g.fillRect(0, 0, w, h); g.fillStyle = '#5d636a'; for (let i = 0; i < 8; i++) g.fillRect(i * 8, 0, 3, h); });
+    const rollMat = std({ map: fluted, roughness: 0.35, metalness: 0.7 }, roomEnv, 0.6);
+    const rolls = [-1, 1].map((d) => {
+      const holder = new THREE.Group(); holder.position.set(0.03, top + 0.3, -0.27 + d * 0.0185); holder.rotation.z = Math.PI / 2; mill.add(holder);
+      const r = new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.018, 0.07, 20), rollMat); holder.add(r);
+      r.userData.dir = d; return r;
+    });
+    const sifters = new THREE.Group(); mill.add(sifters);
+    const siftTex = canvasTex(32, 64, (g, w, h) => { g.fillStyle = '#eeebe6'; g.fillRect(0, 0, w, h); g.fillStyle = '#8e939a'; for (let i = 0; i < 8; i++) g.fillRect(0, i * 8 + 6, w, 2); });
+    add(new THREE.Mesh(mergeGeometries([-0.05, 0.12].map((x) => new THREE.BoxGeometry(0.12, 0.15, 0.12).translate(x, top + 0.58, -0.25))), std({ map: siftTex, roughness: 0.7 }, roomEnv, 0.2)), sifters);
+    const cutter = add(new THREE.Mesh(new THREE.BoxGeometry(0.003, 0.04, 0.004), M.black), mill, false); cutter.position.set(0.511, top + 0.082, 0.18);
+    const bays = new THREE.InstancedMesh(new THREE.BoxGeometry(0.026, 0.044, 0.002), new THREE.MeshBasicMaterial({ color: 0xffffff }), 8); // bay windows
+    const im4 = new THREE.Matrix4(), bayCol = new THREE.Color();
+    for (let i = 0; i < 8; i++) { bays.setMatrixAt(i, im4.makeTranslation(0.55 + (i + 0.5) * 0.03875, top + 0.05, 0.2405)); bays.setColorAt(i, bayCol.setHex(0x3a3f45)); }
+    mill.add(bays);
+    const cartons = new THREE.InstancedMesh(new THREE.BoxGeometry(0.028, 0.021, 0.028), std({ map: cardTex, roughness: 0.85 }, roomEnv, 0.2), 8);
+    for (let i = 0; i < 8; i++) cartons.setMatrixAt(i, im4.makeTranslation(0.9 + ((i % 2) - 0.5) * 0.031, top + 0.0225 + Math.floor(i / 4) * 0.022, 0.31 + ((Math.floor(i / 2) % 2) - 0.5) * 0.031));
+    cartons.castShadow = true; mill.add(cartons);
+    // the flow: small packets run along the troughs, up the elevator, down the spout and through the pipe (piecewise
+    // straight, so they never float); the commissioning front advances one section per step
+    const FP = [
+      [-0.75, 0.015, 0.16, 0], [-0.75, 0.015, -0.236, 0], [-0.75, 0.70, -0.236, 0], [-0.725, 0.685, -0.27, 0],
+      [-0.15, 0.685, -0.27, 1], [0.215, 0.685, -0.27, 1], [0.215, 0.685, 0.0, 1], [0.215, 0.385, 0.0, 1],
+      [0.44, 0.385, 0.0, 2], [0.44, 0.2, 0.0, 2], [0.44, 0.2, 0.045, 2], [0.44, 0.2, 0.18, 2], [0.44, 0.15, 0.18, 2],
+      [0.44, 0.082, 0.18, 3], [0.51, 0.082, 0.18, 3], [0.53, 0.058, 0.18, 3], [0.86, 0.058, 0.18, 3], [0.9, 0.058, 0.18, 3],
+    ];
+    const flowPath = new THREE.CurvePath();
+    for (let i = 1; i < FP.length; i++) flowPath.add(new THREE.LineCurve3(new THREE.Vector3(FP[i - 1][0], top + FP[i - 1][1], FP[i - 1][2]), new THREE.Vector3(FP[i][0], top + FP[i][1], FP[i][2])));
+    const cum = flowPath.getCurveLengths(), total = cum[cum.length - 1];
+    const SEC1 = [0, 1, 2, 3].map((sec) => { let e = 0; for (let i = 1; i < FP.length; i++) if (FP[i][3] === sec) e = cum[i - 1] / total; return e; });
+    const SEC0 = [0, SEC1[0], SEC1[1], SEC1[2]];
+    const NP = 110;
+    const flour = new THREE.InstancedMesh(new THREE.SphereGeometry(0.008, 8, 6), // wheat gold: reads against the white model
       std({ color: 0xf0b43c, roughness: 0.5, emissive: 0x9a5c0c, emissiveIntensity: 0.9 }, roomEnv, 0.2), NP);
     flour.frustumCulled = false; mill.add(flour);
-    const fm = new THREE.Matrix4(), fv = new THREE.Vector3(), hideM = new THREE.Matrix4().makeScale(0, 0, 0);
+    const fv = new THREE.Vector3(), hideM = new THREE.Matrix4().makeScale(0, 0, 0);
     const placeFlour = (front, phase) => {
       for (let i = 0; i < NP; i++) {
-        const s = (i / NP + phase) % 1;
-        if (s > front) { flour.setMatrixAt(i, hideM); continue; }
-        flowPath.getPointAt(s, fv);
-        flour.setMatrixAt(i, fm.makeTranslation(fv.x, fv.y, fv.z));
+        const u = (i / NP + phase) % 1;
+        if (u > front) { flour.setMatrixAt(i, hideM); continue; }
+        flowPath.getPointAt(u, fv);
+        flour.setMatrixAt(i, im4.makeTranslation(fv.x, fv.y, fv.z));
       }
       flour.instanceMatrix.needsUpdate = true;
     };
-    const fluted = canvasTex(64, 16, (g, w, h) => { g.fillStyle = '#c9ccd0'; g.fillRect(0, 0, w, h); g.fillStyle = '#5d636a'; for (let i = 0; i < 8; i++) g.fillRect(i * 8, 0, 3, h); });
-    const rollMat = std({ map: fluted, roughness: 0.35, metalness: 0.7 }, roomEnv, 0.6);
-    rounded(0.26, 0.1, 0.17, 0.008, M.model2, -0.45, top + 0.05, 0.2, { parent: mill });
-    const rolls = [-1, 1].map((d) => {
-      const holder = new THREE.Group(); holder.position.set(-0.45, top + 0.135, 0.2 + d * 0.031); holder.rotation.z = Math.PI / 2; mill.add(holder);
-      const r = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.2, 20), rollMat); holder.add(r);
-      r.userData.dir = d; return r;
-    });
-    const lampAt = [[0.35, 0.875, -0.28], [-0.45, 0.88, 0.075], [0.12, 0.44, -0.16], [0.68, 0.338, 0.42]]; // intake, milling, conveying (front of the right post), pasta
     const lampMats = lampAt.map(() => new THREE.MeshBasicMaterial({ color: 0x3a3f45 }));
-    lampAt.forEach(([x, y, z], i) => { const m = new THREE.Mesh(new THREE.SphereGeometry(0.026, 16, 12), lampMats[i]); m.position.set(x, top + y, z); mill.add(m); });
-    let rollA = 0;
+    lampAt.forEach(([x, y, z], i) => { const m = new THREE.Mesh(new THREE.CylinderGeometry(0.0095, 0.0095, 0.024, 16), lampMats[i]); m.position.set(x, top + y + 0.024, z); mill.add(m); });
+    // the case: slim black top frame; the vertical edges are bonded glass (no posts or seams across the view)
+    add(new THREE.Mesh(new RoundedBoxGeometry(2.0, 1.0, 1.15, 2, 0.01), M.vitrine), mill, false, false).position.set(0, top + 0.5, 0);
+    for (const [w, h, d, x, y, z] of [[2.0, 0.018, 0.018, 0, 1.0, 0.575], [2.0, 0.018, 0.018, 0, 1.0, -0.575], [0.018, 0.018, 1.15, 1.0, 1.0, 0], [0.018, 0.018, 1.15, -1.0, 1.0, 0]])
+      block(w, h, d, M.black, x, top + y, z, { parent: mill, cast: false });
+    const p = rounded(0.92, 0.17, 0.02, 0.01, M.black, 0, 0.6, 0.635, { parent: mill });
+    plane(0.88, 0.14, lit(canvasTex(1024, 163, (g, w) => {
+      g.fillStyle = '#fbf8f3'; g.fillRect(0, 0, w, 163);
+      g.fillStyle = '#14171a'; g.font = '800 58px "Inter", "Segoe UI", system-ui, sans-serif'; g.fillText('FLOUR MILL \u2192 PASTA PLANT', 26, 68, w - 52);
+      g.fillStyle = '#c4501d'; g.fillRect(26, 86, 64, 6);
+      g.fillStyle = '#3a3f45'; g.font = '700 40px "JetBrains Mono", monospace'; spacing(g, 2); g.fillText('PLANT COMMISSIONING \u00b7 1:100', 26, 142, w - 52);
+    }), { transparent: false, depthWrite: true }), 0, 0, 0.011, { parent: p });
+    let rollA = 0, shakeA = 0, cutA = 0;
     const paint = (now) => {
       const k = Math.min(4, Math.floor(PS.t / PLANT.STEP)); // sections fully commissioned
       lampMats.forEach((m, i) => m.color.setHex(i < k ? 0x35d07f : i === k && PS.phase === 'run' ? ((now / 260) % 2 < 1 ? 0xffb020 : 0x6b4a0e) : 0x3a3f45));
-      placeFlour(PS.phase === 'done' ? 1 : Math.min(1, PS.t / PLANT.END), PS.flow);
+      const f = (PS.t - k * PLANT.STEP) / PLANT.STEP;
+      placeFlour(PS.phase === 'done' ? 1 : PS.phase === 'idle' ? 0 : k >= 4 ? 1 : SEC0[k] + (SEC1[k] - SEC0[k]) * f, PS.flow);
+      const last = PS.phase === 'done' ? 1 : PS.phase === 'idle' ? 0 : clamp((PS.t - 3 * PLANT.STEP) / PLANT.STEP, 0, 1); // the pasta line's share
+      const lit8 = Math.floor(8 * last + 1e-6);
+      for (let i = 0; i < 8; i++) bays.setColorAt(i, bayCol.setHex(i < lit8 ? 0xffb347 : 0x3a3f45));
+      bays.instanceColor.needsUpdate = true;
+      cartons.count = Math.floor(8 * clamp((last - 0.35) / 0.65, 0, 1) + 1e-6);
     };
     const startPlant = () => {
       PS.delay = 0;
@@ -1372,10 +1488,12 @@ async function init() {
         PS.t = Math.min(PLANT.END, PS.t + dt);
         if (PS.t >= PLANT.END) PS.phase = 'done';
       } else if (!(PS.phase === 'done' && here && S.motion)) return false; // the line keeps running only while you watch
-      const spin = PS.phase === 'done' ? 1 : clamp((PS.t - PLANT.STEP) / 1.5, 0, 1);
-      rollA += dt * 9 * spin;
-      for (const r of rolls) r.rotation.y = rollA * r.userData.dir;
-      PS.flow = (PS.flow + dt * 0.045) % 1;
+      const spin = PS.phase === 'done' ? 1 : clamp((PS.t - PLANT.STEP) / 1.5, 0, 1);          // the mill from step 2
+      const pasta = PS.phase === 'done' ? 1 : clamp((PS.t - 3 * PLANT.STEP) / 1.0, 0, 1);     // the press from step 4
+      rollA += dt * 9 * spin; for (const r of rolls) r.rotation.y = rollA * r.userData.dir;
+      shakeA += dt * 13 * spin; sifters.position.set(Math.sin(shakeA) * 0.003 * spin, 0, Math.cos(shakeA) * 0.003 * spin);
+      cutA += dt * 14 * pasta; cutter.rotation.x = cutA;
+      PS.flow = (PS.flow + dt * 0.03) % 1;
       paint(now);
       return true;
     };

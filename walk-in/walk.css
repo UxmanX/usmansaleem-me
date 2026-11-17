@@ -39,6 +39,7 @@ a { color: inherit; }
 .wk-stage { position: fixed; inset: 0; z-index: 0; overflow: hidden; }
 .wk-stage canvas, .wk-poster { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
 .wk-poster { object-fit: cover; object-position: 62% 50%; transition: opacity 0.8s ease; }
+@media (orientation: portrait) { .wk-poster { object-position: 50% 50%; } } /* poster-tall is the phone's own first frame */
 .is-3d .wk-poster { opacity: 0; }
 .no-3d #wk-canvas { display: none; }
 

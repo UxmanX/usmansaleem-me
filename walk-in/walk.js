@@ -317,6 +317,7 @@ else init().catch((err) => { console.error(err); fail('The 3D shop could not loa
 
 /* ------------------------------------------------------------------ 3D */
 async function init() {
+  performance.mark('wk:init');
   const canvas = $('#wk-canvas');
   const lite = isSmall() || (navigator.deviceMemory || 8) <= 4;
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
@@ -329,28 +330,37 @@ async function init() {
   renderer.localClippingEnabled = true; // the entrance header cutaway
   const aniso = Math.min(lite ? 4 : 8, renderer.capabilities.getMaxAnisotropy());
 
-  /* ---------- load fonts, textures, sky and the door in parallel ---------- */
+  /* ---------- fonts, textures, sky and door (the page head already started the sky and door) ---------- */
   let want = 0, got = 0;
   hud.classList.add('is-visible');
-  const tick = () => { got++; hudText.textContent = `Loading the shop… ${Math.round((100 * got) / Math.max(1, want))}%`; };
+  const progress = () => { hudText.textContent = `Loading the shop… ${Math.round((100 * got) / Math.max(1, want))}%`; };
+  const tick = () => { got++; progress(); };
   const texLoader = new THREE.TextureLoader();
-  const loadTex = (url, srgb = false, wrap = true) => {
+  // hands back the texture at once, so the scene can be built while the image is still downloading;
+  // each image goes to the GPU the moment it lands, so the first frame does not stall on 19 uploads
+  const loadTex = (url, srgb = false, wrap = true, upload = true) => {
     want++;
-    return new Promise((res) => texLoader.load(url, (t) => {
-      if (srgb) t.colorSpace = THREE.SRGBColorSpace;
-      if (wrap) t.wrapS = t.wrapT = THREE.RepeatWrapping;
-      t.anisotropy = aniso;
-      tick(); res(t);
-    }, undefined, () => { tick(); res(null); }));
+    let t;
+    const done = new Promise((res) => {
+      t = texLoader.load(url, () => { if (upload) renderer.initTexture(t); tick(); res(t); }, undefined, () => { tick(); res(null); });
+    });
+    if (srgb) t.colorSpace = THREE.SRGBColorSpace;
+    if (wrap) t.wrapS = t.wrapT = THREE.RepeatWrapping;
+    t.anisotropy = aniso;
+    return { t, done };
   };
-  const RES = lite ? '512' : '1k';
+  // phones get 256 px normal/ARM maps (a sixth of the bytes); they download while the scene below is built
+  const RES = lite ? '512' : '1k', DETAIL = lite ? '256' : '512';
   const NAMES = ['pave', 'asphalt', 'brick', 'tiles', 'plaster', 'wood'];
-  const texJob = Promise.all(NAMES.map((n) => Promise.all([
-    loadTex(`assets/tex/${n}_diff_${RES}.webp`, true),
-    loadTex(`assets/tex/${n}_nor_512.webp`),
-    loadTex(`assets/tex/${n}_arm_512.webp`),
-  ])));
-  const skyJob = loadTex('assets/sky.v2.jpg', true, false);
+  const TX = {}, texDone = [];
+  for (const n of NAMES) {
+    const map = loadTex(`assets/tex/${n}_diff_${RES}.webp`, true);
+    const normalMap = loadTex(`assets/tex/${n}_nor_${DETAIL}.webp`);
+    const arm = loadTex(`assets/tex/${n}_arm_${DETAIL}.webp`);
+    TX[n] = { map: map.t, normalMap: normalMap.t, arm: arm.t };
+    texDone.push(map.done, normalMap.done, arm.done);
+  }
+  const skyJob = loadTex('assets/sky.v2.jpg', true, false, false).done;
   want++;
   const doorJob = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder).loadAsync('assets/door.v1.glb')
     .then((g) => { tick(); return g; }, (err) => { tick(); console.warn('Door model failed to load; using a simple stand-in.', err); return null; });
@@ -360,8 +370,9 @@ async function init() {
       .map((f) => document.fonts?.load(f))).catch(() => {}),
     new Promise((r) => setTimeout(r, 2500)),
   ]);
-  const [sets, skyTex, gltf] = await Promise.all([texJob, skyJob, doorJob, fontJob]);
-  const TX = Object.fromEntries(NAMES.map((n, i) => [n, { map: sets[i][0], normalMap: sets[i][1], arm: sets[i][2] }]));
+  // building needs only the sky (image light) and the fonts (canvas signs); the door and textures are awaited later
+  const [skyTex] = await Promise.all([skyJob, fontJob]);
+  performance.mark('wk:sky');
 
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(50, innerWidth / innerHeight, 0.05, 220);
@@ -378,6 +389,7 @@ async function init() {
   } else scene.background = new THREE.Color(0x4f5670);
   pmrem.dispose();
   scene.environment = skyEnv;
+  performance.mark('wk:env');
   scene.fog = new THREE.Fog(0x6f6577, 26, 100); // matches the dusk horizon at this background intensity; hazes the street's far ends
 
   /* ---------- helpers ---------- */
@@ -407,6 +419,7 @@ async function init() {
     if (t.arm) { o.roughnessMap = t.arm; o.aoMap = t.arm; o.aoMapIntensity = ao; }
     const m = physical ? new THREE.MeshPhysicalMaterial({ ...o, ...physical }) : new THREE.MeshStandardMaterial(o);
     m.userData.tile = TILE[name];
+    m.userData.fallback = fallback;
     return m;
   }
   // world-scale box projection, so texel density matches across pieces and joints line up
@@ -1599,6 +1612,8 @@ async function init() {
   let leafL = null, leafR = null, slideLocal = 0, miniL = null, miniR = null, miniSlide = 0;
   const decals = [];
   const headerMeshes = [];
+  const gltf = await doorJob; // the page head preloads it, so this rarely waits
+  performance.mark('wk:door');
   if (gltf) {
     const door = gltf.scene;
     door.traverse((o) => {
@@ -2396,7 +2411,24 @@ async function init() {
 
   // compile every shader off the main thread before the first frame, so scrolling never freezes
   hudText.textContent = 'Preparing materials…';
+  performance.mark('wk:built');
   try { await renderer.compileAsync(scene, camera); } catch { /* older browsers compile on the first render */ }
+  performance.mark('wk:compiled');
+  if (got < want) progress();
+  await Promise.all(texDone);
+  scene.traverse((o) => {
+    for (const m of o.material ? [].concat(o.material) : []) {
+      for (const k of ['map', 'normalMap', 'roughnessMap', 'aoMap']) {
+        const t = m[k];
+        if (!t || t.isRenderTargetTexture) continue;
+        if (!t.source.data) { // failed to load: fall back to the plain material
+          m[k] = null; m.needsUpdate = true;
+          if (k === 'map' && m.userData.fallback !== undefined) m.color.set(m.userData.fallback);
+        } else if (t.version === 0) t.needsUpdate = true; // a clone made before its image arrived
+      }
+    }
+  });
+  performance.mark('wk:tex');
 
   /* ---------- loop: render only when something changes ---------- */
   let last = performance.now(), animT = 0, slow = 1 / 60;
@@ -2453,6 +2485,7 @@ async function init() {
     renderDetail();
     S.frames++;
     if (!S.ready) {
+      performance.mark('wk:frame1');
       S.ready = true;
       root.classList.add('is-3d');
       S.dirty = true;

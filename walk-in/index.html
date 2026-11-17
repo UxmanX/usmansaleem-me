@@ -14,20 +14,38 @@
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
   <meta name="twitter:card" content="summary_large_image">
-  <link rel="preload" as="image" href="assets/poster.v3.jpg">
+  <link rel="preload" as="image" href="assets/poster.v3.jpg" media="(orientation: landscape)" fetchpriority="high">
+  <link rel="preload" as="image" href="assets/poster-tall.v1.jpg" media="(orientation: portrait)" fetchpriority="high">
   <meta name="theme-color" content="#14171a">
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='24' fill='%23ff541e'/><text x='50' y='66' font-family='Arial' font-weight='800' font-size='46' text-anchor='middle' fill='white'>US</text></svg>">
-  <script>document.documentElement.classList.add('js');</script>
+  <script>
+    document.documentElement.classList.add('js');
+    if (!location.hash) document.documentElement.classList.add('dock-intro'); // the dock's first state, before the scripts arrive (walk.js keeps it in sync)
+    // the sky (needed the moment the 3D starts) and the door downloads begin now, alongside the scripts;
+    // the textures start once the scripts run, while the scene is being built, so they never slow the poster or the scripts
+    if ('WebGL2RenderingContext' in window) for (const [href, as] of [['assets/sky.v2.jpg', 'image'], ['assets/door.v1.glb', 'fetch']]) {
+      const l = document.createElement('link');
+      l.rel = 'preload'; l.as = as; l.href = href; l.crossOrigin = 'anonymous';
+      document.head.appendChild(l);
+    }
+  </script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
   <!-- 3D: three.js (MIT, see vendor/three/LICENSE). Textures and sky: Poly Haven (polyhaven.com), CC0. -->
-  <link rel="stylesheet" href="walk.css?v=11">
+  <link rel="stylesheet" href="walk.css?v=12">
   <script type="importmap">
     { "imports": { "three": "./vendor/three/build/three.module.min.js", "three/addons/": "./vendor/three/examples/jsm/" } }
   </script>
   <link rel="modulepreload" href="vendor/three/build/three.core.min.js">
   <link rel="modulepreload" href="vendor/three/build/three.module.min.js">
+  <link rel="modulepreload" href="walk.js?v=13">
+  <link rel="modulepreload" href="vendor/three/examples/jsm/loaders/GLTFLoader.js">
+  <link rel="modulepreload" href="vendor/three/examples/jsm/utils/BufferGeometryUtils.js">
+  <link rel="modulepreload" href="vendor/three/examples/jsm/utils/SkeletonUtils.js">
+  <link rel="modulepreload" href="vendor/three/examples/jsm/libs/meshopt_decoder.module.js">
+  <link rel="modulepreload" href="vendor/three/examples/jsm/environments/RoomEnvironment.js">
+  <link rel="modulepreload" href="vendor/three/examples/jsm/geometries/RoundedBoxGeometry.js">
 </head>
 <body>
   <a class="wk-skiplink" href="#stop-checkout" data-jump>Skip to the summary</a>
@@ -44,7 +62,7 @@
   </header>
 
   <div class="wk-stage" aria-hidden="true">
-    <img class="wk-poster" src="assets/poster.v3.jpg" alt="" onerror="this.remove()">
+    <picture><source media="(orientation: portrait)" srcset="assets/poster-tall.v1.jpg"><img class="wk-poster" src="assets/poster.v3.jpg" alt="" fetchpriority="high" onerror="this.remove()"></picture>
     <canvas id="wk-canvas"></canvas>
   </div>
 
@@ -73,6 +91,7 @@
     <button class="dock-info" type="button" aria-expanded="false"><span class="dock-title"><span class="dock-count" data-step aria-hidden="true"></span> <span data-title></span></span><span class="visually-hidden" data-sr></span><span class="dock-more" aria-hidden="true"><svg viewBox="0 0 20 20"><path d="M5.5 12.5 10 8l4.5 4.5"/></svg></span></button>
     <button class="dock-btn dock-next" type="button"><span data-label>Walk in</span><span class="dock-next-name"></span><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7.5 4.5 13 10l-5.5 5.5"/></svg></button>
   </nav>
+  <script>if (!matchMedia('(pointer: coarse)').matches) { document.querySelector('[data-hint]').textContent = 'Scroll to walk in'; document.querySelector('.dock-hint-ico').classList.add('is-down'); }</script>
   <!-- Free walk: look and walk around yourself (optional; the guided tour stays the default) -->
   <div class="wk-free" role="region" aria-label="Free walk" hidden>
     <p class="free-near" hidden><span class="free-near-dot" aria-hidden="true"></span><span data-free-near></span><button class="free-read" type="button">Read about it</button></p>
@@ -203,6 +222,6 @@
   </main>
 
   <noscript><p class="wk-noscript">The 3D walk needs JavaScript. Everything above is still readable.</p></noscript>
-  <script type="module" src="walk.js?v=12"></script>
+  <script type="module" src="walk.js?v=13"></script>
 </body>
 </html>

@@ -33,13 +33,13 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
   <!-- 3D: three.js (MIT, see vendor/three/LICENSE). Textures and sky: Poly Haven (polyhaven.com), CC0. -->
-  <link rel="stylesheet" href="walk.css?v=12">
+  <link rel="stylesheet" href="walk.css?v=13">
   <script type="importmap">
     { "imports": { "three": "./vendor/three/build/three.module.min.js", "three/addons/": "./vendor/three/examples/jsm/" } }
   </script>
   <link rel="modulepreload" href="vendor/three/build/three.core.min.js">
   <link rel="modulepreload" href="vendor/three/build/three.module.min.js">
-  <link rel="modulepreload" href="walk.js?v=14">
+  <link rel="modulepreload" href="walk.js?v=15">
   <link rel="modulepreload" href="vendor/three/examples/jsm/loaders/GLTFLoader.js">
   <link rel="modulepreload" href="vendor/three/examples/jsm/utils/BufferGeometryUtils.js">
   <link rel="modulepreload" href="vendor/three/examples/jsm/utils/SkeletonUtils.js">
@@ -92,7 +92,7 @@
     <button class="dock-btn dock-next" type="button"><span data-label>Walk in</span><span class="dock-next-name"></span><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7.5 4.5 13 10l-5.5 5.5"/></svg></button>
   </nav>
   <script>if (!matchMedia('(pointer: coarse)').matches) { document.querySelector('[data-hint]').textContent = 'Scroll to walk in'; document.querySelector('.dock-hint-ico').classList.add('is-down'); }</script>
-  <!-- Free walk: look and walk around yourself (optional; the guided tour stays the default) -->
+  <!-- Free walk: look and walk around yourself (the default since Nov 2026; the guided tour is one button away) -->
   <div class="wk-free" role="region" aria-label="Free walk" hidden>
     <p class="free-near" hidden><span class="free-near-dot" aria-hidden="true"></span><span data-free-near></span><button class="free-read" type="button">Read about it</button></p>
     <div class="free-bar">
@@ -202,7 +202,8 @@
           </ul>
           <p class="r-hint" data-visit-hint hidden></p>
           <hr>
-          <p>MEng Mechanical · University of Ottawa<br>B.Sc. Mechanical · UET Lahore</p>
+          <p class="r-dips"><button type="button" class="r-dip" data-diploma="uottawa">MEng Mechanical · University of Ottawa</button><br><button type="button" class="r-dip" data-diploma="uet">B.Sc. Mechanical · UET Lahore</button></p>
+          <p class="r-hint r-dip-hint"><span class="t-touch">Tap</span><span class="t-mouse">Click</span> a degree to see the diploma</p>
           <p class="r-route"><abbr title="Lahore, Ottawa, Mississauga">LHE → YOW → YYZ</abbr></p>
           <hr>
           <dl class="r-lines r-total">
@@ -222,6 +223,19 @@
   </main>
 
   <noscript><p class="wk-noscript">The 3D walk needs JavaScript. Everything above is still readable.</p></noscript>
-  <script type="module" src="walk.js?v=14"></script>
+  <script type="module" src="walk.js?v=15"></script>
+  <!-- Diplomas, readable: opened from the receipt, or by clicking a frame on the wall in the walk -->
+  <dialog class="wk-viewer" aria-labelledby="viewer-title">
+    <div class="viewer-top">
+      <h2 id="viewer-title" class="viewer-title" data-viewer-title>Diploma</h2>
+      <div class="viewer-tabs" role="group" aria-label="Diplomas">
+        <button type="button" class="viewer-tab" data-diploma-tab="uet" aria-pressed="true">UET Lahore</button>
+        <button type="button" class="viewer-tab" data-diploma-tab="uottawa" aria-pressed="false">uOttawa</button>
+      </div>
+      <button type="button" class="viewer-close" data-viewer-close><span aria-hidden="true">&#x2715;</span><span class="visually-hidden">Close</span></button>
+    </div>
+    <div class="viewer-scroll" data-viewer-scroll><img data-viewer-img alt="" decoding="async"></div>
+    <p class="viewer-note"><span class="t-touch">Tap</span><span class="t-mouse">Click</span> the diploma to zoom · ID numbers removed · <a data-viewer-full href="#" target="_blank" rel="noopener">Open full size</a></p>
+  </dialog>
 </body>
 </html>

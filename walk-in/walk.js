@@ -175,7 +175,6 @@ $('main').addEventListener('click', (e) => {
   if (open) setOpen(open, false);
 });
 addEventListener('keydown', (e) => {
-  if (viewer?.open) return; // the diploma viewer has the keys
   if (EX.on) return; // free walk has its own keys
   if (e.key === 'Escape') {
     const open = $('.card.is-open');
@@ -189,45 +188,6 @@ addEventListener('keydown', (e) => {
 addEventListener('scrollend', () => { goal = -1; });
 addEventListener('touchstart', (e) => { if (!e.target.closest?.('.wk-dock')) goal = -1; }, { passive: true });
 addEventListener('wheel', () => { goal = -1; }, { passive: true });
-
-// Diplomas, readable: sharp copies (ID numbers removed) in a viewer, opened from the receipt or by clicking a frame
-const viewer = $('.wk-viewer');
-let viewerAt = 0; // when it opened: a tap's follow-up click must not close it again
-const DIPS = {
-  uet: { src: 'assets/diploma-uet-view.v1.webp', w: 1400, h: 1979, title: 'B.Sc. Mechanical Engineering · UET Lahore',
-    alt: 'Degree certificate: Bachelor of Science in Mechanical Engineering, University of Engineering and Technology, Lahore, awarded to Usman Saleem. ID numbers removed.' },
-  uottawa: { src: 'assets/diploma-uottawa-view.v1.webp', w: 2000, h: 1545, title: 'MEng Mechanical Engineering · University of Ottawa',
-    alt: 'Diploma: Master of Engineering in Mechanical Engineering, University of Ottawa, awarded to Usman Saleem.' },
-};
-function openDiploma(key) {
-  const d = DIPS[key];
-  if (!viewer || !d) return;
-  const img = viewer.querySelector('[data-viewer-img]');
-  viewer.querySelector('[data-viewer-scroll]').classList.remove('is-zoomed');
-  img.style.width = '';
-  img.width = d.w; img.height = d.h; img.alt = d.alt; img.src = d.src;
-  viewer.querySelector('[data-viewer-title]').textContent = d.title;
-  viewer.querySelector('[data-viewer-full]').href = d.src;
-  for (const b of viewer.querySelectorAll('[data-diploma-tab]')) b.setAttribute('aria-pressed', String(b.dataset.diplomaTab === key));
-  if (!viewer.open) { viewer.showModal(); viewerAt = performance.now(); }
-}
-if (viewer) {
-  const sc = viewer.querySelector('[data-viewer-scroll]'), img = viewer.querySelector('[data-viewer-img]');
-  viewer.addEventListener('click', (e) => {
-    const t = e.target, tab = t.closest('[data-diploma-tab]');
-    if (tab) { openDiploma(tab.dataset.diplomaTab); return; }
-    if (performance.now() - viewerAt < 400) return;
-    if (t.closest('[data-viewer-close]') || t === viewer || (t === sc && !sc.classList.contains('is-zoomed'))) { viewer.close(); return; }
-    if (t !== img) return;
-    // zoom about 2.2x (no further than the scan's own pixels), keeping the spot you tapped in view
-    const r = img.getBoundingClientRect(), fx = (e.clientX - r.left) / r.width, fy = (e.clientY - r.top) / r.height;
-    const z = !sc.classList.contains('is-zoomed');
-    img.style.width = z ? `${Math.min(img.naturalWidth || img.width, Math.round(r.width * 2.2))}px` : '';
-    sc.classList.toggle('is-zoomed', z);
-    if (z) { sc.scrollLeft = fx * img.offsetWidth - sc.clientWidth / 2; sc.scrollTop = fy * img.offsetHeight - sc.clientHeight / 2; }
-  });
-  for (const b of document.querySelectorAll('[data-diploma]')) b.addEventListener('click', () => openDiploma(b.dataset.diploma));
-}
 
 // Your visit: a stop counts once you stay on it for a moment; the checkout receipt lists them
 const VISIT = { seen: new Set(), t0: performance.now(), timer: 0, printAt: 0 };
@@ -1605,24 +1565,27 @@ async function init() {
       return true;
     };
     add(new THREE.Mesh(new THREE.SphereGeometry(0.07, 24, 12, 0, Math.PI * 2, 0, Math.PI / 2), M.chrome), co).position.set(-0.7, 1.05, 0.12);
-    // Usman behind the counter: a cut-out from a photo, standing back from the quartz and turned toward you
-    // (about the vertical only). An empty stand-in holds the place until the photo arrives after the first frame.
+    // Usman behind the counter, from his professional headshot. The photo stops at mid-chest, so he sits close
+    // behind the quartz (chest 5 cm off its back edge, crown at 1.495 m): from anywhere in front the counter's edge
+    // hides everything below the lapels (photo end 1.5-2 cm under the sight line), the one view the photo honestly gives. He turns to face you about the
+    // vertical only. An empty stand-in holds the place until the photo arrives after the first frame.
     {
       const blank = canvasTex(4, 4, () => {});
-      const mat = new THREE.MeshStandardMaterial({ map: blank, emissiveMap: blank, color: 0xfff3e6, emissive: 0xffe6cc, emissiveIntensity: 0.18,
+      const mat = new THREE.MeshStandardMaterial({ map: blank, emissiveMap: blank, color: 0xfff3e6, emissive: 0xffe2c4, emissiveIntensity: 0.3,
         roughness: 0.9, metalness: 0, envMapIntensity: 0.25, alphaToCoverage: true });
-      me = new THREE.Mesh(new THREE.PlaneGeometry(0.502, 0.839), mat);
+      const geo = new THREE.PlaneGeometry(0.496, 0.506); geo.translate(-0.012, 0, 0); // his head on the turning axis
+      me = new THREE.Mesh(geo, mat);
       co.updateMatrixWorld(true);
-      co.localToWorld(me.position.set(0.12, 1.343, -0.75));
+      co.localToWorld(me.position.set(0.12, 1.495 + 0.007 - 0.253, -0.475));
       scene.add(me);
-      lateTex.push(['assets/usman-counter.v1.webp', (t) => { blank.dispose(); mat.map = t; mat.emissiveMap = t; }]);
+      lateTex.push(['assets/usman-counter.v2.webp', (t) => { blank.dispose(); mat.map = t; mat.emissiveMap = t; }]);
     }
     contact(3.4, 1.8, -2.9, -11.4, 0.3);
   }
   // the real diplomas, in the order of the route above them: UET Lahore (B.Sc.), then uOttawa (MEng).
-  // A plain mat-and-paper stand-in shows until the scans arrive; they are fetched after the first frame,
-  // so they never hold up the start. ID numbers are removed from the published scans. Clicking one in the walk
-  // (or its line on the receipt) opens the readable copy.
+  // A plain mat-and-paper stand-in shows until the scans arrive after the first frame. They are wall pieces only:
+  // the published copies are deliberately low resolution (~575 px per metre), so they read as his diplomas from
+  // the counter but the fine print, grades and signatures don't (his choice; ID numbers are removed as well).
   for (const [name, x, w, h] of [['uet', -4.615, 0.669, 0.884], ['uottawa', -2.75, 1.1, 0.884]]) {
     rounded(w + 0.08, h + 0.08, 0.04, 0.008, M.black, x, 1.9, -14.27);
     const stand = canvasTex(64, Math.round((64 * h) / w), (g, cw, ch) => {
@@ -1632,8 +1595,8 @@ async function init() {
       g.fillStyle = '#f5f2ea'; g.fillRect(m, m, cw - 2 * m, ch - 2 * m);
     });
     const mat = lit(stand, { transparent: false, depthWrite: true });
-    plane(w, h, mat, x, 1.9, -14.247).userData.diploma = name;
-    lateTex.push([`assets/diploma-${name}-1024.v1.webp`, (t) => { mat.map.dispose(); mat.map = t; }]);
+    plane(w, h, mat, x, 1.9, -14.247);
+    lateTex.push([`assets/diploma-${name}-wall.v2.webp`, (t) => { mat.map.dispose(); mat.map = t; }]);
   }
   plane(3.6, 0.6, lit(canvasTex(1440, 240, (g, w) => {
     g.strokeStyle = '#14171a'; g.lineWidth = 5; g.setLineDash([18, 14]);
@@ -2232,7 +2195,6 @@ async function init() {
     if (!hit || hit.distance > 32) return null;
     const p = hit.point;
     if (p.y <= 0.05) return { floor: true, p };
-    if (hit.object.userData.diploma) return { diploma: hit.object.userData.diploma, p };
     if (Math.abs(p.x) < 1.5 && p.z > -0.45 && p.z < 0.35 && p.y < 2.5) return { door: true, p };
     let stop = -1, best = 2.3;
     for (let i = 2; i < N; i++) { const d = Math.hypot(SUBJ[i].x - p.x, SUBJ[i].z - p.z); if (d < best) { best = d; stop = i; } }
@@ -2241,7 +2203,6 @@ async function init() {
   function tapAt(cx, cy) {
     const h = pick(cx, cy);
     if (!h) return;
-    if (h.diploma) { openDiploma(h.diploma); return; }
     if (h.door) { walkTo(clamp(F.pos.x, -0.3, 0.3), F.pos.z > ZMID ? -2.4 : 2.4); return; } // through it
     if (h.stop !== undefined) { goStop(h.stop); return; }
     const t = h.p.clone(); t.y = 0;
@@ -2252,7 +2213,7 @@ async function init() {
     if (!F.hover) return;
     const [cx, cy] = F.hover; F.hover = null;
     const h = pick(cx, cy);
-    root.classList.toggle('free-point', !!h && (!!h.door || !!h.diploma || h.stop !== undefined));
+    root.classList.toggle('free-point', !!h && (!!h.door || h.stop !== undefined));
     if (F.walk) return; // the orange ring marks where you're going
     if (h && h.floor) {
       const t = collide(h.p.clone().setY(0), h.p.clone().setY(0), true);
@@ -2378,7 +2339,7 @@ async function init() {
   }, { passive: false });
   const KEYMAP = { KeyW: 'f', ArrowUp: 'f', KeyS: 'b', ArrowDown: 'b', KeyA: 'l', KeyD: 'r', ArrowLeft: 'tl', ArrowRight: 'tr', KeyQ: 'tl', KeyE: 'tr' };
   addEventListener('keydown', (e) => {
-    if (!EX.on || viewer?.open) return;
+    if (!EX.on) return;
     if (e.key === 'Escape') { e.preventDefault(); exitFree(); return; }
     if (e.key === 'Shift') F.run = true;
     const k = KEYMAP[e.code];

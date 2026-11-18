@@ -2160,7 +2160,7 @@ async function init() {
   function walkTo(x, z, face = null, opt = {}) {
     const t = collide(new THREE.Vector3(x, 0, z), new THREE.Vector3(x, 0, z), true);
     const path = route(t.x, t.z);
-    if (!path) { if (!opt.dolly) teleport(t.x, t.z, face); return; }
+    if (!path || (opt.nearby && lenOf(path) > 2.401)) { if (!opt.dolly && !opt.nearby) teleport(t.x, t.z, face); return; }
     if (!S.motion) { place(t.x, t.z, face); return; }
     const total = lenOf(path);
     if (opt.far && total > opt.far) { teleport(t.x, t.z, face); return; }
@@ -2184,14 +2184,27 @@ async function init() {
     for (let i = 2; i < N; i++) { const d = Math.hypot(SUBJ[i].x - p.x, SUBJ[i].z - p.z); if (d < best) { best = d; stop = i; } }
     return stop >= 0 ? { stop, p } : { thing: true, p };
   }
+  // A floor pixel near the horizon can be many metres away. Take a short, visible step
+  // toward it, stopping before obstacles instead of detouring or teleporting through the shop.
+  function floorTarget(p) {
+    const dx = p.x - F.pos.x, dz = p.z - F.pos.z, d = Math.hypot(dx, dz);
+    if (!Number.isFinite(d) || d < 0.12) return null;
+    const reach = Math.min(d, 2.4), steps = Math.ceil(reach / 0.12);
+    const t = F.pos.clone().setY(0);
+    for (let i = 1; i <= steps; i++) {
+      const k = (reach * i) / (steps * d), x = F.pos.x + dx * k, z = F.pos.z + dz * k;
+      if (blocked(x, z)) break;
+      t.set(x, 0, z);
+    }
+    return Math.hypot(t.x - F.pos.x, t.z - F.pos.z) >= 0.12 ? t : null;
+  }
   function tapAt(cx, cy) {
     const h = pick(cx, cy);
     if (!h) return;
-    if (h.door) { walkTo(clamp(F.pos.x, -0.3, 0.3), F.pos.z > ZMID ? -2.4 : 2.4); return; } // through it
+    if (h.door) { walkTo(clamp(F.pos.x, -0.3, 0.3), F.pos.z > ZMID ? -2.4 : 2.4); return; } // deliberate shortcut through it
     if (h.stop !== undefined) { goStop(h.stop); return; }
-    const t = h.p.clone(); t.y = 0;
-    if (h.thing) { dirV.set(t.x - F.pos.x, 0, t.z - F.pos.z); const d = dirV.length(); if (d > 0.01) t.addScaledVector(dirV, -Math.min(0.75, d) / d); }
-    walkTo(t.x, t.z);
+    const t = h.floor ? floorTarget(h.p) : null; // walls and scenery are not destinations
+    if (t) walkTo(t.x, t.z, null, { nearby: true });
   }
   function resolveHover() {
     if (!F.hover) return;
@@ -2200,8 +2213,8 @@ async function init() {
     root.classList.toggle('free-point', !!h && (!!h.door || h.stop !== undefined));
     if (F.walk) return; // the orange ring marks where you're going
     if (h && h.floor) {
-      const t = collide(h.p.clone().setY(0), h.p.clone().setY(0), true);
-      if (Math.hypot(t.x - h.p.x, t.z - h.p.z) < 0.3) { showSpot(t, true); return; }
+      const t = floorTarget(h.p);
+      if (t) { showSpot(t, true); return; }
     }
     hideSpot();
   }
@@ -2213,9 +2226,12 @@ async function init() {
     const help = $('[data-free-help]');
     if (!help) return;
     const touch = coarse.matches;
-    help.textContent = F.pos.z > ZMID
-      ? (touch ? 'Tap the door to go in · drag to look' : 'Click the door to go in · drag to look around')
-      : (touch ? 'Drag to look · tap to walk' : 'Drag to look · click where you want to go');
+    const moving = !!F.walk || F.vel.lengthSq() > 1e-5 || fadeEl?.classList.contains('is-on');
+    help.textContent = moving
+      ? (touch ? 'Tap the scene to stop' : 'Click the scene or press Space to stop')
+      : F.pos.z > ZMID
+        ? (touch ? 'Tap door to enter' : 'Click the door to enter · drag to look')
+        : (touch ? 'Tap floor to step closer' : 'Drag to look · click floor for a short step');
   }
   function syncNear() {
     if (!nearEl) return;
@@ -2231,8 +2247,11 @@ async function init() {
       if (d < bd) { bd = d; best = i; }
     }
     if (best !== EX.near) { EX.near = best; F.nearT = 0; syncNear(); }
-    if ((F.pos.z > ZMID) !== F.out) { F.out = F.pos.z > ZMID; syncHelp(); } // crossed the door
-    else if (best >= 0 && !VISIT.seen.has(best) && (F.nearT += dt) > 0.7) VISIT.seen.add(best);
+    const moving = !!F.walk || F.vel.lengthSq() > 1e-5 || !!fadeEl?.classList.contains('is-on');
+    if ((F.pos.z > ZMID) !== F.out || moving !== F.helpMoving) {
+      F.out = F.pos.z > ZMID; F.helpMoving = moving; syncHelp();
+    }
+    if (best >= 0 && !VISIT.seen.has(best) && (F.nearT += dt) > 0.7) VISIT.seen.add(best);
   }
 
   function updateFree(dt) {
@@ -2277,10 +2296,22 @@ async function init() {
 
   // input (free walk only): drag to look, tap to walk, keys, wheel
   const ptrs = new Map();
+  const wheelInput = { at: -Infinity, dir: 0, used: 0, blocked: false };
+  function stopTravel() {
+    F.walk = null; F.vel.set(0, 0, 0); F.keys.clear(); F.run = false; F.hover = null;
+    clearTimeout(fadeT); fadeT = 0; fadeEl?.classList.remove('is-on');
+    wheelInput.at = performance.now(); wheelInput.blocked = true;
+    hideSpot(); syncHelp(); S.dirty = true;
+  }
   canvas.addEventListener('pointerdown', (e) => {
     if (!EX.on || (e.pointerType === 'mouse' && e.button !== 0)) return;
+    const stopped = !!F.walk || F.vel.lengthSq() > 1e-5 || fadeEl?.classList.contains('is-on');
+    stopTravel(); // touching or grabbing the scene always gives control back immediately
     canvas.setPointerCapture?.(e.pointerId);
-    ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY, x0: e.clientX, y0: e.clientY, t0: performance.now(), drag: false });
+    const multi = ptrs.size > 0;
+    if (multi) for (const p of ptrs.values()) p.multi = true;
+    const slop = e.pointerType === 'mouse' ? 4 : 6;
+    ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY, x0: e.clientX, y0: e.clientY, t0: performance.now(), drag: false, stopped, multi, slop });
   });
   canvas.addEventListener('pointermove', (e) => {
     if (!EX.on) return;
@@ -2288,12 +2319,10 @@ async function init() {
     if (!p) { if (e.pointerType === 'mouse') { F.hover = [e.clientX, e.clientY]; S.dirty = true; } return; }
     const dx = e.clientX - p.x, dy = e.clientY - p.y;
     p.x = e.clientX; p.y = e.clientY;
-    if (!p.drag && Math.hypot(p.x - p.x0, p.y - p.y0) > (e.pointerType === 'mouse' ? 4 : 9)) {
-      p.drag = true; root.classList.add('free-drag');
-      if (F.walk) F.walk.face = null; // you're steering the view now
-      else hideSpot();
+    if (!p.drag && Math.hypot(p.x - p.x0, p.y - p.y0) > p.slop) {
+      p.drag = true; root.classList.add('free-drag'); hideSpot();
     }
-    if (!p.drag || ptrs.size > 1) return;
+    if (!p.drag || p.multi) return;
     const k = (1.3 * hfovNow()) / innerWidth;
     F.yaw += dx * k; F.pitch = clamp(F.pitch + dy * k, -1.1, 1.1);
     F.look = true;
@@ -2303,28 +2332,56 @@ async function init() {
     if (!p) return;
     ptrs.delete(e.pointerId);
     if (!ptrs.size) root.classList.remove('free-drag');
-    if (e.type === 'pointerup' && !p.drag && performance.now() - p.t0 < 700) tapAt(e.clientX, e.clientY);
+    const tap = EX.on && e.type === 'pointerup' && !p.drag && !p.multi && !p.stopped
+      && Math.hypot(e.clientX - p.x0, e.clientY - p.y0) <= p.slop && performance.now() - p.t0 < 500;
+    if (canvas.hasPointerCapture?.(e.pointerId)) canvas.releasePointerCapture(e.pointerId);
+    if (tap) tapAt(e.clientX, e.clientY);
   };
   canvas.addEventListener('pointerup', endPtr);
   canvas.addEventListener('pointercancel', endPtr);
+  canvas.addEventListener('lostpointercapture', endPtr);
+  function cancelPointers() {
+    const ids = [...ptrs.keys()]; ptrs.clear(); root.classList.remove('free-drag');
+    for (const id of ids) if (canvas.hasPointerCapture?.(id)) canvas.releasePointerCapture(id);
+  }
   canvas.addEventListener('pointerleave', (e) => {
     if (e.pointerType !== 'mouse' || ptrs.size) return;
     F.hover = null; root.classList.remove('free-point');
     if (!F.walk) hideSpot();
   });
   canvas.addEventListener('contextmenu', (e) => { if (EX.on) e.preventDefault(); });
-  canvas.addEventListener('wheel', (e) => { // wheel or trackpad: step forward and back
-    if (!EX.on || e.ctrlKey) return;
+  // Wheel input is a small nudge, not an ever-growing destination. High-resolution trackpads
+  // and free-spinning mice can send dozens of events after a single flick: discard the excess.
+  canvas.addEventListener('wheel', (e) => {
+    if (!EX.on || e.ctrlKey || e.metaKey || e.altKey || e.shiftKey) return; // keep browser zoom/accessibility shortcuts
+    if (!Number.isFinite(e.deltaY) || !e.deltaY || Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;
     e.preventDefault();
-    const step = clamp(-(e.deltaMode === 1 ? e.deltaY * 33 : e.deltaY) * 0.006, -1.2, 1.2);
-    const base = F.walk?.dolly ? F.walk.path[F.walk.path.length - 1] : F.pos;
+    if (ptrs.size) return;
+    const now = performance.now(), dir = -Math.sign(e.deltaY), reversed = wheelInput.dir && dir !== wheelInput.dir;
+    if (now - wheelInput.at > 220) { wheelInput.used = 0; wheelInput.blocked = false; }
+    else if (reversed) wheelInput.used = 0;
+    wheelInput.at = now; wheelInput.dir = dir;
+    if (wheelInput.blocked) return;
+    if (reversed) { F.walk = null; F.vel.set(0, 0, 0); hideSpot(); }
+    const pixels = e.deltaY * (e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? innerHeight : 1);
+    const step = Math.min(Math.abs(pixels) * 0.0025, 0.35, Math.max(0, 1.2 - wheelInput.used));
+    if (step <= 0) return;
     fwd.set(-Math.sin(F.yaw), 0, -Math.cos(F.yaw));
-    walkTo(base.x + fwd.x * step, base.z + fwd.z * step, null, { dolly: true });
+    const end = F.walk?.dolly ? F.walk.path[F.walk.path.length - 1] : F.pos;
+    const pending = Math.max(0, ((end.x - F.pos.x) * fwd.x + (end.z - F.pos.z) * fwd.z) * dir);
+    const travel = Math.min(0.75, pending + step), accepted = Math.max(0, travel - pending);
+    if (accepted < 1e-6) return;
+    wheelInput.used += accepted;
+    walkTo(F.pos.x + fwd.x * travel * dir, F.pos.z + fwd.z * travel * dir, null, { dolly: true });
   }, { passive: false });
   const KEYMAP = { KeyW: 'f', ArrowUp: 'f', KeyS: 'b', ArrowDown: 'b', KeyA: 'l', KeyD: 'r', ArrowLeft: 'tl', ArrowRight: 'tr', KeyQ: 'tl', KeyE: 'tr' };
   addEventListener('keydown', (e) => {
     if (!EX.on) return;
     if (e.key === 'Escape') { e.preventDefault(); exitFree(); return; }
+    if (e.code === 'Space' && !e.altKey && !e.ctrlKey && !e.metaKey
+      && !e.target.closest?.('button, a, input, textarea, select, [contenteditable]')) {
+      e.preventDefault(); stopTravel(); return;
+    }
     if (e.key === 'Shift') F.run = true;
     const k = KEYMAP[e.code];
     if (!k || e.altKey || e.ctrlKey || e.metaKey || e.target.closest?.('input, textarea, select, [contenteditable]')) return;
@@ -2332,7 +2389,9 @@ async function init() {
     F.keys.add(k); S.dirty = true;
   });
   addEventListener('keyup', (e) => { if (e.key === 'Shift') F.run = false; const k = KEYMAP[e.code]; if (k) F.keys.delete(k); });
-  addEventListener('blur', () => { F.keys.clear(); F.run = false; });
+  const suspendInput = () => { if (EX.on) stopTravel(); cancelPointers(); };
+  addEventListener('blur', suspendInput);
+  document.addEventListener('visibilitychange', () => { if (document.hidden) suspendInput(); });
 
   if (window.__walk) Object.assign(S, { cam: camera, F, pick }); // test hooks, ?debug only
   // switching modes
@@ -2342,7 +2401,7 @@ async function init() {
     if (freeEl) freeEl.hidden = !EX.on;
     const touch = coarse.matches, keys = $('[data-free-keys]');
     syncHelp();
-    if (keys) keys.textContent = touch ? 'Tap a display to step up to it' : 'W A S D or arrow keys · Shift to hurry · Esc to leave';
+    if (keys) keys.textContent = touch ? 'Drag to look · tap displays' : 'W A S D / arrows · scroll to step · Esc: tour';
     syncNear();
   }
   function enterFree() {
@@ -2359,8 +2418,8 @@ async function init() {
     root.classList.add('free');
     syncFreeUi();
     live.textContent = coarse.matches
-      ? 'Free walk. Drag to look around and tap the floor to walk there. Guided tour returns to the stops.'
-      : 'Free walk. Drag to look around, click the floor to walk there, or use W A S D or the arrow keys. Escape returns to the guided tour.';
+      ? 'Free walk. Drag to look around. Tap the floor for a short step, or a door or display to go there. Tap the scene again to stop. Guided tour returns to the stops.'
+      : 'Free walk. Drag to look around. Click the floor for a short step, a door or display to go there, or use W A S D and arrow keys. Click the scene or press Space to stop. Escape returns to the guided tour.';
     S.dirty = true;
   }
   function exitFree(stop) {
@@ -2371,7 +2430,7 @@ async function init() {
       KF.forEach((k, j) => { const d = Math.hypot(k.p[0] - F.pos.x, k.p[2] - F.pos.z); if (d < bd) { bd = d; i = j; } });
     }
     EX.on = false;
-    F.keys.clear(); F.walk = null; F.hover = null; ptrs.clear(); hideSpot();
+    stopTravel(); cancelPointers();
     clearTimeout(fadeT); fadeEl?.classList.remove('is-on');
     root.classList.remove('free', 'free-drag', 'free-point');
     syncFreeUi();

@@ -12,7 +12,7 @@
   <meta property="og:url" content="https://usmansaleem.me/water/">
   <meta property="og:title" content="Open the gate · A living hydraulic cross-section by Usman Saleem, MEng">
   <meta property="og:description" content="Slide open a bi-parting gate and watch simulated water lens the drawing, load an aluminium baffle and drain along Torricelli's curve.">
-  <meta property="og:image" content="https://usmansaleem.me/water/assets/og-water.v1.jpg">
+  <meta property="og:image" content="https://usmansaleem.me/water/assets/og-water.v2.jpg">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
   <meta property="og:image:alt" content="An engineering cross-section drawing with a sliding gate releasing clear water onto a baffle.">
@@ -21,9 +21,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="water.css?v=1">
-  <link rel="modulepreload" href="flip.js?v=1">
-  <link rel="modulepreload" href="gl.js?v=1">
+  <link rel="stylesheet" href="water.css?v=2">
+  <link rel="modulepreload" href="flip.js?v=2">
+  <link rel="modulepreload" href="gl.js?v=2">
   <script type="application/ld+json">
   {"@context":"https://schema.org","@type":"CreativeWork","name":"Open the gate: a living hydraulic cross-section","url":"https://usmansaleem.me/water/","author":{"@type":"Person","name":"Usman Saleem","url":"https://usmansaleem.me/","jobTitle":"Key Accounts Project Coordinator"},"about":["Fluid mechanics","FLIP fluid simulation","Torricelli's law","Euler-Bernoulli beam theory"]}
   </script>
@@ -44,20 +44,22 @@
 
   <main class="layout">
     <section class="intro" aria-labelledby="h-title">
-      <p class="kicker"><span class="dot" aria-hidden="true"></span>DWG US-H2O-01 · Section A–A · Rev A</p>
+      <p class="kicker"><span class="dot" aria-hidden="true"></span>DWG US-H2O-01 · Section A–A · Rev B</p>
       <h1 id="h-title">Open the gate.</h1>
+      <p class="sub">A live hydraulic cross-section by a mechanical engineer. Real water physics, checked against theory as it runs.</p>
     </section>
 
     <section class="stage-col" aria-label="Interactive drawing">
       <div class="stage" id="stage">
         <picture class="poster" aria-hidden="true">
-          <source media="(max-width: 900px)" srcset="assets/poster-tall.v1.jpg">
-          <img src="assets/poster-wide.v1.jpg" alt="" decoding="async">
+          <source media="(max-width: 900px)" srcset="assets/poster-tall.v2.jpg">
+          <img src="assets/poster-wide.v2.jpg" alt="" decoding="async">
         </picture>
         <canvas class="gl" id="gl" aria-hidden="true"></canvas>
         <canvas class="ink" id="ink-static" aria-hidden="true"></canvas>
         <canvas class="ink" id="ink" aria-hidden="true"></canvas>
-        <div class="grip" id="grip" aria-hidden="true"><span class="grip-arrows">◂ ▸</span><span class="grip-label">Slide to open</span></div>
+        <div class="grip" id="grip" aria-hidden="true"><span class="grip-tab"></span><span class="grip-label">Slide to open</span></div>
+        <button class="stage-badge" id="motion-btn" type="button" aria-pressed="true" aria-label="Motion"><span class="ico" aria-hidden="true"></span><span data-label>Pause</span></button>
         <p class="stage-hint" id="stage-hint" aria-hidden="true"></p>
         <noscript><p class="noscript">The live drawing needs JavaScript. Everything else on this page works without it.</p></noscript>
       </div>
@@ -65,45 +67,48 @@
 
     <section class="controls" aria-label="Controls">
       <div class="ctl ctl-gate">
-        <label for="gate" class="ctl-label">Gate opening <span class="tagname">ZT-101</span></label>
-        <output id="gate-out" for="gate" class="mono">0 mm</output>
-        <input id="gate" type="range" min="0" max="100" step="1" value="0" aria-describedby="gate-help">
-        <p id="gate-help" class="sr">Opens the bi-parting gate in the floor of the head tank. Arrow keys step 5 percent.</p>
-        <button class="btn btn-orange" id="radar-btn" type="button" aria-pressed="false"><span class="radar-ico" aria-hidden="true"></span>Radar: open, hold, close</button>
-      </div>
-      <fieldset class="ctl ctl-coat">
-        <legend class="ctl-label">Baffle coating</legend>
-        <div class="seg">
-          <label><input type="radio" name="coat" value="philic" checked><span>Hydrophilic <i class="mono">θ ≈ 18°</i></span></label>
-          <label><input type="radio" name="coat" value="phobic"><span>Superhydrophobic <i class="mono">θ ≈ 152°</i></span></label>
+        <div class="gate-head">
+          <label for="gate" class="ctl-label">Gate opening <span class="tagname">ZT-101</span></label>
+          <output id="gate-out" for="gate" class="mono">0 mm</output>
+          <button class="chip chip-radar" id="radar-btn" type="button" aria-pressed="false"><span class="radar-ico" aria-hidden="true"></span>Auto cycle</button>
         </div>
-      </fieldset>
-      <div class="ctl ctl-row">
-        <button class="btn toggle" id="pump-btn" type="button" aria-pressed="true">Pump P-101 <span class="state" data-state>on</span></button>
-        <button class="btn" id="refill-btn" type="button">Refill &amp; reset trace</button>
+        <div class="scale">
+          <input id="gate" type="range" min="0" max="100" step="1" value="0" aria-describedby="gate-help">
+          <div class="ticks" id="gate-ticks" aria-hidden="true"><span>0</span><span>50</span><span>100</span><span>150</span><span>200 mm</span></div>
+        </div>
+        <p id="gate-help" class="sr">Opens the bi-parting gate in the floor of the head tank. Arrow keys step 1 percent. Auto cycle opens, holds and closes it like a door radar.</p>
       </div>
-      <div class="ctl ctl-row ctl-prefs">
-        <button class="btn toggle" id="sound-btn" type="button" aria-pressed="false"><span class="ico" aria-hidden="true"></span>Sound <span class="state" data-state>off</span></button>
-        <button class="btn toggle" id="motion-btn" type="button" aria-pressed="true">Motion <span class="state" data-state>on</span></button>
-        <button class="btn toggle" id="tilt-btn" type="button" aria-pressed="false" hidden>Tilt <span class="state" data-state>off</span></button>
+      <div class="strip">
+        <fieldset class="ctl-coat">
+          <legend class="sr">Baffle coating</legend>
+          <div class="seg">
+            <label><input type="radio" name="coat" value="philic" checked><span>Hydrophilic <i class="mono">18°</i></span></label>
+            <label><input type="radio" name="coat" value="phobic"><span>Superhydrophobic <i class="mono">152°</i></span></label>
+          </div>
+        </fieldset>
+        <div class="chips">
+          <button class="chip toggle" id="pump-btn" type="button" aria-pressed="true">Pump</button>
+          <button class="chip toggle" id="dye-btn" type="button" aria-pressed="true"><span class="ink-dot" aria-hidden="true"></span>Dye</button>
+          <button class="chip toggle" id="sound-btn" type="button" aria-pressed="false"><span class="ico" aria-hidden="true"></span>Sound</button>
+          <button class="chip toggle" id="tilt-btn" type="button" aria-pressed="false" hidden>Tilt</button>
+          <button class="chip" id="refill-btn" type="button">Reset</button>
+        </div>
       </div>
-      <p class="try">Try: drag the gate seam · stir the water · move or shake this browser window<span class="touch-only"> · tap Tilt and tip your phone</span>.</p>
+      <p class="try">Press and hold in the water to inject ink · drag the gate seam · <span class="no-touch">hover</span><span class="touch-only">tap</span> a tag or a readout<span class="touch-only"> · tap Tilt and tip your phone</span>.</p>
     </section>
 
-    <p class="lede">A working cross-section, drawn by a mechanical engineer. The gate at the top is a <strong>bi-parting sliding gate</strong>: the same motion as the automatic sliding entrances I coordinate every day. Slide it open and a fluid solver written for this page takes over, checked live against Torricelli's law.</p>
-
     <section class="readouts" aria-labelledby="h-read">
-      <h2 id="h-read" class="h2">Live readouts</h2>
+      <h2 id="h-read" class="h2">Live readouts <span class="h2-note">hover a row to see it in the drawing</span></h2>
       <dl class="dl" id="readouts">
-        <div><dt>Head above the gate <span class="tagname">LT-101</span></dt><dd><span data-r="h">0.000</span> m</dd></div>
-        <div><dt>Discharge, model <span class="eq">C<sub>d</sub>·a·W·√(2gh)</span></dt><dd><span data-r="qm">0.0</span> L/s</dd></div>
-        <div><dt>Discharge, simulated <span class="eq">particle flux</span></dt><dd><span data-r="qs">0.0</span> L/s</dd></div>
-        <div><dt>Measured discharge coefficient</dt><dd><span data-r="cd">–</span></dd></div>
-        <div><dt>Orifice Reynolds number</dt><dd><span data-r="re">–</span></dd></div>
-        <div><dt>Baffle root stress <span class="eq">σ = Mc/I</span></dt><dd><span data-r="sig">0.0</span> MPa</dd></div>
-        <div><dt>Baffle tip deflection <span class="eq">drawn ×10</span></dt><dd><span data-r="del">0.00</span> mm</dd></div>
-        <div><dt>Safety factor vs 6061-T6 yield</dt><dd><span data-r="sf">–</span></dd></div>
-        <div><dt>Pump return <span class="tagname">FT-102</span></dt><dd><span data-r="qp">0.0</span> L/s</dd></div>
+        <div data-inst="head" tabindex="0"><dt>Head above the gate <span class="tagname">LT-101</span></dt><dd><span data-r="h">0.000</span> m</dd></div>
+        <div data-inst="orifice" tabindex="0"><dt>Discharge, model <span class="eq">C<sub>d</sub>·a·W·√(2gh)</span></dt><dd><span data-r="qm">0.0</span> L/s</dd></div>
+        <div data-inst="flow" tabindex="0"><dt>Discharge, simulated <span class="eq">particle flux</span></dt><dd><span data-r="qs">0.0</span> L/s</dd></div>
+        <div data-inst="orifice" tabindex="0"><dt>Measured discharge coefficient</dt><dd><span data-r="cd">–</span></dd></div>
+        <div data-inst="flow" tabindex="0"><dt>Orifice Reynolds number</dt><dd><span data-r="re">–</span></dd></div>
+        <div data-inst="baffle" tabindex="0"><dt>Baffle root stress <span class="eq">σ = Mc/I</span></dt><dd><span data-r="sig">0.0</span> MPa</dd></div>
+        <div data-inst="baffle" tabindex="0"><dt>Baffle tip deflection <span class="eq">drawn ×10</span></dt><dd><span data-r="del">0.00</span> mm</dd></div>
+        <div data-inst="baffle" tabindex="0"><dt>Safety factor vs 6061-T6 yield</dt><dd><span data-r="sf">–</span></dd></div>
+        <div data-inst="flow" tabindex="0"><dt>Pump return <span class="tagname">FT-102</span></dt><dd><span data-r="qp">0.0</span> L/s</dd></div>
       </dl>
       <figure class="chart">
         <svg id="chart" viewBox="0 0 360 150" role="img" aria-labelledby="chart-cap">
@@ -117,10 +122,13 @@
       </figure>
     </section>
 
+    <p class="lede">The gate at the top is a <strong>bi-parting sliding gate</strong>: the same motion as the automatic sliding entrances I coordinate every day. Slide it open and a fluid solver written for this page takes over. Three hypodermic needles release ink the way Osborne Reynolds did in 1883, so you can watch the streamlines squeeze through the opening, the <strong>vena contracta</strong> that sets the discharge coefficient.</p>
+
     <section class="notes" id="notes" aria-labelledby="h-notes">
       <h2 id="h-notes" class="h2">General notes</h2>
       <ol>
-        <li><b>Gate.</b> Two leaves on a belt drive part from the centreline, like the automatic sliding entrances (Besam SL500 family) on the 50+ concurrent replacement projects I coordinate at ASSA ABLOY Entrance Systems. This one holds back water instead of weather. The radar button runs it like a door: open, hold, close.</li>
+        <li><b>Gate.</b> Two leaves on a belt drive part from the centreline, like the automatic sliding entrances (Besam SL500 family) on the 50+ concurrent replacement projects I coordinate at ASSA ABLOY Entrance Systems. This one holds back water instead of weather. Auto cycle runs it like a door radar: open, hold, close.</li>
+        <li><b>Dye.</b> Three hypodermic needles release ink filaments, as Osborne Reynolds did in 1883. In still water they hang from the tips; open the gate and they bend towards the opening and squeeze through the vena contracta. Below it the filament breaks up into the water and fades in the sump. Press and hold anywhere in the water to add your own.</li>
         <li><b>Baffle.</b> 6061-T6 aluminium box section, 120 × 40 × 3 mm, cantilevered from a column. Root stress and tip deflection come from Euler–Bernoulli beam theory, loaded by the pressure the simulated water puts on it: the hand check I run before trusting a finite element model (MEng, Finite Element Analysis).</li>
         <li><b>Coating.</b> Switch the baffle between hydrophilic and superhydrophobic. Contact angle decides whether water clings and sheets off the lip or beads and bounces (MEng, Surfaces &amp; Coatings).</li>
         <li><b>Weir and pump.</b> Tagged like a process flow diagram, the documents I checked line by line while commissioning a flour-milling and pasta plant with Bühler, coordinating about 60 technicians on site.</li>
@@ -136,12 +144,12 @@
         <tr><th scope="row">Role</th><td>Mechanical Engineer · Key Accounts Project Coordinator, ASSA ABLOY Entrance Systems, Mississauga</td></tr>
         <tr><th scope="row">Education</th><td>MEng Mechanical, University of Ottawa · B.Sc. Mechanical Engineering, UET Lahore</td></tr>
         <tr><th scope="row">Contact</th><td class="links"><a href="mailto:usman.saleem@uottawa.ca">Email</a> <a href="https://www.linkedin.com/in/usmansal" target="_blank" rel="noopener">LinkedIn</a> <a href="/assets/Usman_Saleem_MEng_Resume.pdf">Résumé PDF</a></td></tr>
-        <tr class="tb-meta"><th scope="row">Sheet</th><td><span>DWG US-H2O-01</span><span>Rev A</span><span>Scale NTS</span><span>1 of 1</span></td></tr>
+        <tr class="tb-meta"><th scope="row">Sheet</th><td><span>DWG US-H2O-01</span><span>Rev B</span><span>Scale NTS</span><span>1 of 1</span></td></tr>
       </table>
       <p class="back"><a href="/">← Classic site</a><a href="/walk-in/">Walk-in 3D tour →</a></p>
     </section>
   </main>
 
-  <script type="module" src="water.js?v=1"></script>
+  <script type="module" src="water.js?v=2"></script>
 </body>
 </html>

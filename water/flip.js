@@ -39,6 +39,9 @@ export class Flip {
     this.ox = new Float32Array(maxParticles); this.oy = new Float32Array(maxParticles);
     this.vx = new Float32Array(maxParticles); this.vy = new Float32Array(maxParticles);
     this.foam = new Float32Array(maxParticles);   // 0..1 whitewater amount
+    this.dye = new Float32Array(maxParticles);    // 0..1 Reynolds dye (passive tracer carried by the particle)
+    this.seed = new Float32Array(maxParticles);   // fixed per-particle random for the renderer
+    this.dyeMix = 0;                              // pairwise dye exchange per step (0 = off)
     this.near = new Uint8Array(maxParticles);     // neighbour count from the last separation pass
     this.phobicHit = new Uint8Array(maxParticles);
 
@@ -74,6 +77,7 @@ export class Flip {
     const i = this.count++;
     this.px[i] = x; this.py[i] = y; this.ox[i] = x; this.oy[i] = y;
     this.vx[i] = vx; this.vy[i] = vy; this.foam[i] = 0; this.phobicHit[i] = 0;
+    this.dye[i] = 0; this.seed[i] = Math.random();
     return i;
   }
   // Fill a rectangle with a jittered hexagonal lattice (about 3.2 particles per cell).
@@ -287,9 +291,11 @@ export class Flip {
     for (let i = 0; i < count; i++) { const c = pCell[i]; pFirst[c]--; pIds[pFirst[c]] = i; }
     const minD = 2 * this.r, minD2 = minD * minD, nearD2 = (3.2 * this.r) ** 2;
     const coh = this.cohesion, cohD2 = (3.1 * this.r) ** 2, hit = this.phobicHit;
+    const dye = this.dye, dm = this.dyeMix;
     const nbc = this.nbc || (this.nbc = new Uint16Array(this.maxP));
     for (let it = 0; it < this.separateIters; it++) {
       const countNear = it === 0;
+      const mix = countNear && dm > 0;
       if (countNear) nbc.fill(0, 0, count);
       for (let i = 0; i < count; i++) {
         let x = px[i], y = py[i];
@@ -297,7 +303,7 @@ export class Flip {
         const x0 = xi > 0 ? xi - 1 : 0, x1 = xi < pnx - 1 ? xi + 1 : pnx - 1;
         const y0 = yi > 0 ? yi - 1 : 0, y1 = yi < pny - 1 ? yi + 1 : pny - 1;
         const hi = hit[i];
-        let nb = 0;
+        let nb = 0, di = dye[i];
         for (let a = x0; a <= x1; a++) {
           const base = a * pny;
           const f = pFirst[base + y0], l = pFirst[base + y1 + 1];   // cells y0..y1 of a column are contiguous
@@ -308,6 +314,7 @@ export class Flip {
             const d2 = dx * dx + dy * dy;
             if (d2 > nearD2) continue;
             if (countNear) { nb++; nbc[id]++; }
+            if (mix && (di > 0 || dye[id] > 0)) { const dd = (dye[id] - di) * dm; di += dd; dye[id] -= dd; }   // conservative
             if (d2 > minD2 || d2 === 0) {
               if (coh > 0 && d2 < cohD2 && (hi || hit[id])) {
                 const d = Math.sqrt(d2), sc = 0.5 * coh * (d - minD) / d;
@@ -322,6 +329,7 @@ export class Flip {
           }
         }
         px[i] = x; py[i] = y;
+        if (mix) dye[i] = di;
         if (countNear) nbc[i] += nb;
       }
       if (countNear) for (let i = 0; i < count; i++) near[i] = nbc[i] > 255 ? 255 : nbc[i];

@@ -1890,3 +1890,9 @@ section[id] {
 @media (max-width: 640px) {
   .site-nav.menu-open .nav-link.nav-walkin { display: block; margin-top: 4px; }
 }
+
+/* Water lab entry points (/water/) */
+.nav-link.nav-water { display: inline-flex; align-items: center; gap: 0; }
+.nav-water-drop { display: inline-block; flex: none; vertical-align: 1px; margin: 0 8px 0 1px; width: 8px; height: 8px; border-radius: 50% 50% 50% 0; transform: rotate(135deg); background: var(--accent-cyan); box-shadow: 0 0 0 3px rgba(0, 210, 255, 0.16); }
+.btn-secondary.btn-water svg { color: #0b7d99; }
+.btn-secondary.btn-water:hover { border-color: rgba(0, 210, 255, 0.55); background-color: #eef9fc; }

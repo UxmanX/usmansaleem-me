@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Open the gate · Water lab · Usman Saleem, MEng</title>
+  <meta name="description" content="A living engineering drawing by mechanical engineer Usman Saleem: open a bi-parting sliding gate and real-time simulated water falls onto a cantilevered baffle, checked live against Torricelli's law.">
+  <link rel="canonical" href="https://usmansaleem.me/water/">
+  <meta name="theme-color" content="#fbf8f3">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Usman Saleem, MEng">
+  <meta property="og:url" content="https://usmansaleem.me/water/">
+  <meta property="og:title" content="Open the gate · A living hydraulic cross-section by Usman Saleem, MEng">
+  <meta property="og:description" content="Slide open a bi-parting gate and watch simulated water lens the drawing, load an aluminium baffle and drain along Torricelli's curve.">
+  <meta property="og:image" content="https://usmansaleem.me/water/assets/og-water.v1.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="An engineering cross-section drawing with a sliding gate releasing clear water onto a baffle.">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='24' fill='%23ff541e'/><text x='50' y='66' font-size='48' font-family='sans-serif' font-weight='900' fill='%23ffffff' text-anchor='middle'>US</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="water.css?v=1">
+  <link rel="modulepreload" href="flip.js?v=1">
+  <link rel="modulepreload" href="gl.js?v=1">
+  <script type="application/ld+json">
+  {"@context":"https://schema.org","@type":"CreativeWork","name":"Open the gate: a living hydraulic cross-section","url":"https://usmansaleem.me/water/","author":{"@type":"Person","name":"Usman Saleem","url":"https://usmansaleem.me/","jobTitle":"Key Accounts Project Coordinator"},"about":["Fluid mechanics","FLIP fluid simulation","Torricelli's law","Euler-Bernoulli beam theory"]}
+  </script>
+</head>
+<body>
+  <a class="skip" href="#notes">Skip to the notes</a>
+  <header class="top">
+    <a class="brand" href="/" aria-label="Usman Saleem, home">
+      <span class="mark" aria-hidden="true">US</span>
+      <span class="brand-text"><b>Usman Saleem, MEng</b><small>Mechanical Engineer · Key Accounts Project Coordinator</small></span>
+    </a>
+    <nav class="top-nav" aria-label="Site">
+      <a class="pill hide-sm" href="/">Classic site</a>
+      <a class="pill hide-sm" href="/walk-in/">Walk-in</a>
+      <a class="pill pill-dark" href="/assets/Usman_Saleem_MEng_Resume.pdf">Résumé <span class="tag">PDF</span></a>
+    </nav>
+  </header>
+
+  <main class="layout">
+    <section class="intro" aria-labelledby="h-title">
+      <p class="kicker"><span class="dot" aria-hidden="true"></span>DWG US-H2O-01 · Section A–A · Rev A</p>
+      <h1 id="h-title">Open the gate.</h1>
+    </section>
+
+    <section class="stage-col" aria-label="Interactive drawing">
+      <div class="stage" id="stage">
+        <picture class="poster" aria-hidden="true">
+          <source media="(max-width: 900px)" srcset="assets/poster-tall.v1.jpg">
+          <img src="assets/poster-wide.v1.jpg" alt="" decoding="async">
+        </picture>
+        <canvas class="gl" id="gl" aria-hidden="true"></canvas>
+        <canvas class="ink" id="ink-static" aria-hidden="true"></canvas>
+        <canvas class="ink" id="ink" aria-hidden="true"></canvas>
+        <div class="grip" id="grip" aria-hidden="true"><span class="grip-arrows">◂ ▸</span><span class="grip-label">Slide to open</span></div>
+        <p class="stage-hint" id="stage-hint" aria-hidden="true"></p>
+        <noscript><p class="noscript">The live drawing needs JavaScript. Everything else on this page works without it.</p></noscript>
+      </div>
+    </section>
+
+    <section class="controls" aria-label="Controls">
+      <div class="ctl ctl-gate">
+        <label for="gate" class="ctl-label">Gate opening <span class="tagname">ZT-101</span></label>
+        <output id="gate-out" for="gate" class="mono">0 mm</output>
+        <input id="gate" type="range" min="0" max="100" step="1" value="0" aria-describedby="gate-help">
+        <p id="gate-help" class="sr">Opens the bi-parting gate in the floor of the head tank. Arrow keys step 5 percent.</p>
+        <button class="btn btn-orange" id="radar-btn" type="button" aria-pressed="false"><span class="radar-ico" aria-hidden="true"></span>Radar: open, hold, close</button>
+      </div>
+      <fieldset class="ctl ctl-coat">
+        <legend class="ctl-label">Baffle coating</legend>
+        <div class="seg">
+          <label><input type="radio" name="coat" value="philic" checked><span>Hydrophilic <i class="mono">θ ≈ 18°</i></span></label>
+          <label><input type="radio" name="coat" value="phobic"><span>Superhydrophobic <i class="mono">θ ≈ 152°</i></span></label>
+        </div>
+      </fieldset>
+      <div class="ctl ctl-row">
+        <button class="btn toggle" id="pump-btn" type="button" aria-pressed="true">Pump P-101 <span class="state" data-state>on</span></button>
+        <button class="btn" id="refill-btn" type="button">Refill &amp; reset trace</button>
+      </div>
+      <div class="ctl ctl-row ctl-prefs">
+        <button class="btn toggle" id="sound-btn" type="button" aria-pressed="false"><span class="ico" aria-hidden="true"></span>Sound <span class="state" data-state>off</span></button>
+        <button class="btn toggle" id="motion-btn" type="button" aria-pressed="true">Motion <span class="state" data-state>on</span></button>
+        <button class="btn toggle" id="tilt-btn" type="button" aria-pressed="false" hidden>Tilt <span class="state" data-state>off</span></button>
+      </div>
+      <p class="try">Try: drag the gate seam · stir the water · move or shake this browser window<span class="touch-only"> · tap Tilt and tip your phone</span>.</p>
+    </section>
+
+    <p class="lede">A working cross-section, drawn by a mechanical engineer. The gate at the top is a <strong>bi-parting sliding gate</strong>: the same motion as the automatic sliding entrances I coordinate every day. Slide it open and a fluid solver written for this page takes over, checked live against Torricelli's law.</p>
+
+    <section class="readouts" aria-labelledby="h-read">
+      <h2 id="h-read" class="h2">Live readouts</h2>
+      <dl class="dl" id="readouts">
+        <div><dt>Head above the gate <span class="tagname">LT-101</span></dt><dd><span data-r="h">0.000</span> m</dd></div>
+        <div><dt>Discharge, model <span class="eq">C<sub>d</sub>·a·W·√(2gh)</span></dt><dd><span data-r="qm">0.0</span> L/s</dd></div>
+        <div><dt>Discharge, simulated <span class="eq">particle flux</span></dt><dd><span data-r="qs">0.0</span> L/s</dd></div>
+        <div><dt>Measured discharge coefficient</dt><dd><span data-r="cd">–</span></dd></div>
+        <div><dt>Orifice Reynolds number</dt><dd><span data-r="re">–</span></dd></div>
+        <div><dt>Baffle root stress <span class="eq">σ = Mc/I</span></dt><dd><span data-r="sig">0.0</span> MPa</dd></div>
+        <div><dt>Baffle tip deflection <span class="eq">drawn ×10</span></dt><dd><span data-r="del">0.00</span> mm</dd></div>
+        <div><dt>Safety factor vs 6061-T6 yield</dt><dd><span data-r="sf">–</span></dd></div>
+        <div><dt>Pump return <span class="tagname">FT-102</span></dt><dd><span data-r="qp">0.0</span> L/s</dd></div>
+      </dl>
+      <figure class="chart">
+        <svg id="chart" viewBox="0 0 360 150" role="img" aria-labelledby="chart-cap">
+          <g class="grid" id="chart-grid"></g>
+          <path id="chart-model" class="model" d=""></path>
+          <path id="chart-sim" class="sim" d=""></path>
+          <text x="4" y="12" class="ax">h (m)</text>
+          <text x="356" y="146" class="ax" text-anchor="end" id="chart-t">t (s)</text>
+        </svg>
+        <figcaption id="chart-cap"><span class="key key-sim"></span>Simulated head <span class="key key-model"></span>Torricelli model, same gate and pump inputs</figcaption>
+      </figure>
+    </section>
+
+    <section class="notes" id="notes" aria-labelledby="h-notes">
+      <h2 id="h-notes" class="h2">General notes</h2>
+      <ol>
+        <li><b>Gate.</b> Two leaves on a belt drive part from the centreline, like the automatic sliding entrances (Besam SL500 family) on the 50+ concurrent replacement projects I coordinate at ASSA ABLOY Entrance Systems. This one holds back water instead of weather. The radar button runs it like a door: open, hold, close.</li>
+        <li><b>Baffle.</b> 6061-T6 aluminium box section, 120 × 40 × 3 mm, cantilevered from a column. Root stress and tip deflection come from Euler–Bernoulli beam theory, loaded by the pressure the simulated water puts on it: the hand check I run before trusting a finite element model (MEng, Finite Element Analysis).</li>
+        <li><b>Coating.</b> Switch the baffle between hydrophilic and superhydrophobic. Contact angle decides whether water clings and sheets off the lip or beads and bounces (MEng, Surfaces &amp; Coatings).</li>
+        <li><b>Weir and pump.</b> Tagged like a process flow diagram, the documents I checked line by line while commissioning a flour-milling and pasta plant with Bühler, coordinating about 60 technicians on site.</li>
+        <li><b>Discharge.</b> While the head stands well above the opening, the measured coefficient settles near 0.6, the textbook value for a sharp-edged orifice. Once the tank drains below the gate width, the opening stops acting like an orifice: the coefficient falls and Torricelli overpredicts the flow. That gap is physics, not a bug.</li>
+        <li><b>Solver.</b> 2-D FLIP/PIC fluid (Zhu &amp; Bridson) on a staggered grid, written in plain JavaScript for this page and rendered with WebGL2. Same habit as my audit tool that turned a three-hour portal crawl into fifteen seconds: automate the tedious part, then check it against first principles.</li>
+        <li><b>Illustrative.</b> A 2-D model at lab-flume scale (120 mm deep), not a design calculation or a product rating.</li>
+      </ol>
+    </section>
+
+    <section class="titleblock" aria-label="Title block">
+      <table>
+        <tr><th scope="row">Drawn</th><td><b>Usman Saleem, MEng</b></td></tr>
+        <tr><th scope="row">Role</th><td>Mechanical Engineer · Key Accounts Project Coordinator, ASSA ABLOY Entrance Systems, Mississauga</td></tr>
+        <tr><th scope="row">Education</th><td>MEng Mechanical, University of Ottawa · B.Sc. Mechanical Engineering, UET Lahore</td></tr>
+        <tr><th scope="row">Contact</th><td class="links"><a href="mailto:usman.saleem@uottawa.ca">Email</a> <a href="https://www.linkedin.com/in/usmansal" target="_blank" rel="noopener">LinkedIn</a> <a href="/assets/Usman_Saleem_MEng_Resume.pdf">Résumé PDF</a></td></tr>
+        <tr class="tb-meta"><th scope="row">Sheet</th><td><span>DWG US-H2O-01</span><span>Rev A</span><span>Scale NTS</span><span>1 of 1</span></td></tr>
+      </table>
+      <p class="back"><a href="/">← Classic site</a><a href="/walk-in/">Walk-in 3D tour →</a></p>
+    </section>
+  </main>
+
+  <script type="module" src="water.js?v=1"></script>
+</body>
+</html>

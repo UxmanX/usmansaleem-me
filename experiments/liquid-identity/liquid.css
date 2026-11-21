@@ -1,0 +1,149 @@
+/* Liquid Identity — page composition. Shared tokens come from ../shared/base.css. */
+.liquid-page {
+  --stage-ink: #181c1c;
+  --nav-h: 88px;
+  overflow-x: hidden;
+}
+
+.liquid-hero {
+  display: grid;
+  grid-template-columns: minmax(320px, 34fr) 66fr;
+  align-items: center;
+  min-height: calc(100svh - var(--nav-h));
+  padding-left: clamp(20px, 4vw, 72px);
+}
+
+.liquid-copy {
+  position: relative;
+  z-index: 1;
+  padding-block: clamp(40px, 6vh, 72px);
+}
+
+.liquid-copy h1 {
+  margin-bottom: 0.42em;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  max-width: 7.5em;
+}
+
+.liquid-line { display: block; }
+.liquid-dot { color: var(--orange); }
+
+.liquid-id {
+  font-size: clamp(1rem, 1.25vw, 1.2rem);
+  line-height: 1.5;
+  max-width: 30ch;
+  margin-bottom: 1.6rem;
+  color: var(--muted);
+}
+
+.liquid-id strong { color: var(--ink); font-weight: 700; }
+
+.liquid-links a:first-child {
+  text-decoration-color: var(--orange);
+  text-decoration-thickness: 2px;
+}
+
+.liquid-stage {
+  position: relative;
+  margin: 0;
+  align-self: stretch;
+  min-height: 420px;
+  display: grid;
+  grid-template-rows: 1fr auto;
+}
+
+#experiment-canvas {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  grid-row: 1;
+  grid-column: 1;
+  touch-action: none;
+  cursor: grab;
+  outline-offset: -6px;
+  border-radius: 4px;
+}
+
+#experiment-canvas:active { cursor: grabbing; }
+
+/* Resting mark shown until the first real frame is drawn, and kept if JS fails. */
+.liquid-still {
+  grid-row: 1;
+  grid-column: 1;
+  width: 100%;
+  height: 100%;
+  padding: 5%;
+  pointer-events: none;
+  fill: none;
+  stroke: var(--stage-ink);
+  stroke-width: 0.13;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+body[data-ready="true"] .liquid-still { display: none; }
+
+.liquid-caption {
+  grid-row: 2;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 4px 24px;
+  padding: 0 clamp(20px, 4vw, 72px) 22px 0;
+}
+
+.liquid-caption .stage-hint { max-width: 52ch; }
+.liquid-caption .experiment-note { margin: 0; }
+
+.liquid-about {
+  padding: clamp(40px, 7vh, 80px) clamp(20px, 4vw, 72px);
+  border-top: 1px solid var(--line);
+}
+
+.liquid-about p {
+  margin: 0;
+  max-width: 46ch;
+  font-size: clamp(1.05rem, 1.6vw, 1.45rem);
+  line-height: 1.45;
+  letter-spacing: -0.015em;
+}
+
+@media (max-width: 1050px) {
+  .liquid-page { --nav-h: 132px; }
+  .liquid-hero { grid-template-columns: minmax(280px, 40fr) 60fr; }
+}
+
+@media (max-width: 760px) {
+  .liquid-page { --nav-h: 120px; }
+  .liquid-hero {
+    grid-template-columns: 1fr;
+    align-items: start;
+    min-height: 0;
+    padding: 0;
+  }
+  .liquid-copy { padding: 22px 18px 0; }
+  .liquid-copy h1 { margin-bottom: 0.3em; max-width: none; }
+  .liquid-line { display: inline; }
+  .liquid-id { font-size: 0.95rem; margin-bottom: 0.4rem; max-width: 34ch; }
+  .liquid-links { gap: 4px 20px; }
+  .liquid-stage {
+    min-height: 0;
+    height: auto;
+    grid-template-rows: clamp(230px, calc(100svh - var(--nav-h) - 280px), 420px) auto;
+  }
+  .liquid-caption {
+    grid-row: auto;
+    padding: 6px 18px 18px;
+    gap: 2px;
+    flex-direction: column;
+  }
+  .liquid-about { padding: 28px 18px; }
+}
+
+@media (max-width: 360px) {
+  .liquid-copy { padding-top: 14px; }
+  .liquid-copy h1 { font-size: 2.15rem; }
+  .liquid-id { font-size: 0.9rem; }
+}

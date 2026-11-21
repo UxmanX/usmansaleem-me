@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <meta name="theme-color" content="#f6f2e9">
+  <meta name="description" content="Usman Saleem — mechanical engineer and maker. Slow down and draw with an illustrative viscous thread.">
+  <title>Honey Plotter — Usman Saleem</title>
+  <link rel="stylesheet" href="../shared/base.css">
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body class="honey-page">
+  <header data-review-nav></header>
+  <main id="main">
+    <section class="honey-opening" aria-labelledby="page-title">
+      <h1 id="page-title">A little slow.<br>On purpose.</h1>
+      <div class="intro-copy">
+        <p class="identity">Usman Saleem<span>Mechanical engineer &amp; maker.</span></p>
+        <p>I like understanding how things move.<br>Sometimes, that means slowing down.</p>
+        <a class="work-link" href="../../#showcase">Explore my work <svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M4 16 16 4M4 4h12v12"/></svg></a>
+      </div>
+    </section>
+    <section class="honey-art" aria-label="Honey plotter">
+      <div class="stage-heading"><span>Honey plotter</span><span>Drag to guide the pour</span></div>
+      <div class="honey-stage" data-stage>
+        <canvas id="experiment-canvas" aria-label="Glossy honey thread coiling onto a moving amber conveyor. Drag up or down to steer the nozzle; the controls below work with a keyboard."></canvas>
+        <p class="stage-fallback" data-fallback>The honey plotter needs canvas to run. You can still explore Usman’s work and résumé.</p>
+      </div>
+      <div class="honey-controls">
+        <div class="speed-control"><label for="belt-speed">Belt speed <output id="speed-value" for="belt-speed">Slow coils</output></label><input id="belt-speed" type="range" min="0" max="100" value="32"><div class="range-ends"><span>Coil</span><span>Stretch</span></div></div>
+        <div class="nozzle-control"><label for="nozzle-position">Pour position</label><input id="nozzle-position" type="range" min="23" max="77" value="48" aria-label="Pour position"></div>
+        <button id="new-pattern" type="button" class="material-action">Pour a new pattern <svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M4 16 16 4M4 4h12v12"/></svg></button>
+      </div>
+      <p class="material-note">A little experiment in viscous coiling. Illustrative motion, not a fluid simulation.</p>
+    </section>
+    <footer class="personal-footer"><p>Curiosity is part of the work.</p><nav aria-label="Portfolio"><a href="../../#contact">Get in touch</a><a href="../../assets/Usman_Saleem_MEng_Resume.pdf">Résumé</a></nav></footer>
+  </main>
+  <script type="module" src="./app.js"></script>
+</body>
+</html>

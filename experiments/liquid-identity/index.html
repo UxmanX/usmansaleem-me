@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="theme-color" content="#fbf8f3">
+  <meta name="description" content="Usman Saleem, mechanical engineer. A prototype landing page where his initials are made of glossy liquid you can pull apart.">
+  <title>Liquid Identity · Usman Saleem, mechanical engineer (prototype)</title>
+  <link rel="preload" href="../shared/plus-jakarta-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="../shared/base.css">
+  <link rel="stylesheet" href="./liquid.css">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='24' fill='%23181c1c'/><text x='50' y='66' font-size='48' font-family='sans-serif' font-weight='800' fill='%23fbf8f3' text-anchor='middle'>US</text></svg>">
+  <script type="module" src="./app.js"></script>
+</head>
+<body class="liquid-page">
+  <header data-review-nav>
+    <a class="review-brand" href="../../">Usman Saleem</a>
+    <a class="review-index" href="../">All experiments</a>
+  </header>
+
+  <main id="main" class="liquid">
+    <section class="liquid-hero" aria-labelledby="liquid-title">
+      <div class="liquid-copy">
+        <h1 id="liquid-title">Go on. <span class="liquid-line">Make a mess<span class="liquid-dot">.</span></span></h1>
+        <p class="liquid-id"><strong>Usman Saleem</strong>, mechanical engineer. Pull my initials apart. They know the way back.</p>
+        <nav class="portfolio-links liquid-links" aria-label="Portfolio">
+          <a href="../../">See the engineering work</a>
+          <a href="../../assets/Usman_Saleem_MEng_Resume.pdf">Résumé (PDF)</a>
+        </nav>
+      </div>
+
+      <figure class="liquid-stage" data-stage>
+        <canvas id="experiment-canvas" role="button" aria-roledescription="liquid monogram"
+          aria-label="US monogram made of glossy liquid. Drag to pull it apart. Space splashes it; arrow keys pull a drop."
+          aria-describedby="liquid-help">
+          Your browser cannot draw this canvas. The page shows a still US monogram instead.
+        </canvas>
+        <svg class="liquid-still" viewBox="0 0 1.6 1" aria-hidden="true" focusable="false">
+          <path d="M0.185 0.205 V0.55 A0.245 0.245 0 0 0 0.675 0.55 V0.205"/>
+          <path d="M1.3778 0.2743 A0.245 0.1475 0 1 0 1.17 0.5 A0.245 0.1475 0 1 1 0.9622 0.7257"/>
+        </svg>
+        <figcaption class="liquid-caption">
+          <span id="liquid-help" class="stage-hint">Drag the letters into beads and threads, then let go. On a keyboard, focus the letters: arrows pull, Space splashes.</span>
+          <span class="experiment-note">An illustrative material experiment. Not a fluid simulation.</span>
+          <noscript><span class="stage-hint">The liquid needs JavaScript. The still monogram above is the resting state.</span></noscript>
+        </figcaption>
+      </figure>
+    </section>
+
+    <section class="liquid-about" aria-label="About Usman">
+      <p>I coordinate commercial entrance projects at ASSA ABLOY Entrance Systems in Mississauga, and build the tools that automate the work. MEng, University of Ottawa.</p>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <span>Liquid Identity. A prototype for review, not the published site.</span>
+    <nav class="portfolio-links" aria-label="Footer">
+      <a href="../../">Portfolio</a>
+      <a href="../../assets/Usman_Saleem_MEng_Resume.pdf">Résumé (PDF)</a>
+      <a href="../">All experiments</a>
+    </nav>
+  </footer>
+  <span data-status class="sr-only"></span>
+</body>
+</html>

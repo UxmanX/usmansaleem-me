@@ -1,7 +1,7 @@
 import { mountShell, fitCanvas, makeLoop } from '../shared/shell.js';
-import { createLiquidModel } from './liquid-model.js';
-import { createWebGLRenderer } from './render-webgl.js';
-import { createCanvasRenderer } from './render-canvas.js';
+import { createLiquidModel } from './liquid-model.js?v=material-2';
+import { createWebGLRenderer } from './render-webgl.js?v=material-2';
+import { createCanvasRenderer } from './render-canvas.js?v=material-2';
 
 const debug = new URLSearchParams(location.search).has('debug');
 const shell = mountShell({ id: 'liquid-identity', title: 'Liquid Identity' });
@@ -24,12 +24,16 @@ function measure() {
 }
 
 function magnet() {
-  return model.pointer.active ? {
+  const pulse = model.snapPulse;
+  if (!model.pointer.active && pulse <= 0.01) return null;
+  return {
     x: view.ox + model.pointer.x * view.scale,
     y: view.oy + model.pointer.y * view.scale,
     r: model.params.grabRadius * view.scale,
-    strength: 0.45,
-  } : null;
+    strength: model.pointer.active ? 0.48 : 0,
+    tension: model.tension,
+    pulse,
+  };
 }
 
 function draw() {
@@ -75,6 +79,7 @@ function recoverFromContextLoss(event) {
   delete document.body.dataset.ready;
   drag = null;
   keyboard = null;
+  model.hoverLeave();
   model.pointerUp();
   try {
     useCanvasFallback();
@@ -109,8 +114,9 @@ function release(event, cancelled = false) {
     interactions.taps += 1;
     const p = localPoint(event);
     model.poke(p.x, p.y);
-    if (!shell.motion) advanceStill(0.25);
   }
+  // Finish a finite release pose for taps, drags and cancellation; keep RAF paused.
+  if (!shell.motion) advanceStill(0.25);
   draw();
 }
 
@@ -128,13 +134,22 @@ function bindInput() {
     draw();
   });
   canvas.addEventListener('pointermove', event => {
-    if (!drag || drag.id !== event.pointerId) return;
-    drag.distance = Math.max(drag.distance, Math.hypot(event.clientX - drag.x, event.clientY - drag.y));
-    if (drag.distance >= 6 && !drag.counted) { interactions.drags += 1; drag.counted = true; }
+    if (drag) {
+      if (drag.id !== event.pointerId) return;
+      drag.distance = Math.max(drag.distance, Math.hypot(event.clientX - drag.x, event.clientY - drag.y));
+      if (drag.distance >= 6 && !drag.counted) { interactions.drags += 1; drag.counted = true; }
+      const p = localPoint(event);
+      model.pointerMove(p.x, p.y);
+      if (!shell.motion) advanceStill(0.08);
+      draw();
+      return;
+    }
+    if (!shell.motion || keyboard || event.pointerType === 'touch') return;
     const p = localPoint(event);
-    model.pointerMove(p.x, p.y);
-    if (!shell.motion) advanceStill(0.08);
-    draw();
+    model.hoverMove(p.x, p.y);
+  });
+  canvas.addEventListener('pointerleave', () => {
+    if (!drag) model.hoverLeave();
   });
   canvas.addEventListener('pointerup', event => release(event));
   canvas.addEventListener('pointercancel', event => release(event, true));
@@ -164,6 +179,7 @@ function bindInput() {
       draw();
     } else if (event.key === 'Escape') {
       keyboard = null;
+      model.hoverLeave();
       model.pointerUp();
       draw();
     }
@@ -177,6 +193,7 @@ function bindInput() {
   });
   canvas.addEventListener('blur', () => {
     keyboard = null;
+    model.hoverLeave();
     model.pointerUp();
     draw();
   });
@@ -198,6 +215,7 @@ try {
   bindInput();
   loop = makeLoop(dt => { model.step(dt); draw(); }, { enabled: shell.motion });
   shell.onMotionChange(enabled => {
+    model.hoverLeave();
     model.pointerUp();
     keyboard = null;
     loop.setEnabled(enabled);
@@ -214,6 +232,7 @@ try {
     interactions.resets += 1;
     keyboard = null;
     drag = null;
+    model.hoverLeave();
     model.reset();
     if (!shell.motion) model.settle();
     draw();
